@@ -67,7 +67,6 @@
 
       void import_mesh();
 
-      //SymmetricTensor<4, dim> get_stress_strain_tensor(const double lambda,const double mu);
       static const SymmetricTensor<4, dim> stress_strain_tensor;
 
     };
