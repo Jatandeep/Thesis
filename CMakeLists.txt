@@ -15,13 +15,15 @@ set(CMAKE_CXX_FLAGS "-DDEAL_II_DEBUG")
 # declare source files and header files
 SET(SOURCES
     source/main.cpp
-    source/lin_elas.cpp
+    source/ElasticProblem.cpp
     source/parameter.cpp
+    source/others.cpp
    )
 
 SET(HEADERS
-    include/lin_elas.h
+    include/ElasticProblem.h
     include/parameter.h
+    include/others.h
     )
 
 

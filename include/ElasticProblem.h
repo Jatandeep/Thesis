@@ -29,51 +29,49 @@
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/grid/grid_in.h>
 #include "parameter.h"
+#include <deal.II/base/timer.h>
 
 #include <fstream>
 #include <iostream>
 
 
-
-    using namespace dealii;
-
+namespace thesis
+{
     template <int dim>
     class ElasticProblem
     {
     public:
-      ElasticProblem (const std::string &filename);
+      ElasticProblem (AllParameters parameter);
       virtual ~ElasticProblem ();
-      void run ();
+      void run (AllParameters parameter);
 
     private:
       void setup_system ();
-      void assemble_system ();
-      void solve ();
-      void refine_grid ();
+      void assemble_system (AllParameters parameter);
+      void solve (AllParameters parameter);
+      void refine_grid (AllParameters parameter);
       void output_results (const unsigned int cycle) const;
 
-      Triangulation<dim>   triangulation;
-      AllParameters parameter;
-      const FESystem<dim>        fe;
+      dealii::Triangulation<dim>   triangulation;
+      //AllParameters parameter;
+      const dealii::FESystem<dim>        fe;
 
-      DoFHandler<dim>      dof_handler;
+      dealii::DoFHandler<dim>      dof_handler;
 
-      ConstraintMatrix     hanging_node_constraints;
-      const QGauss<dim>    quadrature_formula;
-      SparsityPattern      sparsity_pattern;
-      SparseMatrix<double> system_matrix;
-      Vector<double>       solution;
-      Vector<double>       system_rhs;
+      dealii::ConstraintMatrix     hanging_node_constraints;
+      const dealii::QGauss<dim>    quadrature_formula;
+      dealii::SparsityPattern      sparsity_pattern;
+      dealii::SparseMatrix<double> system_matrix;
+      dealii::Vector<double>       solution;
+      dealii::Vector<double>       system_rhs;
 
-      void import_mesh();
+      void import_mesh(AllParameters parameter);
 
-      static const SymmetricTensor<4, dim> stress_strain_tensor;
+      static const dealii::SymmetricTensor<4, dim> stress_strain_tensor;
 
     };
 
-
-
-
+};
 
 
 

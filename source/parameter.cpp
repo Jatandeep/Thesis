@@ -1,6 +1,11 @@
 #include"../include/parameter.h"
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/tria.h>
+#include <deal.II/base/parameter_handler.h>
+
+
+using namespace dealii;
+using namespace thesis;
 
 void Geometrymodel::declare_param(ParameterHandler &prm){
     prm.enter_subsection("Geometry Model");
