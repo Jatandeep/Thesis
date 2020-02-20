@@ -30,6 +30,7 @@
 #include <deal.II/grid/grid_in.h>
 #include "parameter.h"
 #include <deal.II/base/timer.h>
+#include <deal.II/base/tensor_function.h>
 
 #include <fstream>
 #include <iostream>
@@ -47,7 +48,7 @@ namespace thesis
 
     private:
       void setup_system ();
-      void assemble_system (AllParameters parameter);
+      void assemble_system ();
       void solve (AllParameters parameter);
       void refine_grid (AllParameters parameter);
       void output_results (const unsigned int cycle) const;
@@ -71,7 +72,7 @@ namespace thesis
 
     };
 
-};
+}
 
 
 

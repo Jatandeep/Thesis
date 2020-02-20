@@ -6,7 +6,8 @@
 namespace thesis
 {
 
-    struct Geometrymodel{
+    class Geometrymodel{
+    public:
         std::string name;
         std::string meshfile;
 
@@ -14,7 +15,8 @@ namespace thesis
         void parse_param(dealii::ParameterHandler &prm);
     };
 
-    struct Materialmodel{
+    class Materialmodel{
+    public:
         double elastic_mod;
         double poisson_ratio;
 
@@ -23,8 +25,9 @@ namespace thesis
     };
 
 
-    struct FESys
+    class FESys
     {
+    public:
         unsigned int fe_degree;
         unsigned int quad_order;
         double gl_ref;
@@ -32,13 +35,18 @@ namespace thesis
         double cycles;
         double tol,relax_prm;
         double lambda,mu;
+        double act_ref, act_cors;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
+
+        friend class AllParameters;
+
     };
 
 
-    struct AllParameters:public FESys, public Geometrymodel, public Materialmodel{
+    class AllParameters:public FESys, public Geometrymodel, public Materialmodel{
+    public:
         AllParameters(const std::string &filename);
 
         static void declare_param(dealii::ParameterHandler& prm);
@@ -47,4 +55,5 @@ namespace thesis
     };
 
 
-};
+
+}

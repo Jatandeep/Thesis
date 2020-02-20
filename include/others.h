@@ -7,15 +7,17 @@
 
 namespace thesis
 {
-    template <int dim>
-    void right_hand_side (const std::vector<dealii::Point<dim> > &points,
-                          std::vector<dealii::Tensor<1, dim> >   &values);
-    template <int dim>
-    inline dealii::SymmetricTensor<2, dim> get_strain(const dealii::FEValues<dim> &fe_values,
-                                              const unsigned int   shape_func,
-                                              const unsigned int   q_point);
 
-};
+    template <int dim>
+    class Others{
+    public:
+        //template <int dim>
+        static void right_hand_side (const std::vector<dealii::Point<dim> > &points,
+                              std::vector<dealii::Tensor<1, dim> >   &values);
+
+    };
+
+}
 
 
 

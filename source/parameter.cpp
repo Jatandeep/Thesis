@@ -56,6 +56,8 @@ void FESys::declare_param(ParameterHandler &prm){
         prm.declare_entry("Cycles", "1", Patterns::Integer(0));
         prm.declare_entry("Lambda", "1", Patterns::Double(0));
         prm.declare_entry("Mu", "1", Patterns::Double(0));
+        prm.declare_entry("Act_ref", "0.3", Patterns::Double(0));
+        prm.declare_entry("Act_cors", "0.03", Patterns::Double(0));
 
     }
     prm.leave_subsection();
@@ -73,6 +75,8 @@ void FESys::parse_param(ParameterHandler &prm){
         cycles = prm.get_double("Cycles");
         lambda = prm.get_double("Lambda");
         mu = prm.get_double("Mu");
+        act_ref = prm.get_double("Act_ref");
+        act_cors = prm.get_double("Act_cors");
 
     }
     prm.leave_subsection();

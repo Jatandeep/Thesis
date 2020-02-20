@@ -20,8 +20,7 @@ int main(int argc, char *argv[]){
 
       thesis::AllParameters parameter(filename);
       thesis::ElasticProblem<2> elastic_problem_2d(parameter);
-//        thesis::ElasticProblem<2> elastic_problem_2d(filename);
-        elastic_problem_2d.run(parameter);
+      elastic_problem_2d.run(parameter);
 
       }
     catch (std::exception &exc)
