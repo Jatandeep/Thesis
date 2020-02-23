@@ -6,6 +6,7 @@
 
 using namespace dealii;
 using namespace thesis;
+using namespace parameters;
 
 void Geometrymodel::declare_param(ParameterHandler &prm){
     prm.enter_subsection("Geometry Model");
@@ -97,8 +98,8 @@ void AllParameters::declare_param(ParameterHandler &prm){
 }
 
 void AllParameters::parse_param(ParameterHandler &prm){
-    Geometrymodel::parse_param(prm);
-    Materialmodel::parse_param(prm);
-    FESys::parse_param(prm);
+    geometrymodel.parse_param(prm);
+    materialmodel.parse_param(prm);
+    fesys.parse_param(prm);
 }
 

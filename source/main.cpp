@@ -7,20 +7,17 @@
 #include "../include/parameter.h"
 
 
-
-
-
 int main(int argc, char *argv[]){
 
     try
       {
-        using namespace dealii;
+       using namespace dealii;
 
-        const std::string filename = argv[1];
+       const std::string filename = argv[1];
 
-      thesis::AllParameters parameter(filename);
-      thesis::ElasticProblem<2> elastic_problem_2d(parameter);
-      elastic_problem_2d.run(parameter);
+       thesis::parameters::AllParameters param(filename);
+       thesis::ElasticProblem<2> elastic_problem_2d(param);
+       elastic_problem_2d.run(param);
 
       }
     catch (std::exception &exc)

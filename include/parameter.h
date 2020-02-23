@@ -5,6 +5,8 @@
 
 namespace thesis
 {
+    namespace parameters
+    {
 
     class Geometrymodel{
     public:
@@ -40,20 +42,23 @@ namespace thesis
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
 
-        friend class AllParameters;
+
 
     };
 
 
-    class AllParameters:public FESys, public Geometrymodel, public Materialmodel{
+    class AllParameters{
     public:
         AllParameters(const std::string &filename);
+
+        FESys fesys;
+        Geometrymodel geometrymodel;
+        Materialmodel materialmodel;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
 
     };
-
-
+    }
 
 }

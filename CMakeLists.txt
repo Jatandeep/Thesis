@@ -54,10 +54,3 @@ ENDFOREACH()
 
 DEAL_II_SETUP_TARGET(crack)
 
-
-
-
-
-
-
-

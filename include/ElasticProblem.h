@@ -31,6 +31,7 @@
 #include "parameter.h"
 #include <deal.II/base/timer.h>
 #include <deal.II/base/tensor_function.h>
+#include <deal.II/base/function.h>
 
 #include <fstream>
 #include <iostream>
@@ -42,21 +43,19 @@ namespace thesis
     class ElasticProblem
     {
     public:
-      ElasticProblem (AllParameters parameter);
+      ElasticProblem (parameters::AllParameters param);
       virtual ~ElasticProblem ();
-      void run (AllParameters parameter);
+      void run (parameters::AllParameters param);
 
     private:
       void setup_system ();
       void assemble_system ();
-      void solve (AllParameters parameter);
-      void refine_grid (AllParameters parameter);
+      void solve (parameters::AllParameters param);
+      void refine_grid (parameters::AllParameters param);
       void output_results (const unsigned int cycle) const;
 
       dealii::Triangulation<dim>   triangulation;
-      //AllParameters parameter;
       const dealii::FESystem<dim>        fe;
-
       dealii::DoFHandler<dim>      dof_handler;
 
       dealii::ConstraintMatrix     hanging_node_constraints;
@@ -66,19 +65,10 @@ namespace thesis
       dealii::Vector<double>       solution;
       dealii::Vector<double>       system_rhs;
 
-      void import_mesh(AllParameters parameter);
+      void import_mesh(parameters::AllParameters param);
 
       static const dealii::SymmetricTensor<4, dim> stress_strain_tensor;
 
     };
 
 }
-
-
-
-
-
-
-
-
-
