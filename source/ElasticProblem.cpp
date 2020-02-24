@@ -9,14 +9,16 @@ template <int dim>
 SymmetricTensor<4, dim> get_stress_strain_tensor(const double lambda,
                                                  const double mu)
 {
+
   SymmetricTensor<4, dim> tmp;
   for (unsigned int i = 0; i < dim; ++i)
-    for (unsigned int j = 0; j < dim; ++j)
+    for (unsigned int j = i; j < dim; ++j)
       for (unsigned int k = 0; k < dim; ++k)
-        for (unsigned int l = 0; l < dim; ++l)
+        for (unsigned int l = k; l < dim; ++l)
           tmp[i][j][k][l] = (((i == j) && (k == l)) ? lambda:0)
                             + (((i == k) && (j == l)) ? mu:0)
                             + (((i == l) && (j == k)) ? mu:0);
+
   return tmp;
 }
 
@@ -205,7 +207,7 @@ void ElasticProblem<dim>::import_mesh(AllParameters param){
     grid_in.attach_triangulation(triangulation);
     std::ifstream input_file(grid_name.c_str());
     Assert(dim==2, ExcInternalError());
-    grid_in.read_ucd(input_file/*, format*/);
+    grid_in.read_abaqus(input_file,false);
 
 }
 
@@ -223,7 +225,7 @@ void ElasticProblem<dim>::run(AllParameters param){
         if (cy == 0)
           {
             GridGenerator::hyper_cube (triangulation, -1, 1);
-            //import_mesh(parameter);
+            //import_mesh(param.geometrymodel.meshfile);
             triangulation.refine_global (param.fesys.gl_ref);
           }
         else
@@ -243,5 +245,5 @@ void ElasticProblem<dim>::run(AllParameters param){
 }
 
 template class thesis::ElasticProblem<2>;
-
+template class thesis::ElasticProblem<3>;
 

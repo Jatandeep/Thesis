@@ -30,4 +30,4 @@ void Others<dim>::vector_value (const Point<dim> &points,
 }
 
 template class thesis::Others<2>;
-
+template class thesis::Others<3>;
