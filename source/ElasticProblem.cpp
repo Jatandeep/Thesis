@@ -10,16 +10,26 @@ SymmetricTensor<4, dim> get_stress_strain_tensor(const double lambda,
                                                  const double mu)
 {
 
-  SymmetricTensor<4, dim> tmp;
+  SymmetricTensor<4, dim> C_1;
   for (unsigned int i = 0; i < dim; ++i)
     for (unsigned int j = i; j < dim; ++j)
       for (unsigned int k = 0; k < dim; ++k)
         for (unsigned int l = k; l < dim; ++l)
-          tmp[i][j][k][l] = (((i == j) && (k == l)) ? lambda:0)
-                            + (((i == k) && (j == l)) ? mu:0)
-                            + (((i == l) && (j == k)) ? mu:0);
+          C_1[i][j][k][l] = ((((i == k) && (j == l)) ? mu:0)
+                            + (((i == l) && (j == k)) ? mu:0));
 
-  return tmp;
+  SymmetricTensor<4,dim,double> C_2;
+  std::array <std::pair< double, dealii::Tensor< 1, dim, double > >,std::integral_constant< int, dim >::value> eigen2;
+  eigen2 = dealii::eigenvectors(dealii::unit_symmetric_tensor<dim>(),dealii::SymmetricTensorEigenvectorMethod::ql_implicit_shifts);
+
+  for (unsigned int i=0;i<dim;++i) {
+      for (unsigned int j=0;j<dim;++j) {
+          C_2[i][i][j][j] =  lambda * eigen2[i].second * eigen2[i].second * eigen2[j].second * eigen2[j].second;
+
+      }
+  }
+
+  return (C_1+C_2);
 }
 
 template <int dim>
@@ -224,8 +234,8 @@ void ElasticProblem<dim>::run(AllParameters param){
         std::cout << "Cycle " << cy << ':' << std::endl;
         if (cy == 0)
           {
-            GridGenerator::hyper_cube (triangulation, -1, 1);
-            //import_mesh(param.geometrymodel.meshfile);
+            //GridGenerator::hyper_cube (triangulation, -1, 1);
+            import_mesh(param);
             triangulation.refine_global (param.fesys.gl_ref);
           }
         else

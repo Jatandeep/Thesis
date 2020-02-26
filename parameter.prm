@@ -3,7 +3,7 @@
 
 subsection Geometry Model
     set Name = gmsh
-    set Mesh File = /home/iwtm952/Downloads/thesis/meshes/unit_slit.inp
+    set Mesh File = ../thesis/meshes/Job-1.inp
 end
 
 
@@ -27,6 +27,8 @@ subsection Linear Elastic
     set Cycles = 8
     set Lambda = 1
     set Mu = 1
+    set Act_ref = 0.3
+    set Act_cors = 0.03
 end
 
 
