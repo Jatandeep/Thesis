@@ -24,6 +24,7 @@ SET(HEADERS
     include/ElasticProblem.h
     include/parameter.h
     include/others.h
+    include/HyperCubeWithRefinedHole.h
     )
 
 

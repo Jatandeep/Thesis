@@ -34,10 +34,12 @@ namespace thesis
         unsigned int quad_order;
         double gl_ref;
         unsigned int steps;
-        double cycles;
         double tol,relax_prm;
         double lambda,mu;
         double act_ref, act_cors;
+        unsigned int n_time_steps;
+        unsigned int max_new_ite;
+        double res_tol;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);

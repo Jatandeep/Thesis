@@ -54,11 +54,15 @@ void FESys::declare_param(ParameterHandler &prm){
         prm.declare_entry("Max no of steps", "1", Patterns::Integer(0));
         prm.declare_entry("Tolerance", "1", Patterns::Anything());
         prm.declare_entry("Relaxation parameter", "1", Patterns::Double(0));
-        prm.declare_entry("Cycles", "1", Patterns::Integer(0));
         prm.declare_entry("Lambda", "1", Patterns::Double(0));
         prm.declare_entry("Mu", "1", Patterns::Double(0));
         prm.declare_entry("Act_ref", "0.3", Patterns::Double(0));
         prm.declare_entry("Act_cors", "0.03", Patterns::Double(0));
+        prm.declare_entry("Number of time steps", "10", Patterns::Anything());
+        prm.declare_entry("Max newton iterations", "10", Patterns::Anything());
+        prm.declare_entry("Residual tolerance", "1", Patterns::Double(0));
+
+
 
     }
     prm.leave_subsection();
@@ -73,15 +77,17 @@ void FESys::parse_param(ParameterHandler &prm){
         steps = prm.get_double("Max no of steps");
         tol = prm.get_double("Tolerance");
         relax_prm = prm.get_double("Relaxation parameter");
-        cycles = prm.get_double("Cycles");
         lambda = prm.get_double("Lambda");
         mu = prm.get_double("Mu");
         act_ref = prm.get_double("Act_ref");
         act_cors = prm.get_double("Act_cors");
+        n_time_steps = prm.get_integer("Number of time steps");
+        max_new_ite = prm.get_integer("Max newton iterations");
+        res_tol = prm.get_double("Residual tolerance");
+
 
     }
     prm.leave_subsection();
-    std::cout<<"fedegree:"<<fe_degree<<" tol:"<<tol<<std::endl;
 }
 
 AllParameters::AllParameters(const std::string &filename){
