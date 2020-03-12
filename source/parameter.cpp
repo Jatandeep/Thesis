@@ -50,9 +50,9 @@ void FESys::declare_param(ParameterHandler &prm){
     {
         prm.declare_entry("Finite element degree", "1", Patterns::Integer());
         prm.declare_entry("Quad order", "1", Patterns::Integer(0));
-        prm.declare_entry("Global refinement", "0", Patterns::Anything());
-        prm.declare_entry("Max no of steps", "1", Patterns::Integer(0));
-        prm.declare_entry("Tolerance", "1", Patterns::Anything());
+        prm.declare_entry("Global refinement", "0", Patterns::Integer());
+        prm.declare_entry("Max no of steps for solver", "1", Patterns::Integer(0));
+        prm.declare_entry("CG Solver tolerance", "1", Patterns::Anything());
         prm.declare_entry("Relaxation parameter", "1", Patterns::Double(0));
         prm.declare_entry("Lambda", "1", Patterns::Double(0));
         prm.declare_entry("Mu", "1", Patterns::Double(0));
@@ -73,9 +73,9 @@ void FESys::parse_param(ParameterHandler &prm){
     {
         fe_degree = prm.get_integer("Finite element degree");
         quad_order = prm.get_double("Quad order");
-        gl_ref = prm.get_double("Global refinement");
-        steps = prm.get_double("Max no of steps");
-        tol = prm.get_double("Tolerance");
+        gl_ref = prm.get_integer("Global refinement");
+        cg_steps = prm.get_double("Max no of steps for solver");
+        cg_tol = prm.get_double("CG Solver tolerance");
         relax_prm = prm.get_double("Relaxation parameter");
         lambda = prm.get_double("Lambda");
         mu = prm.get_double("Mu");

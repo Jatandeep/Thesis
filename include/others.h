@@ -22,25 +22,5 @@ namespace thesis
                              dealii::Vector<double>  &value/*,double &step_frac*/)const;
 
     };
-
-
-//    template <int dim>
-//    class Display{
-//    public:
-
-
-//    };
-/*
-    template <int dim>
-    class Error{
-    public:
-        Error();
-        double u;
-        void reset();
-        void normalize(const Error<dim> &err);
-        //friend class Display<dim>;
-    };
-*/
-
 }
 

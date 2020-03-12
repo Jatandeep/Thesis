@@ -32,9 +32,9 @@ namespace thesis
     public:
         unsigned int fe_degree;
         unsigned int quad_order;
-        double gl_ref;
-        unsigned int steps;
-        double tol,relax_prm;
+        unsigned int gl_ref;
+        unsigned int cg_steps;
+        double cg_tol,relax_prm;
         double lambda,mu;
         double act_ref, act_cors;
         unsigned int n_time_steps;

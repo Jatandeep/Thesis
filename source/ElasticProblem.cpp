@@ -1,6 +1,6 @@
 #include "../include/ElasticProblem.h"
 #include "../include/others.h"
-#include "../include/HyperCubeWithRefinedHole.h"
+
 
 using namespace dealii;
 using namespace thesis;
@@ -35,9 +35,26 @@ SymmetricTensor<4, dim> get_stress_strain_tensor(const double lambda,
   return (C_1/*+C_2*/);
 }
 
+
+
 template <int dim>
-const SymmetricTensor<4, dim> ElasticProblem<dim>::stress_strain_tensor =
-  get_stress_strain_tensor<dim>(1, 1);
+SymmetricTensor<2,dim> ElasticProblem<dim>::get_stress(AllParameters param,Vector<double> &newton_update,
+                                                       const unsigned int q,
+                                                       const unsigned int n_q_points,
+                                                       FEValues<dim> &fe_values,
+                                                       FEValuesExtractors::Vector disp){
+    SymmetricTensor<4,dim> stress_strain_tensor;
+    SymmetricTensor<2,dim> stress;
+    std::vector<SymmetricTensor<2,dim>> eps(n_q_points);
+
+    stress_strain_tensor = get_stress_strain_tensor<dim>(param.fesys.lambda,param.fesys.mu);
+    fe_values[disp].get_function_symmetric_gradients(newton_update,eps);
+
+    stress = stress_strain_tensor*eps[q];
+
+    return stress;
+}
+
 
 template <int dim>
 ElasticProblem<dim>::ElasticProblem(AllParameters param):
@@ -57,13 +74,24 @@ ElasticProblem<dim>::~ElasticProblem ()
 template <int dim>
 void ElasticProblem<dim>::setup_system ()
 {
+
   dof_handler.distribute_dofs (fe);
-  //DoFRenumbering::Cuthill_McKee(dof_handler);
+  DoFRenumbering::Cuthill_McKee(dof_handler);
   hanging_node_constraints.clear ();
   DoFTools::make_hanging_node_constraints (dof_handler,
-                                           hanging_node_constraints);
+                                               hanging_node_constraints);
+/*
+  const FEValuesExtractors::Vector disp(0);
+  VectorTools::interpolate_boundary_values (dof_handler,
+                                            0,
+                                            Functions::ZeroFunction<dim>(dim),
+                                            hanging_node_constraints
+                                            ,fe.component_mask(disp));
+*/
+
   hanging_node_constraints.close ();
   tangent_matrix.clear();
+
   DynamicSparsityPattern dsp(dof_handler.n_dofs(), dof_handler.n_dofs());
   DoFTools::make_sparsity_pattern(dof_handler,
                                   dsp,
@@ -78,9 +106,8 @@ void ElasticProblem<dim>::setup_system ()
 }
 
 template <int dim>
-void ElasticProblem<dim>::assemble_system_matrix (Error & error_residual,
-                                                  dealii::Vector<double> & newton_update,
-                                                  unsigned int &new_ite,bool error)
+void ElasticProblem<dim>::assemble_system_matrix (AllParameters param,Vector<double> & newton_update)
+
 {
 
   FEValues<dim> fe_values (fe, quadrature_formula,
@@ -89,21 +116,35 @@ void ElasticProblem<dim>::assemble_system_matrix (Error & error_residual,
   const unsigned int   dofs_per_cell = fe.dofs_per_cell;
   const unsigned int   n_q_points    = quadrature_formula.size();
   FullMatrix<double>   cell_matrix (dofs_per_cell, dofs_per_cell);
-
+  Vector<double>       cell_rhs (dofs_per_cell);
   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
   const FEValuesExtractors::Vector disp(0);
 
+  std::vector<Vector<double> >      rhs_values (n_q_points,Vector<double>(dim+1));
+  const Others<dim> right_hand_side;
+
+  SymmetricTensor<4,dim> stress_strain_tensor;
+  stress_strain_tensor = get_stress_strain_tensor<dim>(param.fesys.lambda,param.fesys.mu);
+
+  //double step_fraction = double(current_time_step)/double(param.fesys.n_time_steps);
 
   for (const auto &cell : dof_handler.active_cell_iterators())
     {
       cell_matrix = 0;
+      cell_rhs=0;
 
       fe_values.reinit(cell);
+      right_hand_side.vector_value_list(fe_values.get_quadrature_points(), rhs_values);
+      cell->get_dof_indices (local_dof_indices);
 
         for (unsigned int q = 0; q < n_q_points; ++q)
             for (unsigned int i = 0; i < dofs_per_cell; ++i){
                 const SymmetricTensor<2, dim> phi_i_u = fe_values[disp].symmetric_gradient(i, q);
+
+                const SymmetricTensor<2, dim> stress = get_stress(param,newton_update,q,n_q_points,fe_values,disp);
+
+                cell_rhs(i) -= (stress * phi_i_u)*fe_values.JxW(q)/**step_fraction*/;
 
                 for (unsigned int j = 0; j < dofs_per_cell; ++j){
                     const SymmetricTensor<2, dim> phi_j_u = fe_values[disp].symmetric_gradient(j, q);
@@ -115,44 +156,25 @@ void ElasticProblem<dim>::assemble_system_matrix (Error & error_residual,
                                          fe_values.JxW(q);
 
                 }
+/*
+                const unsigned int
+                component_i = fe.system_to_component_index(i).first;
+                cell_rhs(i) += fe_values.shape_value(i,q) *
+                               rhs_values[q][component_i] *step_fraction*
+                               fe_values.JxW(q);
+*/
           }
 
-    cell->get_dof_indices (local_dof_indices);
-
-    hanging_node_constraints.distribute_local_to_global(cell_matrix,
-                                  local_dof_indices,
-                                  tangent_matrix);//copy local to global
+    hanging_node_constraints.distribute_local_to_global(cell_matrix,cell_rhs,
+                                  local_dof_indices,tangent_matrix,system_rhs,false);  //copy local to global
   }
 
-  if(error){
 
-      FullMatrix<double> K(dof_handler.n_dofs(),dof_handler.n_dofs());
-      Vector<double> u(dof_handler.n_dofs());
-
-      for (unsigned int i=0;i<dof_handler.n_dofs();++i) {
-          if(!hanging_node_constraints.is_constrained(i)){
-              u(i)=newton_update(i);
-             }
-      }
-
-      K.copy_from(tangent_matrix);
-      Vector<double> tmp(dof_handler.n_dofs());
-        K.vmult(tmp,u);
-
-        if(new_ite==0)
-            error_residual.u = tmp.l2_norm();
-        else {
-            error_residual.u -= tmp.l2_norm();
-        }
-        std::cout<<"error_residual_matrix:"<<error_residual.u<<std::endl;
-
-
-  }
 }
 
 template <int dim>
-void ElasticProblem<dim>::assemble_neumann_forces(Error & error_residual,AllParameters param
-                                                  ,unsigned int &new_ite,bool error)
+void ElasticProblem<dim>::assemble_body_forces(AllParameters param)
+
 {
 
   FEValues<dim> fe_values (fe, quadrature_formula,
@@ -193,22 +215,7 @@ void ElasticProblem<dim>::assemble_neumann_forces(Error & error_residual,AllPara
                                   local_dof_indices,
                                   system_rhs);//copy local to global
   }
-  if(error){
 
-      if(new_ite==0){
-
-      Vector<double> err_res(dof_handler.n_dofs());
-      for (unsigned int i=0;i<dof_handler.n_dofs();++i) {
-          if(!hanging_node_constraints.is_constrained(i)){
-              err_res(i)=system_rhs(i);
-             }
-          }
-
-      error_residual.u += err_res.l2_norm();
-      std::cout<<"error_residual_rhs:"<<error_residual.u<<std::endl;
-      std::cout<<"system_rhs:"<<system_rhs.l2_norm()<<std::endl;
-    }
-  }
 }
 
 template <int dim>
@@ -229,14 +236,13 @@ void ElasticProblem<dim>::solve_nonlinear_newton(AllParameters param,
 
         tangent_matrix = 0.0;
         system_rhs = 0.0;
+
         make_constraints(new_ite);
 
-        bool error = false;
-        //bool error = true;
-        assemble_system_matrix(error_residual,newton_update,new_ite,error);
-        assemble_neumann_forces(error_residual,param,new_ite,error);
+        assemble_system_matrix(param,newton_update);
+        assemble_body_forces(param);
 
-        get_error_residual(error_residual,solution_delta);
+        get_error_residual(error_residual);
 
         if(new_ite==0)
             error_residual_0 = error_residual;
@@ -244,7 +250,7 @@ void ElasticProblem<dim>::solve_nonlinear_newton(AllParameters param,
         error_residual_norm = error_residual;
         error_residual_norm.normalize(error_residual_0);
 
-        if(new_ite > 0 && error_residual_norm.u <= param.fesys.res_tol){
+        if(new_ite > 0 && error_residual_norm.u < param.fesys.res_tol){
             std::cout<<"Converged"<<std::endl;
             print_footer();
             break;
@@ -274,8 +280,8 @@ std::pair<unsigned int,double> ElasticProblem<dim>::solve_linear_sys(AllParamete
   double lin_res = 0;
   newton_update = 0;    // (solution)
 
-  SolverControl           solver_control (/*param.fesys.steps ,param.fesys.tol*/
-                                          tangent_matrix.m(),param.fesys.tol*system_rhs.l2_norm());
+  SolverControl           solver_control (/*param.fesys.cg_steps ,param.fesys.cg_tol*/
+                                          tangent_matrix.m(),param.fesys.cg_tol*system_rhs.l2_norm());
   GrowingVectorMemory<Vector<double> > GVM;
   SolverCG<Vector<double>>    cg (solver_control,GVM);
   PreconditionSSOR<> preconditioner;
@@ -304,8 +310,8 @@ void ElasticProblem<dim>::refine_grid (AllParameters param)
                                                    param.fesys.act_ref, param.fesys.act_cors);
   triangulation.execute_coarsening_and_refinement ();
 
-}
 
+}
 
 
 template <int dim>
@@ -391,9 +397,9 @@ void ElasticProblem<dim>::print_footer(){
 }
 
 template <int dim>
-void ElasticProblem<dim>::get_error_residual(Error& error_residual,Vector<double> &newton_update){
+void ElasticProblem<dim>::get_error_residual(Error& error_residual){
 
-/*
+
     Vector<double> err_res(dof_handler.n_dofs());
     for (unsigned int i=0;i<dof_handler.n_dofs();++i) {
         if(!hanging_node_constraints.is_constrained(i)){
@@ -402,15 +408,15 @@ void ElasticProblem<dim>::get_error_residual(Error& error_residual,Vector<double
 
         }
     error_residual.u = err_res.l2_norm();
-*/
 
+/*
     FullMatrix<double> A;
     A.copy_from(tangent_matrix);
     Vector<double> res(dof_handler.n_dofs());
     double number ;
     number =  A.residual(res,newton_update,system_rhs);// |res| = sys_rhs - A*new_upd
     error_residual.u = number;
-
+*/
 
 }
 
@@ -421,10 +427,12 @@ void ElasticProblem<dim>::make_constraints(unsigned int &itr){
     if(itr>=1){
         return;
     }
-
+//    if(itr==0)
+//    dof_handler.distribute_dofs (fe);
     hanging_node_constraints.clear();
     DoFTools::make_hanging_node_constraints (dof_handler,
                                              hanging_node_constraints);
+
 
     const FEValuesExtractors::Vector disp(0);
     VectorTools::interpolate_boundary_values (dof_handler,
@@ -434,49 +442,25 @@ void ElasticProblem<dim>::make_constraints(unsigned int &itr){
                                               ,fe.component_mask(disp));
 
     hanging_node_constraints.close ();
+/*
+    DynamicSparsityPattern dsp(dof_handler.n_dofs(), dof_handler.n_dofs());
+    DoFTools::make_sparsity_pattern(dof_handler,
+                                    dsp,
+                                    hanging_node_constraints,
+                                    /*keep_constrained_dofs = */ /* true);
+    sparsity_pattern.copy_from (dsp);
+    tangent_matrix.reinit (sparsity_pattern);
+    system_rhs.reinit (dof_handler.n_dofs());
+    solution_delta.reinit(dof_handler.n_dofs());
+    solution.reinit (dof_handler.n_dofs());
+*/
 }
 
-
-template <int dim>
-Vector<double>
-ElasticProblem<dim>::get_total_solution(const Vector<double> &solution_delta) const
-{
-    Vector<double> current_solution(solution);
-    current_solution += solution_delta;
-    return current_solution;
-}
 
 template <int dim>
 void ElasticProblem<dim>::run(AllParameters param){
 
     using namespace dealii;
-/*
-    Timer timer;
-    timer.start();
-
-    for (unsigned int cy =0; cy<param.fesys.cycles; ++cy)
-      {
-        std::cout << "Cycle " << cy << ':' << std::endl;
-        if (cy == 0)
-          {
-            //GridGenerator::hyper_cube (triangulation, -1, 1);
-            import_mesh(param);
-           }
-        else
-          refine_grid (param);
-        std::cout << "   Number of active cells:       "
-                  << triangulation.n_active_cells()
-                  << std::endl;
-        setup_system ();
-        std::cout << "   Number of degrees of freedom: "
-                  << dof_handler.n_dofs()
-                  << std::endl;
-        assemble_system ();
-        solve (param);
-        output_results (cy);
-        std::cout<<"time:"<<timer()<<" solution.norm():"<<solution.l2_norm()<<std::endl;
-      }
-*/
 
     for (current_time_step=1;current_time_step<=param.fesys.n_time_steps;++current_time_step) {
         if (current_time_step == 1)
@@ -485,8 +469,10 @@ void ElasticProblem<dim>::run(AllParameters param){
             triangulation.refine_global (param.fesys.gl_ref);
             setup_system ();
           }
-//        else
-//          refine_grid (param);
+        //else
+        //  refine_grid (param);
+
+        //setup_system();
         solution_delta = 0.0;
         solve_nonlinear_newton(param,solution_delta);
         solution = solution_delta;
@@ -498,14 +484,8 @@ void ElasticProblem<dim>::run(AllParameters param){
         std::cout << "   Number of degrees of freedom: "
                           << dof_handler.n_dofs()
                           << std::endl;
+
     }
-}
-
-template <int dim>
-void ElasticProblem<dim>::make_grid()
-{
-    HyperCubeWithRefinedHole::generate_grid<dim>(triangulation,2,2,5,6);
-
 }
 
 template class thesis::ElasticProblem<2>;

@@ -30,25 +30,6 @@ void Others<dim>::vector_value (const Point<dim> &points,
        values[1] = 0.0;
 
 }
-/*
-template <int dim>
-Error<dim>::Error():u(1.0){}
-
-template <int dim>
-void Error<dim>::reset(){
-    u = 1.0;
-}
-
-template <int dim>
-void Error<dim>::normalize(const Error<dim> & err){
-    if(err.u!=0.0)
-        u/=err.u;
-}
-
-*/
-
 
 template class thesis::Others<2>;
 template class thesis::Others<3>;
-//template class thesis::Error<2>;
-//template class thesis::Error<3>;
