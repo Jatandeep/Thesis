@@ -33,6 +33,7 @@
 #include <deal.II/base/timer.h>
 #include <deal.II/base/tensor_function.h>
 #include <deal.II/base/function.h>
+#include <deal.II/base/symmetric_tensor.h>
 #include <deal.II/dofs/dof_renumbering.h>
 #include <deal.II/numerics/solution_transfer.h>
 
@@ -51,31 +52,59 @@ namespace thesis
       void run (parameters::AllParameters param);
 
     private:
-      void setup_system ();
-      std::pair<unsigned int,double> solve_linear_sys (parameters::AllParameters param,
-                                                       dealii::Vector<double> & newton_update);
-      void refine_grid (parameters::AllParameters param);
-      void output_results (const unsigned int cycle) const;
+
+      /*!Read mesh from external file*/
       void import_mesh(parameters::AllParameters param);
 
+      /*!Distribute dof's based on a given Finite Element space and allocating memory for the
+       * sparse matrix and all used vectors.*/
+      void setup_system ();
+
+      /*Implement adaptive refinement scheme*/
+      void refine_grid (parameters::AllParameters param);
+
+      /*!Newton-Raphson algorithm looping over all newton iterations*/
       void solve_nonlinear_newton(parameters::AllParameters param
                                   ,dealii::Vector<double> &solution_delta);
 
-      dealii::Triangulation<dim>   triangulation;
-      const dealii::FESystem<dim>  fe;
-      dealii::DoFHandler<dim>      dof_handler;
+      /*!Solve the linear system as assembled via assemble_system()*/
+      std::pair<unsigned int,double> solve_linear_sys (parameters::AllParameters param,
+                                                       dealii::Vector<double> & newton_update);
 
-      dealii::ConstraintMatrix     hanging_node_constraints;
-      const dealii::QGauss<dim>    quadrature_formula;
+      /*!Set hanging node and Dirichlet constraints.*/
+      void make_constraints(unsigned int &itr);
 
-      dealii::SparsityPattern      sparsity_pattern;
-      dealii::SparseMatrix<double> tangent_matrix;
-      dealii::Vector<double>       solution;
-      dealii::Vector<double>       system_rhs;
+      /*!Assemble the linear system for the elasticity problem*/
+      void assemble_system (parameters::AllParameters param,
+                            dealii::Vector<double> & newton_update);
 
-      dealii::Vector<double>       solution_delta;
-      unsigned int                 current_time_step;
+      /*Assemble External forces(body forces + Neumann forces)*/
+      void assemble_body_forces(parameters::AllParameters param);
 
+      /*Print header and footer for newton iterations*/
+      void print_header();
+      void print_footer();
+
+      /*!Write output into files*/
+      void output_results (const double cycle) const;
+
+      dealii::Triangulation<dim>   triangulation_m;
+      const dealii::FESystem<dim>  fe_m;
+      dealii::DoFHandler<dim>      dof_handler_m;
+
+      dealii::ConstraintMatrix     constraints_m;
+      const dealii::QGauss<dim>    quadrature_formula_m;
+
+      dealii::SparsityPattern      sparsity_pattern_m;
+      dealii::SparseMatrix<double> tangent_matrix_m;
+      dealii::Vector<double>       solution_m;
+      dealii::Vector<double>       system_rhs_m;
+
+      double                       current_time;
+
+      //dealii::FEValuesExtractors::Vector &disp_extractor(0);
+
+      /*!A struct used to keep track of data needed as convergence criteria.*/
       struct Error
           {
               Error()
@@ -98,14 +127,9 @@ namespace thesis
           };
 
       Error error_residual, error_residual_0, error_residual_norm;
-      void get_error_residual(Error & error_residual);
 
-      void make_constraints(unsigned int &itr);
-      void assemble_system_matrix (parameters::AllParameters param,
-                                   dealii::Vector<double> & newton_update);
-      void assemble_body_forces(parameters::AllParameters param);
-      void print_header();
-      void print_footer();
+      /*Calculate error residual from system_rhs*/
+      void get_error_residual(Error & error_residual);
 
       dealii::SymmetricTensor<2,dim> get_stress(parameters::AllParameters param,dealii::Vector<double> &solution,
                                                 const unsigned int q, const unsigned int n_q_points,

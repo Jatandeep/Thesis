@@ -37,7 +37,8 @@ namespace thesis
         double cg_tol,relax_prm;
         double lambda,mu;
         double act_ref, act_cors;
-        unsigned int n_time_steps;
+        unsigned int start_time, end_time;
+        double delta_t, time_tol;
         unsigned int max_new_ite;
         double res_tol;
 

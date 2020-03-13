@@ -58,7 +58,10 @@ void FESys::declare_param(ParameterHandler &prm){
         prm.declare_entry("Mu", "1", Patterns::Double(0));
         prm.declare_entry("Act_ref", "0.3", Patterns::Double(0));
         prm.declare_entry("Act_cors", "0.03", Patterns::Double(0));
-        prm.declare_entry("Number of time steps", "10", Patterns::Anything());
+        prm.declare_entry("Starting time", "0", Patterns::Integer());
+        prm.declare_entry("End time", "1", Patterns::Integer(0));
+        prm.declare_entry("Delta time", "0.1", Patterns::Double(0));
+        prm.declare_entry("Time tolerance", "1", Patterns::Anything());
         prm.declare_entry("Max newton iterations", "10", Patterns::Anything());
         prm.declare_entry("Residual tolerance", "1", Patterns::Double(0));
 
@@ -81,7 +84,10 @@ void FESys::parse_param(ParameterHandler &prm){
         mu = prm.get_double("Mu");
         act_ref = prm.get_double("Act_ref");
         act_cors = prm.get_double("Act_cors");
-        n_time_steps = prm.get_integer("Number of time steps");
+        start_time = prm.get_integer("Starting time");
+        end_time = prm.get_integer("End time");
+        delta_t = prm.get_double("Delta time");
+        time_tol = prm.get_double("Time tolerance");
         max_new_ite = prm.get_integer("Max newton iterations");
         res_tol = prm.get_double("Residual tolerance");
 
