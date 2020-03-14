@@ -20,15 +20,19 @@ end
 subsection Linear Elastic
     set Finite element degree = 1
     set Quad order = 2
-    set Global refinement = 2
-    set Max no of steps = 1000
-    set Tolerance = 1e-12
+    set Global refinement = 5
+    set CG Solver tolerance = 1e-7
     set Relaxation parameter = 1.2
-    set Cycles = 8
     set Lambda = 1
     set Mu = 1
     set Act_ref = 0.3
     set Act_cors = 0.03
+    set Starting time = 1
+    set End time = 2
+    set Delta time = 0.1
+    set Time tolerance = 1e-6
+    set Max newton iterations = 10
+    set Residual tolerance = 1e-7
 end
 
 
