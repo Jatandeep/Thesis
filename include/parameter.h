@@ -33,7 +33,6 @@ namespace thesis
         unsigned int fe_degree;
         unsigned int quad_order;
         unsigned int gl_ref;
-        unsigned int cg_steps;
         double cg_tol,relax_prm;
         double lambda,mu;
         double act_ref, act_cors;

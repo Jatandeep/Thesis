@@ -20,41 +20,10 @@ SymmetricTensor<4, dim> get_stress_strain_tensor(const double lambda,
                             + (((i == l) && (j == k)) ? mu:0)
                              +((i==j) && (k==l)? lambda:0));
 
-/*
-  SymmetricTensor<4,dim,double> C_2;
-  std::array <std::pair< double, dealii::Tensor< 1, dim, double > >,std::integral_constant< int, dim >::value> eigen2;
-  eigen2 = dealii::eigenvectors(dealii::unit_symmetric_tensor<dim>(),dealii::SymmetricTensorEigenvectorMethod::ql_implicit_shifts);
 
-  for (unsigned int i=0;i<dim;++i) {
-      for (unsigned int j=0;j<dim;++j) {
-          C_2[i][i][j][j] =  lambda * eigen2[i].second * eigen2[i].second * eigen2[j].second * eigen2[j].second;
-
-      }
-  }
-*/
-  return (C_1/*+C_2*/);
+  return (C_1);
 }
 
-
-/*
-template <int dim>
-SymmetricTensor<2,dim> ElasticProblem<dim>::get_stress(AllParameters param,Vector<double> &newton_update,
-                                                       const unsigned int q,
-                                                       const unsigned int n_q_points,
-                                                       FEValues<dim> &fe_values,
-                                                       FEValuesExtractors::Vector disp){
-    SymmetricTensor<4,dim> stress_strain_tensor; // bigC;
-    SymmetricTensor<2,dim> stress // sigma;
-    std::vector<SymmetricTensor<2,dim>> epsilon_vals(n_q_points);
-
-    stress_strain_tensor = get_stress_strain_tensor<dim>(param.fesys.lambda,param.fesys.mu);
-    fe_values[disp].get_function_symmetric_gradients(newton_update,eps);
-
-    stress = stress_strain_tensor*eps[q];
-
-    return stress;
-}
-*/
 
 template <int dim>
 ElasticProblem<dim>::ElasticProblem(AllParameters param)
@@ -95,7 +64,6 @@ void ElasticProblem<dim>::setup_system ()
   sparsity_pattern_m.copy_from (dsp);
   tangent_matrix_m.reinit (sparsity_pattern_m);
   system_rhs_m.reinit (dof_handler_m.n_dofs());
-  //solution_delta.reinit(dof_handler_m.n_dofs());
   solution_m.reinit (dof_handler_m.n_dofs());
 
   std::cout << "   Number of active cells:       "
@@ -120,7 +88,7 @@ void ElasticProblem<dim>::assemble_system (AllParameters param,Vector<double> & 
   Vector<double>       cell_rhs (dofs_per_cell);
   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
-  dealii::FEValuesExtractors::Vector disp_extractor(0);
+  const FEValuesExtractors::Vector disp_extractor(0);
 
   SymmetricTensor<4,dim> BigC = get_stress_strain_tensor<dim>(param.fesys.lambda,param.fesys.mu);
 
@@ -138,13 +106,11 @@ void ElasticProblem<dim>::assemble_system (AllParameters param,Vector<double> & 
 
         for (unsigned int q = 0; q < n_q_points; ++q){
 
-                            // get strain for all qps
-
+            const SymmetricTensor<2, dim> sigma = BigC * epsilon_vals[q];
 
             for (unsigned int i = 0; i < dofs_per_cell; ++i){
 
                 const SymmetricTensor<2, dim> sym_grad_shape_i = fe_values[disp_extractor].symmetric_gradient(i, q);
-                const SymmetricTensor<2, dim> sigma = BigC * epsilon_vals[q];
 
                 cell_rhs(i) -= (sigma * sym_grad_shape_i)*fe_values.JxW(q);
 
@@ -160,8 +126,6 @@ void ElasticProblem<dim>::assemble_system (AllParameters param,Vector<double> & 
                 }
             }
           }
-
-           // for i,j
 
         for(unsigned int i=0;i<dofs_per_cell;++i)
             for(unsigned int j=0;j<i;++j)
@@ -281,8 +245,7 @@ std::pair<unsigned int,double> ElasticProblem<dim>::solve_linear_sys(AllParamete
   double lin_res = 0;
   newton_update = 0;    // (solution)
 
-  SolverControl           solver_control (/*param.fesys.cg_steps ,param.fesys.cg_tol*/
-                                          tangent_matrix_m.m(),param.fesys.cg_tol*system_rhs_m.l2_norm());
+  SolverControl           solver_control (tangent_matrix_m.m(),param.fesys.cg_tol*system_rhs_m.l2_norm());
   GrowingVectorMemory<Vector<double> > GVM;
   SolverCG<Vector<double>>    cg (solver_control,GVM);
   PreconditionSSOR<> preconditioner;
@@ -359,7 +322,10 @@ void ElasticProblem<dim>::import_mesh(AllParameters param){
 
     triangulation_m.refine_global (param.fesys.gl_ref);
 
-    // write out mesh to vtk.
+    std::ofstream out ("meshout.vtk");
+    GridOut grid_out;
+    grid_out.write_vtk (triangulation_m, out);
+
 }
 
 
@@ -426,10 +392,10 @@ void ElasticProblem<dim>::make_constraints(unsigned int &itr){
 //    dof_handler_m.distribute_dofs (fe_m);
 
     constraints_m.clear();
-    DoFTools::make_hanging_node_constraints (dof_handler_m,
-                                             constraints_m);
+//  DoFTools::make_hanging_node_constraints (dof_handler_m,
+//                                             constraints_m);
 
-    dealii::FEValuesExtractors::Vector disp_extractor(0);
+    const dealii::FEValuesExtractors::Vector disp_extractor(0);
 
     VectorTools::interpolate_boundary_values (dof_handler_m,
                                               0,
@@ -443,12 +409,12 @@ void ElasticProblem<dim>::make_constraints(unsigned int &itr){
     DoFTools::make_sparsity_pattern(dof_handler_m,
                                     dsp,
                                     constraints_m,
-                                    /*keep_constrained_dofs = */  /*true);
-    sparsity_pattern.copy_from (dsp);
-    tangent_matrix_m.reinit (sparsity_pattern);
-    system_rhs.reinit (dof_handler_m.n_dofs());
-    solution_delta.reinit(dof_handler_m.n_dofs());
-    solution.reinit (dof_handler_m.n_dofs());
+                                    /*keep_constrained_dofs = */ /*true);
+    sparsity_pattern_m.copy_from (dsp);
+    tangent_matrix_m.reinit (sparsity_pattern_m);
+    system_rhs_m.reinit (dof_handler_m.n_dofs());
+    solution_delta_m.reinit(dof_handler_m.n_dofs());
+    solution_m.reinit (dof_handler_m.n_dofs());
 */
 }
 
@@ -458,8 +424,7 @@ void ElasticProblem<dim>::run(AllParameters param){
 
     using namespace dealii;    
 
-    Vector<double>       solution_delta(/*this->solution.size()*/dof_handler_m.n_dofs());
-
+    Vector<double>       solution_delta(dof_handler_m.n_dofs());
 
     long double present_time_tol;
     present_time_tol = param.fesys.time_tol * param.fesys.delta_t;
@@ -468,7 +433,7 @@ void ElasticProblem<dim>::run(AllParameters param){
     while (current_time < param.fesys.end_time + present_time_tol)
     {
         if(current_time > param.fesys.delta_t + present_time_tol)
-            refine_grid(param);
+            //refine_grid(param);
 
         solution_delta = 0.0;
         solve_nonlinear_newton(param,solution_delta);

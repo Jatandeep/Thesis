@@ -18,16 +18,18 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_tools.h>
-#include <deal.II/fe/fe_values.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_q.h>
+#include <deal.II/fe/fe_values.h>
+#include <deal.II/fe/fe_values_extractors.h>
 
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/grid/grid_in.h>
+#include <deal.II/grid/grid_out.h>
 #include "parameter.h"
 #include "others.h"
 #include <deal.II/base/timer.h>
@@ -48,7 +50,7 @@ namespace thesis
     {
     public:
       ElasticProblem (parameters::AllParameters param);
-      virtual ~ElasticProblem ();
+      ~ElasticProblem ();
       void run (parameters::AllParameters param);
 
     private:
@@ -100,9 +102,8 @@ namespace thesis
       dealii::Vector<double>       solution_m;
       dealii::Vector<double>       system_rhs_m;
 
-      double                       current_time;
 
-      //dealii::FEValuesExtractors::Vector &disp_extractor(0);
+      double                       current_time;
 
       /*!A struct used to keep track of data needed as convergence criteria.*/
       struct Error
@@ -131,10 +132,8 @@ namespace thesis
       /*Calculate error residual from system_rhs*/
       void get_error_residual(Error & error_residual);
 
-      dealii::SymmetricTensor<2,dim> get_stress(parameters::AllParameters param,dealii::Vector<double> &solution,
-                                                const unsigned int q, const unsigned int n_q_points,
-                                                dealii::FEValues<dim> &fe_values,
-                                                dealii::FEValuesExtractors::Vector disp);
+      //dealii::FEValuesExtractors::Vector disp_extractor(0);
+
     };
 
 }
