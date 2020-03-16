@@ -189,6 +189,8 @@ void ElasticProblem<dim>::solve_nonlinear_newton(AllParameters param,
 
     Vector<double> newton_update(dof_handler_m.n_dofs());
 
+    solution_delta.reinit(dof_handler_m.n_dofs());                  //
+
     error_residual.reset();
     error_residual_0.reset();
     error_residual_norm.reset();
@@ -245,7 +247,8 @@ std::pair<unsigned int,double> ElasticProblem<dim>::solve_linear_sys(AllParamete
   double lin_res = 0;
   newton_update = 0;    // (solution)
 
-  SolverControl           solver_control (tangent_matrix_m.m(),param.fesys.cg_tol*system_rhs_m.l2_norm());
+  SolverControl           solver_control (tangent_matrix_m.m(),
+                                          param.fesys.cg_tol*system_rhs_m.l2_norm()/*1000,1e-12*/);
   GrowingVectorMemory<Vector<double> > GVM;
   SolverCG<Vector<double>>    cg (solver_control,GVM);
   PreconditionSSOR<> preconditioner;
@@ -274,6 +277,7 @@ void ElasticProblem<dim>::refine_grid (AllParameters param)
                                                    param.fesys.act_ref, param.fesys.act_cors);
   triangulation_m.execute_coarsening_and_refinement ();
 
+  setup_system();                           //
 
 }
 
@@ -433,7 +437,7 @@ void ElasticProblem<dim>::run(AllParameters param){
     while (current_time < param.fesys.end_time + present_time_tol)
     {
         if(current_time > param.fesys.delta_t + present_time_tol)
-            //refine_grid(param);
+            refine_grid(param);
 
         solution_delta = 0.0;
         solve_nonlinear_newton(param,solution_delta);
