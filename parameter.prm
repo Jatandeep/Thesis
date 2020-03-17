@@ -2,38 +2,48 @@
 ##################  Geometry  ##################
 
 subsection Geometry Model
-    set Name = gmsh
     set Mesh File = ../thesis/meshes/Job-1.inp
+    set Global refinement = 5
+    set Act_ref = 0.3
+    set Act_cors = 0.03
 end
-
 
 ###################  Material  ##################
 
 subsection Material Model
     set Elastic modulus = 6000
     set Poisson ratio = 0.3
+    set Lambda = 1
+    set Mu = 1
 end
-
 
 ##################  Settings  #####################
 
-subsection Linear Elastic
+subsection FE System
     set Finite element degree = 1
     set Quad order = 2
-    set Global refinement = 5
-    set CG Solver tolerance = 1e-7
-    set Relaxation parameter = 1.2
-    set Lambda = 1
-    set Mu = 1
-    set Act_ref = 0.3
-    set Act_cors = 0.03
-    set Starting time = 1
-    set End time = 2
-    set Delta time = 0.1
-    set Time tolerance = 1e-6
+end
+
+############  Non Linear System  ##################
+
+subsection Newton Raphson
     set Max newton iterations = 10
     set Residual tolerance = 1e-7
 end
 
+################  Linear Solver  ##################
 
-	
+subsection Linear Solver
+    set CG Solver tolerance = 1e-7
+    set Relaxation parameter = 1.2
+end
+
+###################  Time   ##################
+
+subsection Time
+    set Starting time = 0
+    set End time = 1
+    set Delta time = 0.1
+    set Time tolerance = 1e-6
+end
+

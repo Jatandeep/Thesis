@@ -49,39 +49,39 @@ namespace thesis
     class ElasticProblem
     {
     public:
-      ElasticProblem (parameters::AllParameters param);
+      ElasticProblem (const parameters::AllParameters &param);
       ~ElasticProblem ();
-      void run (parameters::AllParameters param);
+      void run (const parameters::AllParameters &param);
 
     private:
 
       /*!Read mesh from external file*/
-      void import_mesh(parameters::AllParameters param);
+      void import_mesh(const parameters::AllParameters &param);
 
       /*!Distribute dof's based on a given Finite Element space and allocating memory for the
        * sparse matrix and all used vectors.*/
       void setup_system ();
 
       /*Implement adaptive refinement scheme*/
-      void refine_grid (parameters::AllParameters param);
+      void refine_grid (const parameters::AllParameters &param);
 
       /*!Newton-Raphson algorithm looping over all newton iterations*/
-      void solve_nonlinear_newton(parameters::AllParameters param
+      void solve_nonlinear_newton(const parameters::AllParameters &param
                                   ,dealii::Vector<double> &solution_delta);
 
       /*!Solve the linear system as assembled via assemble_system()*/
-      std::pair<unsigned int,double> solve_linear_sys (parameters::AllParameters param,
+      std::pair<unsigned int,double> solve_linear_sys (const parameters::AllParameters &param,
                                                        dealii::Vector<double> & newton_update);
 
       /*!Set hanging node and Dirichlet constraints.*/
       void make_constraints(unsigned int &itr);
 
       /*!Assemble the linear system for the elasticity problem*/
-      void assemble_system (parameters::AllParameters param,
+      void assemble_system (const parameters::AllParameters &param,
                             dealii::Vector<double> & newton_update);
 
       /*Assemble External forces(body forces + Neumann forces)*/
-      void assemble_body_forces(parameters::AllParameters param);
+      void assemble_body_forces(const parameters::AllParameters &param);
 
       /*Print header and footer for newton iterations*/
       void print_header();
@@ -101,7 +101,6 @@ namespace thesis
       dealii::SparseMatrix<double> tangent_matrix_m;
       dealii::Vector<double>       solution_m;
       dealii::Vector<double>       system_rhs_m;
-
 
       double                       current_time;
 
@@ -132,7 +131,7 @@ namespace thesis
       /*Calculate error residual from system_rhs*/
       void get_error_residual(Error & error_residual);
 
-      //dealii::FEValuesExtractors::Vector disp_extractor(0);
+      dealii::FEValuesExtractors::Vector disp_extractor;
 
     };
 

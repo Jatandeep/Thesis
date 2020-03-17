@@ -26,9 +26,10 @@ SymmetricTensor<4, dim> get_stress_strain_tensor(const double lambda,
 
 
 template <int dim>
-ElasticProblem<dim>::ElasticProblem(AllParameters param)
+ElasticProblem<dim>::ElasticProblem(const AllParameters &param)
   : fe_m(FE_Q<dim>(param.fesys.fe_degree),dim)
   , quadrature_formula_m(param.fesys.fe_degree+1)
+  , disp_extractor(0)
 {
     import_mesh(param);
     dof_handler_m.initialize(triangulation_m, fe_m);
@@ -75,7 +76,7 @@ void ElasticProblem<dim>::setup_system ()
 }
 
 template <int dim>
-void ElasticProblem<dim>::assemble_system (AllParameters param,Vector<double> & newton_update)
+void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<double> & newton_update)
 
 {
 
@@ -88,9 +89,7 @@ void ElasticProblem<dim>::assemble_system (AllParameters param,Vector<double> & 
   Vector<double>       cell_rhs (dofs_per_cell);
   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
-  const FEValuesExtractors::Vector disp_extractor(0);
-
-  SymmetricTensor<4,dim> BigC = get_stress_strain_tensor<dim>(param.fesys.lambda,param.fesys.mu);
+  SymmetricTensor<4,dim> BigC = get_stress_strain_tensor<dim>(param.materialmodel.lambda,param.materialmodel.mu);
 
   for (const auto &cell : dof_handler_m.active_cell_iterators())
     {
@@ -139,7 +138,7 @@ void ElasticProblem<dim>::assemble_system (AllParameters param,Vector<double> & 
 }
 
 template <int dim>
-void ElasticProblem<dim>::assemble_body_forces(AllParameters param)
+void ElasticProblem<dim>::assemble_body_forces(const AllParameters &param)
 
 {
 
@@ -161,7 +160,7 @@ void ElasticProblem<dim>::assemble_body_forces(AllParameters param)
 
       fe_values.reinit(cell);
 
-      double step_fraction = double(current_time)/double(param.fesys.end_time);
+      double step_fraction = double(current_time)/double(param.time.end_time);
       right_hand_side.vector_value_list(fe_values.get_quadrature_points(), rhs_values);
 
          for (unsigned int q = 0; q < n_q_points; ++q)
@@ -184,12 +183,10 @@ void ElasticProblem<dim>::assemble_body_forces(AllParameters param)
 }
 
 template <int dim>
-void ElasticProblem<dim>::solve_nonlinear_newton(AllParameters param,
+void ElasticProblem<dim>::solve_nonlinear_newton(const AllParameters &param,
                                                  Vector<double> &solution_delta){
 
     Vector<double> newton_update(dof_handler_m.n_dofs());
-
-    solution_delta.reinit(dof_handler_m.n_dofs());                  //
 
     error_residual.reset();
     error_residual_0.reset();
@@ -197,7 +194,7 @@ void ElasticProblem<dim>::solve_nonlinear_newton(AllParameters param,
 
     print_header();
     unsigned int new_iter = 0;
-    for (; new_iter < param.fesys.max_new_ite; ++new_iter) {
+    for (; new_iter < param.newtonraphson.max_new_ite; ++new_iter) {
 
         std::cout << " " << std::setw(2) << new_iter << " " << std::flush;
 
@@ -217,7 +214,7 @@ void ElasticProblem<dim>::solve_nonlinear_newton(AllParameters param,
         error_residual_norm = error_residual;
         error_residual_norm.normalize(error_residual_0);
 
-        if(new_iter > 0 && error_residual_norm.u < param.fesys.res_tol){
+        if(new_iter > 0 && error_residual_norm.u < param.newtonraphson.res_tol){
             std::cout<<"Converged"<<std::endl;
             print_footer();
             break;
@@ -234,13 +231,13 @@ void ElasticProblem<dim>::solve_nonlinear_newton(AllParameters param,
                             << "  " << std::endl;
 
     }
-    AssertThrow (new_iter < param.fesys.max_new_ite,
+    AssertThrow (new_iter < param.newtonraphson.max_new_ite,
                    ExcMessage("No convergence in nonlinear solver!"));
 
 }
 
 template <int dim>
-std::pair<unsigned int,double> ElasticProblem<dim>::solve_linear_sys(AllParameters param,Vector<double> &newton_update)
+std::pair<unsigned int,double> ElasticProblem<dim>::solve_linear_sys(const AllParameters &param,Vector<double> &newton_update)
 {
 
   unsigned int lin_ite = 0;
@@ -248,11 +245,11 @@ std::pair<unsigned int,double> ElasticProblem<dim>::solve_linear_sys(AllParamete
   newton_update = 0;    // (solution)
 
   SolverControl           solver_control (tangent_matrix_m.m(),
-                                          param.fesys.cg_tol*system_rhs_m.l2_norm()/*1000,1e-12*/);
+                                          param.linearsolver.cg_tol*system_rhs_m.l2_norm()/*1000,1e-12*/);
   GrowingVectorMemory<Vector<double> > GVM;
   SolverCG<Vector<double>>    cg (solver_control,GVM);
   PreconditionSSOR<> preconditioner;
-  preconditioner.initialize(tangent_matrix_m, param.fesys.relax_prm);
+  preconditioner.initialize(tangent_matrix_m, param.linearsolver.relax_prm);
   cg.solve (tangent_matrix_m, newton_update, system_rhs_m,
             preconditioner);
 
@@ -264,7 +261,7 @@ std::pair<unsigned int,double> ElasticProblem<dim>::solve_linear_sys(AllParamete
 }
 
 template <int dim>
-void ElasticProblem<dim>::refine_grid (AllParameters param)
+void ElasticProblem<dim>::refine_grid (const AllParameters &param)
 {
   Vector<float> estimated_error_per_cell (triangulation_m.n_active_cells());
   KellyErrorEstimator<dim>::estimate (dof_handler_m,
@@ -274,10 +271,8 @@ void ElasticProblem<dim>::refine_grid (AllParameters param)
                                       estimated_error_per_cell);
   GridRefinement::refine_and_coarsen_fixed_number (triangulation_m,
                                                    estimated_error_per_cell,
-                                                   param.fesys.act_ref, param.fesys.act_cors);
+                                                   param.geometrymodel.act_ref, param.geometrymodel.act_cors);
   triangulation_m.execute_coarsening_and_refinement ();
-
-  setup_system();                           //
 
 }
 
@@ -313,7 +308,7 @@ void ElasticProblem<dim>::output_results (const double cycle) const
 }
 
 template <int dim>
-void ElasticProblem<dim>::import_mesh(AllParameters param){
+void ElasticProblem<dim>::import_mesh(const AllParameters &param){
 
     std::string grid_name;
     grid_name += param.geometrymodel.meshfile;
@@ -324,7 +319,7 @@ void ElasticProblem<dim>::import_mesh(AllParameters param){
     Assert(dim==2, ExcInternalError());
     grid_in.read_abaqus(input_file,false);
 
-    triangulation_m.refine_global (param.fesys.gl_ref);
+    triangulation_m.refine_global (param.geometrymodel.gl_ref);
 
     std::ofstream out ("meshout.vtk");
     GridOut grid_out;
@@ -395,11 +390,9 @@ void ElasticProblem<dim>::make_constraints(unsigned int &itr){
 //    if(itr==0)
 //    dof_handler_m.distribute_dofs (fe_m);
 
-    constraints_m.clear();
-//  DoFTools::make_hanging_node_constraints (dof_handler_m,
+   constraints_m.clear();
+//    DoFTools::make_hanging_node_constraints (dof_handler_m,
 //                                             constraints_m);
-
-    const dealii::FEValuesExtractors::Vector disp_extractor(0);
 
     VectorTools::interpolate_boundary_values (dof_handler_m,
                                               0,
@@ -424,21 +417,25 @@ void ElasticProblem<dim>::make_constraints(unsigned int &itr){
 
 
 template <int dim>
-void ElasticProblem<dim>::run(AllParameters param){
+void ElasticProblem<dim>::run(const AllParameters &param){
 
     using namespace dealii;    
 
     Vector<double>       solution_delta(dof_handler_m.n_dofs());
 
     long double present_time_tol;
-    present_time_tol = param.fesys.time_tol * param.fesys.delta_t;
-    current_time = param.fesys.start_time;
+    present_time_tol = param.time.time_tol * param.time.delta_t;
+    current_time = param.time.start_time;
 
-    while (current_time < param.fesys.end_time + present_time_tol)
+    while (current_time < param.time.end_time + present_time_tol)
     {
-        if(current_time > param.fesys.delta_t + present_time_tol)
-            refine_grid(param);
-
+        if(current_time > param.time.delta_t + present_time_tol)
+/*	{
+            	refine_grid(param);
+		setup_system();
+		solution_delta.reinit(dof_handler_m.n_dofs());
+	}
+*/
         solution_delta = 0.0;
         solve_nonlinear_newton(param,solution_delta);
         solution_m = solution_delta;
@@ -446,7 +443,7 @@ void ElasticProblem<dim>::run(AllParameters param){
 
         std::cout<<" solution.norm():"<<solution_m.l2_norm()<<std::endl;
 
-        current_time += param.fesys.delta_t;
+        current_time += param.time.delta_t;
     }
 
 }

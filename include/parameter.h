@@ -8,19 +8,21 @@ namespace thesis
     namespace parameters
     {
 
-    class Geometrymodel{
+    class GeometryModel{
     public:
-        std::string name;
         std::string meshfile;
+	double act_ref, act_cors;
+	unsigned int gl_ref;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
     };
 
-    class Materialmodel{
+    class MaterialModel{
     public:
         double elastic_mod;
         double poisson_ratio;
+        double lambda,mu;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
@@ -32,30 +34,50 @@ namespace thesis
     public:
         unsigned int fe_degree;
         unsigned int quad_order;
-        unsigned int gl_ref;
-        double cg_tol,relax_prm;
-        double lambda,mu;
-        double act_ref, act_cors;
-        unsigned int start_time, end_time;
-        double delta_t, time_tol;
+        
+        static void declare_param(dealii::ParameterHandler& prm);
+        void parse_param(dealii::ParameterHandler &prm);
+    };
+
+
+    class NewtonRaphson{
+    public:
         unsigned int max_new_ite;
         double res_tol;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
-
-
-
     };
 
 
+    class LinearSolver{
+    public:
+        double cg_tol,relax_prm;
+
+        static void declare_param(dealii::ParameterHandler& prm);
+        void parse_param(dealii::ParameterHandler &prm);
+    };
+
+
+    class Time{
+    public:
+        unsigned int start_time, end_time;
+        double delta_t, time_tol;
+
+        static void declare_param(dealii::ParameterHandler& prm);
+        void parse_param(dealii::ParameterHandler &prm);
+    };
+	
     class AllParameters{
     public:
         AllParameters(const std::string &filename);
 
         FESys fesys;
-        Geometrymodel geometrymodel;
-        Materialmodel materialmodel;
+        GeometryModel geometrymodel;
+        MaterialModel materialmodel;
+	NewtonRaphson newtonraphson;
+	LinearSolver linearsolver;
+	Time time;	
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
