@@ -1,0 +1,3 @@
+/home/iwtm952/Downloads/thesis/CMakeFiles/edit_cache.dir
+/home/iwtm952/Downloads/thesis/CMakeFiles/rebuild_cache.dir
+/home/iwtm952/Downloads/thesis/CMakeFiles/crack.dir
