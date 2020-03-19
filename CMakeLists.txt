@@ -18,13 +18,16 @@ SET(SOURCES
     source/ElasticProblem.cpp
     source/parameter.cpp
     source/others.cpp
-   )
+    source/constitutive.cpp   
+)
 
 SET(HEADERS
     include/ElasticProblem.h
     include/parameter.h
     include/others.h
-    )
+    include/constants.h    
+    include/constitutive.h
+)
 
 
 SET(TARGET_SRC ${SOURCES} ${HEADERS})

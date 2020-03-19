@@ -1,29 +1,11 @@
 #include "../include/ElasticProblem.h"
 #include "../include/others.h"
-
+#include "../include/constants.h"
+#include "../include/constitutive.h"
 
 using namespace dealii;
 using namespace thesis;
 using namespace parameters;
-
-template <int dim>
-SymmetricTensor<4, dim> get_stress_strain_tensor(const double lambda,
-                                                 const double mu)
-{
-
-  SymmetricTensor<4, dim> C_1;
-  for (unsigned int i = 0; i < dim; ++i)
-    for (unsigned int j = i; j < dim; ++j)
-      for (unsigned int k = 0; k < dim; ++k)
-        for (unsigned int l = k; l < dim; ++l)
-          C_1[i][j][k][l] = ((((i == k) && (j == l)) ? mu:0)
-                            + (((i == l) && (j == k)) ? mu:0)
-                             +((i==j) && (k==l)? lambda:0));
-
-
-  return (C_1);
-}
-
 
 template <int dim>
 ElasticProblem<dim>::ElasticProblem(const AllParameters &param)
@@ -89,7 +71,8 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<dou
   Vector<double>       cell_rhs (dofs_per_cell);
   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
-  SymmetricTensor<4,dim> BigC = get_stress_strain_tensor<dim>(param.materialmodel.lambda,param.materialmodel.mu);
+//  SymmetricTensor<4,dim> BigC = get_stress_strain_tensor<dim>(param.materialmodel.lambda,param.materialmodel.mu);
+  SymmetricTensor<4,dim> BigC;
 
   for (const auto &cell : dof_handler_m.active_cell_iterators())
     {
@@ -104,6 +87,7 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<dou
       fe_values[disp_extractor].get_function_symmetric_gradients(newton_update,epsilon_vals);
 
         for (unsigned int q = 0; q < n_q_points; ++q){
+	    BigC = get_BigC(param.materialmodel.lambda,param.materialmodel.mu,epsilon_vals[q]);
 
             const SymmetricTensor<2, dim> sigma = BigC * epsilon_vals[q];
 
@@ -320,11 +304,6 @@ void ElasticProblem<dim>::import_mesh(const AllParameters &param){
     grid_in.read_abaqus(input_file,false);
 
     triangulation_m.refine_global (param.geometrymodel.gl_ref);
-
-    std::ofstream out ("meshout.vtk");
-    GridOut grid_out;
-    grid_out.write_vtk (triangulation_m, out);
-
 }
 
 
@@ -419,12 +398,13 @@ void ElasticProblem<dim>::make_constraints(unsigned int &itr){
 template <int dim>
 void ElasticProblem<dim>::run(const AllParameters &param){
 
-    using namespace dealii;    
+
+    using namespace constants;
 
     Vector<double>       solution_delta(dof_handler_m.n_dofs());
 
     long double present_time_tol;
-    present_time_tol = param.time.time_tol * param.time.delta_t;
+    present_time_tol = time_tol_fac * param.time.delta_t;
     current_time = param.time.start_time;
 
     while (current_time < param.time.end_time + present_time_tol)
@@ -450,5 +430,4 @@ void ElasticProblem<dim>::run(const AllParameters &param){
 
 template class thesis::ElasticProblem<2>;
 template class thesis::ElasticProblem<3>;
-
 

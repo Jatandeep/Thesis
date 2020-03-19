@@ -2,8 +2,8 @@
 ##################  Geometry  ##################
 
 subsection Geometry Model
-    set Mesh File = ../thesis/meshes/Job-1.inp
-    set Global refinement = 5
+    set Mesh File = ../thesis/meshes/Job-2.inp
+    set Global refinement = 4
     set Act_ref = 0.3
     set Act_cors = 0.03
 end
@@ -17,7 +17,7 @@ subsection Material Model
     set Mu = 1
 end
 
-##################  Settings  #####################
+##################  FE System  #####################
 
 subsection FE System
     set Finite element degree = 1
