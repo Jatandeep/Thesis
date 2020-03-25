@@ -19,7 +19,7 @@ namespace thesis
         virtual double value (const dealii::Point<dim> &p,unsigned int component =0)const;
 
         virtual void vector_value (const dealii::Point<dim> &p,
-                             dealii::Vector<double>  &value/*,double &step_frac*/)const;
+                             dealii::Vector<double>  &value)const;
 
     };
 }

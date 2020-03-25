@@ -40,10 +40,10 @@ void ElasticProblem<dim>::setup_system ()
   tangent_matrix_m.clear();
 
   DynamicSparsityPattern dsp(dof_handler_m.n_dofs(), dof_handler_m.n_dofs());
-  DoFTools::make_sparsity_pattern(dof_handler_m,
-                                  dsp,
-                                  constraints_m,
-                                  /*keep_constrained_dofs = */ true);
+  DoFTools::make_sparsity_pattern(dof_handler_m
+                                  ,dsp
+                                  ,constraints_m
+                                  ,true);/*keep_constrained_dofs = */
   sparsity_pattern_m.copy_from (dsp);
   tangent_matrix_m.reinit (sparsity_pattern_m);
   system_rhs_m.reinit (dof_handler_m.n_dofs());
@@ -71,7 +71,6 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<dou
   Vector<double>       cell_rhs (dofs_per_cell);
   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
-//  SymmetricTensor<4,dim> BigC = get_stress_strain_tensor<dim>(param.materialmodel.lambda,param.materialmodel.mu);
   SymmetricTensor<4,dim> BigC;
 
   for (const auto &cell : dof_handler_m.active_cell_iterators())
@@ -87,9 +86,12 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<dou
       fe_values[disp_extractor].get_function_symmetric_gradients(newton_update,epsilon_vals);
 
         for (unsigned int q = 0; q < n_q_points; ++q){
-	    BigC = get_BigC(param.materialmodel.lambda,param.materialmodel.mu,epsilon_vals[q]);
 
-            const SymmetricTensor<2, dim> sigma = BigC * epsilon_vals[q];
+	    BigC = get_BigC(param.materialmodel.lambda,param.materialmodel.mu,epsilon_vals[q]);
+		
+       	    SymmetricTensor<2,dim> sigma = get_stress(param.materialmodel.lambda
+						     ,param.materialmodel.mu
+						     ,epsilon_vals[q]);
 
             for (unsigned int i = 0; i < dofs_per_cell; ++i){
 
@@ -229,7 +231,7 @@ std::pair<unsigned int,double> ElasticProblem<dim>::solve_linear_sys(const AllPa
   newton_update = 0;    // (solution)
 
   SolverControl           solver_control (tangent_matrix_m.m(),
-                                          param.linearsolver.cg_tol*system_rhs_m.l2_norm()/*1000,1e-12*/);
+                                          param.linearsolver.cg_tol*system_rhs_m.l2_norm());
   GrowingVectorMemory<Vector<double> > GVM;
   SolverCG<Vector<double>>    cg (solver_control,GVM);
   PreconditionSSOR<> preconditioner;
@@ -366,32 +368,16 @@ void ElasticProblem<dim>::make_constraints(unsigned int &itr){
     if(itr>=1){
         return;
     }
-//    if(itr==0)
-//    dof_handler_m.distribute_dofs (fe_m);
 
    constraints_m.clear();
-//    DoFTools::make_hanging_node_constraints (dof_handler_m,
-//                                             constraints_m);
 
-    VectorTools::interpolate_boundary_values (dof_handler_m,
+   VectorTools::interpolate_boundary_values (dof_handler_m,
                                               0,
                                               Functions::ZeroFunction<dim>(dim),
                                               constraints_m
                                               ,fe_m.component_mask(disp_extractor));
 
     constraints_m.close ();
-/*
-    DynamicSparsityPattern dsp(dof_handler_m.n_dofs(), dof_handler_m.n_dofs());
-    DoFTools::make_sparsity_pattern(dof_handler_m,
-                                    dsp,
-                                    constraints_m,
-                                    /*keep_constrained_dofs = */ /*true);
-    sparsity_pattern_m.copy_from (dsp);
-    tangent_matrix_m.reinit (sparsity_pattern_m);
-    system_rhs_m.reinit (dof_handler_m.n_dofs());
-    solution_delta_m.reinit(dof_handler_m.n_dofs());
-    solution_m.reinit (dof_handler_m.n_dofs());
-*/
 }
 
 
@@ -410,7 +396,8 @@ void ElasticProblem<dim>::run(const AllParameters &param){
     while (current_time < param.time.end_time + present_time_tol)
     {
         if(current_time > param.time.delta_t + present_time_tol)
-/*	{
+/*	To be implemented
+	{
             	refine_grid(param);
 		setup_system();
 		solution_delta.reinit(dof_handler_m.n_dofs());

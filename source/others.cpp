@@ -11,7 +11,7 @@ double Others<dim>::value(const Point<dim> &point, unsigned int c)const{}
 
 template <int dim>
 void Others<dim>::vector_value (const Point<dim> &points,
-                                  Vector<double>  &values/*,double &step_frac*/) const
+                                  Vector<double>  &values) const
 {
     Point<dim> point_1, point_2;
     point_1(0) = 0.5;
