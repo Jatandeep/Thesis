@@ -16,7 +16,7 @@ namespace thesis
     public:
         Others():dealii::Function<dim>(1){}
 
-        virtual double value (const dealii::Point<dim> &p,unsigned int component =0)const;
+        virtual double value (const dealii::Point<dim> &p)const;
 
         virtual void vector_value (const dealii::Point<dim> &p,
                              dealii::Vector<double>  &value)const;
