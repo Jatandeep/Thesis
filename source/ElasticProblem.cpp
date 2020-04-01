@@ -105,8 +105,8 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<dou
 	    static bool once=false;
 	    if(!once){
 	    std::cout<<"eps BigC (C_1+C_2):"<<std::endl;
-//	    print_C(BigC);
-	    std::cout<<"eps:"<<std::endl;
+	    print_C(BigC);
+//	    std::cout<<"eps:"<<std::endl;
 //	    print_eps(epsilon_vals[q]);
 	    once=true;
 	    }
