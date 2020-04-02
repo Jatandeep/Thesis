@@ -2,6 +2,7 @@
 #include "../include/others.h"
 #include "../include/constants.h"
 #include "../include/constitutive.h"
+#include "../include/utilities.h"
 
 using namespace dealii;
 using namespace thesis;
@@ -72,16 +73,11 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<dou
   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
   SymmetricTensor<4,dim> BigC;
-/*Printing const BigC*/
+
   SymmetricTensor<4,dim> Big_C;
-  static  bool once_1= false;
+
   Big_C = get_const_BigC<dim>(param.materialmodel.lambda,param.materialmodel.mu);
-  if(!once_1){
-  std::cout<<"Const Big_C:"<<std::endl;
-  print_C(Big_C);
-  once_1 =true;
-  }
-/*---------------------*/
+
   for (const auto &cell : dof_handler_m.active_cell_iterators())
     {
       cell_matrix = 0;
@@ -100,17 +96,9 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<dou
         for (unsigned int q = 0; q < n_q_points; ++q){
 
 	    BigC = get_BigC(param.materialmodel.lambda,param.materialmodel.mu,epsilon_vals[q]);
-/*Printing BigC and eps*/	    
+	    
 //	    BigC = get_BigC(param.materialmodel.lambda, param.materialmodel.mu,eps_t);
-	    static bool once=false;
-	    if(!once){
-	    std::cout<<"eps BigC (C_1+C_2):"<<std::endl;
-	    print_C(BigC);
-//	    std::cout<<"eps:"<<std::endl;
-//	    print_eps(epsilon_vals[q]);
-	    once=true;
-	    }
-/*---------------------*/       	    
+	         	    
 	    SymmetricTensor<2,dim> sigma = get_stress(param.materialmodel.lambda
 						     ,param.materialmodel.mu
 						     ,epsilon_vals[q]);

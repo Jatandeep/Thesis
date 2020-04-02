@@ -1,4 +1,5 @@
 #include "../include/ElasticProblem.h"
+#include "../include/utilities.h"
 
 using namespace dealii;
 
@@ -17,41 +18,15 @@ SymmetricTensor<4, dim> get_const_BigC(const double lambda
                             + (((i == l) && (j == k)) ? mu:0)
                              +((i==j) && (k==l)? lambda:0));
 
+  static bool once_1=false;
+  if(!once_1){
+  std::cout<<"Const Big_C:"<<std::endl;
+  //std::cout<<C;
+  print_tensor(C);
+  once_1 =true;
+  }
+ 
   return C;
-}
-
-//Print 4th Order Symmetric Tensor
-template <int dim>
-void print_C(SymmetricTensor<4,dim> &C){
-for(unsigned int i=0;i<dim;++i)
-	for(unsigned int j=0;j<dim;++j){
-		for(unsigned int k=0;k<dim;++k)
-			for(unsigned int l=0;l<dim;++l)
-			std::cout<<C[i][j][k][l]<<"\t";
-	std::cout<<std::endl;
-	}
-}
-
-//Prints 4th Order Tensor
-template <int dim>
-void print_C(Tensor<4,dim> &C){
-for(unsigned int i=0;i<dim;++i)
-	for(unsigned int j=0;j<dim;++j){
-		for(unsigned int k=0;k<dim;++k)
-			for(unsigned int l=0;l<dim;++l)
-			std::cout<<C[i][j][k][l]<<"\t";
-	std::cout<<std::endl;
-	}
-}
-
-//Prints strain 
-template <int dim>
-void print_eps(SymmetricTensor<2,dim> &eps){
-for(unsigned int i=0;i<dim;++i){
-	for(unsigned int j=0;j<dim;++j)
-		std::cout<<eps[i][j]<<"\t";
-	        std::cout<<std::endl;
-	}
 }
 
 //Returns a biaxial strain
@@ -403,9 +378,11 @@ SymmetricTensor<4,dim> get_BigC(const double lambda
 static bool once_2 = false;
 if(!once_2){
 std::cout<<"C_1:"<<std::endl;
-print_C(C_1);
+print_tensor(C_1);
 std::cout<<"C_2:"<<std::endl;
-print_C(C_2);
+print_tensor(C_2);
+std::cout<<"eps bigC (C_1+C_2):"<<std::endl;
+print_tensor(C_total);
 once_2 =true;
 }
 
@@ -420,12 +397,6 @@ template SymmetricTensor<4,2> get_BigC(double,double,SymmetricTensor<2,2>&);
 template SymmetricTensor<4,3> get_BigC(double,double,SymmetricTensor<2,3>&);
 template SymmetricTensor<2,2> get_stress(const double,const double,SymmetricTensor<2,2>&);
 template SymmetricTensor<2,3> get_stress(const double,const double,SymmetricTensor<2,3>&);
-template void print_C(SymmetricTensor<4,2>&);
-template void print_C(SymmetricTensor<4,3>&);
-template void print_C(Tensor<4,2>&);
-template void print_C(Tensor<4,3>&);
-template void print_eps(SymmetricTensor<2,2>&);
-template void print_eps(SymmetricTensor<2,3>&);
 template SymmetricTensor<2,2> biaxial();
 template SymmetricTensor<2,3> biaxial();
 template SymmetricTensor<2,2> uniaxial();

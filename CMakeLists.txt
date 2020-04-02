@@ -18,7 +18,8 @@ SET(SOURCES
     source/ElasticProblem.cpp
     source/parameter.cpp
     source/others.cpp
-    source/constitutive.cpp   
+    source/constitutive.cpp
+    source/utilities.cpp   
 )
 
 SET(HEADERS
@@ -27,6 +28,7 @@ SET(HEADERS
     include/others.h
     include/constants.h    
     include/constitutive.h
+    include/utilities.h
 )
 
 
