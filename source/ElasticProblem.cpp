@@ -89,16 +89,11 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<dou
 
       std::vector<SymmetricTensor<2,dim>> epsilon_vals(n_q_points);
       fe_values[disp_extractor].get_function_symmetric_gradients(newton_update,epsilon_vals);
-/* Tests for diff eps*/
-	SymmetricTensor<2,dim> eps_t;
-	eps_t = biaxial<dim>();
-/*--------------------*/
+
         for (unsigned int q = 0; q < n_q_points; ++q){
 
 	    BigC = get_BigC(param.materialmodel.lambda,param.materialmodel.mu,epsilon_vals[q]);
-	    
-//	    BigC = get_BigC(param.materialmodel.lambda, param.materialmodel.mu,eps_t);
-	         	    
+ 
 	    SymmetricTensor<2,dim> sigma = get_stress(param.materialmodel.lambda
 						     ,param.materialmodel.mu
 						     ,epsilon_vals[q]);
@@ -188,11 +183,11 @@ void ElasticProblem<dim>::solve_nonlinear_newton(const AllParameters &param,
     error_residual_0.reset();
     error_residual_norm.reset();
 
-//    print_header();
+    print_header();
     unsigned int new_iter = 0;
     for (; new_iter < param.newtonraphson.max_new_ite; ++new_iter) {
 
-//        std::cout << " " << std::setw(2) << new_iter << " " << std::flush;
+        std::cout << " " << std::setw(2) << new_iter << " " << std::flush;
 
         tangent_matrix_m = 0.0;
         system_rhs_m = 0.0;
@@ -211,8 +206,8 @@ void ElasticProblem<dim>::solve_nonlinear_newton(const AllParameters &param,
         error_residual_norm.normalize(error_residual_0);
 
         if(new_iter > 0 && error_residual_norm.u < param.newtonraphson.res_tol){
-//            std::cout<<"Converged"<<std::endl;
-//            print_footer();
+            std::cout<<"Converged"<<std::endl;
+            print_footer();
             break;
         }
 
@@ -221,10 +216,10 @@ void ElasticProblem<dim>::solve_nonlinear_newton(const AllParameters &param,
 
         solution_delta += newton_update;
 
-//        std::cout << " | " << std::fixed << std::setprecision(3) << std::setw(7)
-//                            << std::scientific << lin_solver_output.first << "  "
-//                            << lin_solver_output.second << "  " << error_residual_norm.u
-//                            << "  " << std::endl;
+        std::cout << " | " << std::fixed << std::setprecision(3) << std::setw(7)
+                            << std::scientific << lin_solver_output.first << "  "
+                            << lin_solver_output.second << "  " << error_residual_norm.u
+                            << "  " << std::endl;
 
     }
     AssertThrow (new_iter < param.newtonraphson.max_new_ite,
@@ -373,7 +368,7 @@ void ElasticProblem<dim>::get_error_residual(Error& error_residual){
 
 template <int dim>
 void ElasticProblem<dim>::make_constraints(unsigned int &itr){
-//    std::cout<<" CST "<<std::flush;
+    std::cout<<" CST "<<std::flush;
 
     if(itr>=1){
         return;

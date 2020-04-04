@@ -17,48 +17,16 @@ SymmetricTensor<4, dim> get_const_BigC(const double lambda
           C[i][j][k][l] = ((((i == k) && (j == l)) ? mu:0)
                             + (((i == l) && (j == k)) ? mu:0)
                              +((i==j) && (k==l)? lambda:0));
-
+/*Printing the tensor
   static bool once_1=false;
   if(!once_1){
   std::cout<<"Const Big_C:"<<std::endl;
-  //std::cout<<C;
   print_tensor(C);
   once_1 =true;
   }
- 
+*/ 
   return C;
 }
-
-//Returns a biaxial strain
-template <int dim>
-SymmetricTensor<2,dim> biaxial(){
-	SymmetricTensor<2,dim> b;
-	
-	for(unsigned int i=0;i<dim;++i)
-		for(unsigned int j=0;j<dim;++j){
-			if(i==j)
-			b[i][j]=1;
-			else
-			b[i][j]=0;
-		}
-return b;	
-}
-
-//Returns a uniaxial strain
-template <int dim>
-SymmetricTensor<2,dim> uniaxial(){
-	SymmetricTensor<2,dim> u;
-	for(unsigned int i=0;i<dim;++i)
-                for(unsigned int j=0;j<dim;++j){
-                        if(i==0 && j==0)
-                        u[i][j]=1;
-                        else
-                        u[i][j]=0;
-                }
-return u;
-
-}
-
 
 //Gives stress at particular quadrature point
 template<int dim>
@@ -73,6 +41,66 @@ SymmetricTensor<2,dim> get_stress(const double lambda
 
 return stress; 
 }
+
+//Gives an array of stress eigenvalues
+template <int dim>
+std::array<double,std::integral_constant< int, dim >::value> get_stress_eigenval(const double lambda
+				      						,const double mu
+				      						,SymmetricTensor<2,dim> &eps
+										,std::array<double,std::integral_constant< int, dim >::value> &eps_eigenval){
+
+	std::array<double,std::integral_constant< int, dim >::value> stress_eigenval;
+	double tr_eps = trace(eps);
+
+	for(unsigned int i=0;i<dim;++i)
+		stress_eigenval[i] = lambda*tr_eps + 2*mu*eps_eigenval[i];
+return stress_eigenval;
+}
+
+//Gives an array of +ve stress eigenvalues
+template <int dim>
+std::array<double,std::integral_constant< int, dim >::value> get_stress_eigenval_plus(const double lambda
+				      						,const double mu
+				      						,SymmetricTensor<2,dim> &eps
+										,std::array<double,std::integral_constant< int, dim >::value> &eps_eigenval){
+
+	std::array<double,std::integral_constant< int, dim >::value> stress_eigenval_plus;
+	double tr_eps = trace(eps);
+	double tr_eps_plus = (tr_eps>0) ? tr_eps:0 ;
+
+	std::array<double,std::integral_constant< int, dim >::value> eps_eigenval_plus;
+
+	for(unsigned int i=0;i<dim;++i)
+		eps_eigenval_plus[i] = (eps_eigenval[i] > 0) ? eps_eigenval[i]:0 ;
+
+	for(unsigned int i=0;i<dim;++i)
+		stress_eigenval_plus[i] = lambda*tr_eps_plus + 2*mu*eps_eigenval_plus[i];
+
+return stress_eigenval_plus;
+}
+
+//Gives an array of -ve stress eigenvalues
+template <int dim>
+std::array<double,std::integral_constant< int, dim >::value> get_stress_eigenval_minus(const double lambda
+				      						,const double mu
+				      						,SymmetricTensor<2,dim> &eps
+										,std::array<double,std::integral_constant< int, dim >::value> &eps_eigenval){
+
+	std::array<double,std::integral_constant< int, dim >::value> stress_eigenval_minus;
+	double tr_eps = trace(eps);
+	double tr_eps_minus = (tr_eps>0) ? 0:tr_eps ;
+
+	std::array<double,std::integral_constant< int, dim >::value> eps_eigenval_minus;
+
+	for(unsigned int i=0;i<dim;++i)
+		eps_eigenval_minus[i] = (eps_eigenval[i] > 0) ? 0:eps_eigenval[i] ;
+
+	for(unsigned int i=0;i<dim;++i)
+		stress_eigenval_minus[i] = lambda*tr_eps_minus + 2*mu*eps_eigenval_minus[i];
+
+return stress_eigenval_minus;
+}
+
 
 //Gives coefficient of first part of spectral BigC
 double delsig_dellmbda(const double lambda
@@ -178,56 +206,6 @@ double delsig_dellmbda_minus(const double lambda
 return result;
 }
 
-/*Gives stress eigenvalue to be used in coefficient of second part BigC*/
-template<int dim>
-double get_stress_eigenvalue(const double lambda
-                      	    ,const double mu
-                            ,SymmetricTensor<2,dim> & eps
-			    ,double eps_eigenvalue)
-{
-	double result;
-	double tr_eps = trace(eps);
-	result = lambda*tr_eps + 2*mu*eps_eigenvalue;
-
-return result;
-}
-
-/*Gives positive stress eigenvalue to be used in coefficient of second part positive BigC*/
-template<int dim>
-double get_stress_eigenvalue_plus(const double lambda
-                                 ,const double mu
-                      		 ,SymmetricTensor<2,dim> & eps
-                        	 ,double eps_eigenvalue)
-{
-        double result;
-        double tr_eps = trace(eps);
-
-	double tr_eps_plus = (tr_eps>0) ? tr_eps:0 ;
-	double eps_eigenvalue_plus = (eps_eigenvalue > 0) ? eps_eigenvalue:0 ;
-
-        result = lambda*tr_eps_plus + 2*mu*eps_eigenvalue_plus;
-
-return result;
-}
-
-/*Gives negative stress eigenvalue to be used in coefficient of second part negative BigC*/ 
-template<int dim>
-double get_stress_eigenvalue_minus(const double lambda
-                      		  ,const double mu
-                       		  ,SymmetricTensor<2,dim> & eps
-                      		  ,double eps_eigenvalue)
-{
-        double result;
-        double tr_eps = trace(eps);
-
-        double tr_eps_minus = (tr_eps>0) ? 0:tr_eps;
-        double eps_eigenvalue_minus = (eps_eigenvalue > 0) ? 0:eps_eigenvalue;
-
-        result = lambda*tr_eps_minus + 2*mu*eps_eigenvalue_minus;
-
-return result;
-}
-
 /*Gives BigC: both definitions works- with and without splitting into +ve & -ve*/
 template <int dim>
 SymmetricTensor<4,dim> get_BigC(const double lambda
@@ -249,10 +227,18 @@ SymmetricTensor<4,dim> get_BigC(const double lambda
 	Tensor<2,dim> Na_x_Nb;
 	Tensor<2,dim> Nb_x_Na;
 
+	//Gives an array of dim pair of eigenvalues and eigenvectors of eps 
 	std::array <std::pair< double, Tensor< 1, dim, double > >,std::integral_constant< int, dim >::value> eigen;
   	eigen = eigenvectors(eps,SymmetricTensorEigenvectorMethod::ql_implicit_shifts);
 
+	//Gives an array of eps eigenvalues
+	std::array <double,std::integral_constant< int, dim >::value> eps_eigenval;
+	eps_eigenval = eigenvalues(eps);
 
+	//Calculates an array of stress eigenvalues
+	std::array <double,std::integral_constant< int, dim >::value> stress_eigenval;
+	stress_eigenval = get_stress_eigenval(lambda,mu,eps,eps_eigenval); 
+	
 	//Calculating C_1:
 	double scalar_1 = 0;
   	for (unsigned int a = 0;a < dim; ++a){
@@ -274,7 +260,7 @@ SymmetricTensor<4,dim> get_BigC(const double lambda
 	double scalar_3=0;
         for (unsigned int a=0;a<dim;++a) 
                 for (unsigned int b=0;b<dim;++b){
-		scalar_2  = 0.5* ( get_stress_eigenvalue(lambda,mu,eps,eigen[b].first) - get_stress_eigenvalue(lambda,mu,eps,eigen[a].first))/(eigen[b].first - eigen[a].first);
+		scalar_2  = 0.5* ( stress_eigenval[b] - stress_eigenval[a] )/(eigen[b].first - eigen[a].first);
 		scalar_3 =  0.5* (delsig_dellmbda_b(lambda,mu) - delsig_dellmbda(lambda,mu,a,b));
 		Na_x_Nb = outer_product(eigen[a].second,eigen[b].second);
 		Nb_x_Na = outer_product(eigen[b].second,eigen[a].second);
@@ -294,6 +280,12 @@ SymmetricTensor<4,dim> get_BigC(const double lambda
 			 for (unsigned int k = 0; k < dim; ++k)
 				for (unsigned int l = k; l < dim; ++l)
 		 		C_total[i][j][k][l] = C_1[i][j][k][l] + C_2[i][j][k][l];
+
+
+	//Calculates an array of +ve stress eigenvalues
+	std::array <double,std::integral_constant< int, dim >::value> stress_eigenval_plus;
+	stress_eigenval_plus = get_stress_eigenval_plus(lambda,mu,eps,eps_eigenval); 
+	
 
 	//Calculating C_1_plus:
 	double scalar_4 = 0;
@@ -315,7 +307,7 @@ SymmetricTensor<4,dim> get_BigC(const double lambda
 	double scalar_6=0;
         for (unsigned int a=0;a<dim;++a) 
                 for (unsigned int b=0;b<dim;++b){
-		scalar_5  = 0.5* ( get_stress_eigenvalue_plus(lambda,mu,eps,eigen[b].first) - get_stress_eigenvalue_plus(lambda,mu,eps,eigen[a].first))/(eigen[b].first - eigen[a].first);
+		scalar_5  = 0.5* ( stress_eigenval_plus[b] - stress_eigenval_plus[a] )/(eigen[b].first - eigen[a].first);
 		scalar_6 =  0.5* (delsig_dellmbda_b_plus(lambda,mu,eps,eigen[b].first) - delsig_dellmbda_plus(lambda,mu,a,b,eps,eigen[a].first));
 		Na_x_Nb = outer_product(eigen[a].second,eigen[b].second);
 		Nb_x_Na = outer_product(eigen[b].second,eigen[a].second);
@@ -329,7 +321,10 @@ SymmetricTensor<4,dim> get_BigC(const double lambda
        		}
  
 
-
+	//Calculates an array of -ve stress eigenvalues
+	std::array <double,std::integral_constant< int, dim >::value> stress_eigenval_minus;
+	stress_eigenval_minus = get_stress_eigenval_minus(lambda,mu,eps,eps_eigenval); 
+	
 
 	//Calculating C_1_minus:
 	double scalar_7 = 0;
@@ -352,7 +347,7 @@ SymmetricTensor<4,dim> get_BigC(const double lambda
 	double scalar_9=0;
         for (unsigned int a=0;a<dim;++a) 
                 for (unsigned int b=0;b<dim;++b){
-		scalar_8  = 0.5* ( get_stress_eigenvalue_minus(lambda,mu,eps,eigen[b].first) - get_stress_eigenvalue_minus(lambda,mu,eps,eigen[a].first))/(eigen[b].first - eigen[a].first);
+		scalar_8  = 0.5* ( stress_eigenval_minus[b] - stress_eigenval_minus[a] )/(eigen[b].first - eigen[a].first);
 		scalar_9 =  0.5* (delsig_dellmbda_b_minus(lambda,mu,eps,eigen[b].first) - delsig_dellmbda_minus(lambda,mu,a,b,eps,eigen[a].first));
 		Na_x_Nb = outer_product(eigen[a].second,eigen[b].second);
 		Nb_x_Na = outer_product(eigen[b].second,eigen[a].second);
@@ -374,7 +369,7 @@ SymmetricTensor<4,dim> get_BigC(const double lambda
 				for (unsigned int l = k; l < dim; ++l)
 		 		C_total_pm[i][j][k][l] = C_1_plus[i][j][k][l] + C_2_plus[i][j][k][l] + C_1_minus[i][j][k][l] + C_2_minus[i][j][k][l];
 
-
+/*Printing Different 4th order tensors:
 static bool once_2 = false;
 if(!once_2){
 std::cout<<"C_1:"<<std::endl;
@@ -385,9 +380,10 @@ std::cout<<"eps bigC (C_1+C_2):"<<std::endl;
 print_tensor(C_total);
 once_2 =true;
 }
+*/
 
-return C_total;
-//return C_total_pm;
+//return C_total;
+return C_total_pm;
 }
 
 
@@ -397,7 +393,4 @@ template SymmetricTensor<4,2> get_BigC(double,double,SymmetricTensor<2,2>&);
 template SymmetricTensor<4,3> get_BigC(double,double,SymmetricTensor<2,3>&);
 template SymmetricTensor<2,2> get_stress(const double,const double,SymmetricTensor<2,2>&);
 template SymmetricTensor<2,3> get_stress(const double,const double,SymmetricTensor<2,3>&);
-template SymmetricTensor<2,2> biaxial();
-template SymmetricTensor<2,3> biaxial();
-template SymmetricTensor<2,2> uniaxial();
-template SymmetricTensor<2,3> uniaxial();
+

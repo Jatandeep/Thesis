@@ -4,11 +4,6 @@
 using namespace dealii;
 using namespace thesis;
 
-
-template <int dim>
-double Others<dim>::value(const Point<dim> &point)const{}
-
-
 template <int dim>
 void Others<dim>::vector_value (const Point<dim> &points,
                                   Vector<double>  &values) const
