@@ -13,6 +13,7 @@ ElasticProblem<dim>::ElasticProblem(const AllParameters &param)
   : fe_m(FE_Q<dim>(param.fesys.fe_degree),dim)
   , quadrature_formula_m(param.fesys.fe_degree+1)
   , disp_extractor(0)
+  , dofs_per_block_m(n_blocks_m)
 {
     import_mesh(param);
     dof_handler_m.initialize(triangulation_m, fe_m);
@@ -32,23 +33,38 @@ template <int dim>
 void ElasticProblem<dim>::setup_system ()
 {
 
+  std::vector<unsigned int> block_component(n_components_m,u_dof_m);
+
   dof_handler_m.distribute_dofs (fe_m);
-  //DoFRenumbering::Cuthill_McKee(dof_handler_m);
+  DoFRenumbering::Cuthill_McKee(dof_handler_m);
+  DoFRenumbering::component_wise(dof_handler_m, block_component);
+  DoFTools::count_dofs_per_block(dof_handler_m, dofs_per_block_m,
+                                   block_component);
+
   constraints_m.clear ();
   DoFTools::make_hanging_node_constraints (dof_handler_m,
                                            constraints_m);
   constraints_m.close ();
   tangent_matrix_m.clear();
 
-  DynamicSparsityPattern dsp(dof_handler_m.n_dofs(), dof_handler_m.n_dofs());
+  {
+  const types::global_dof_index n_dofs_u = dofs_per_block_m[u_dof_m];
+  BlockDynamicSparsityPattern dsp(n_blocks_m,n_blocks_m);
+  dsp.block(u_dof_m,u_dof_m).reinit(n_dofs_u,n_dofs_u);
   DoFTools::make_sparsity_pattern(dof_handler_m
                                   ,dsp
                                   ,constraints_m
                                   ,true);/*keep_constrained_dofs = */
   sparsity_pattern_m.copy_from (dsp);
+  }
+
   tangent_matrix_m.reinit (sparsity_pattern_m);
-  system_rhs_m.reinit (dof_handler_m.n_dofs());
-  solution_m.reinit (dof_handler_m.n_dofs());
+
+  system_rhs_m.reinit (dofs_per_block_m);
+  system_rhs_m.collect_sizes();
+
+  solution_m.reinit (dofs_per_block_m);
+  solution_m.collect_sizes();
 
   std::cout << "   Number of active cells:       "
                             << triangulation_m.n_active_cells()
@@ -59,7 +75,7 @@ void ElasticProblem<dim>::setup_system ()
 }
 
 template <int dim>
-void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<double> & newton_update)
+void ElasticProblem<dim>::assemble_system (const AllParameters &param,BlockVector<double> & newton_update)
 
 {
 
@@ -88,7 +104,7 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<dou
       cell->get_dof_indices (local_dof_indices);
 
       std::vector<SymmetricTensor<2,dim>> epsilon_vals(n_q_points);
-      fe_values[disp_extractor].get_function_symmetric_gradients(newton_update,epsilon_vals);
+      fe_values[disp_extractor].get_function_symmetric_gradients(newton_update.block(u_dof_m),epsilon_vals);
 
         for (unsigned int q = 0; q < n_q_points; ++q){
 
@@ -175,9 +191,9 @@ void ElasticProblem<dim>::assemble_body_forces(const AllParameters &param)
 
 template <int dim>
 void ElasticProblem<dim>::solve_nonlinear_newton(const AllParameters &param,
-                                                 Vector<double> &solution_delta){
+                                                 BlockVector<double> &solution_delta){
 
-    Vector<double> newton_update(dof_handler_m.n_dofs());
+    BlockVector<double> newton_update(dofs_per_block_m);
 
     error_residual.reset();
     error_residual_0.reset();
@@ -228,21 +244,20 @@ void ElasticProblem<dim>::solve_nonlinear_newton(const AllParameters &param,
 }
 
 template <int dim>
-std::pair<unsigned int,double> ElasticProblem<dim>::solve_linear_sys(const AllParameters &param,Vector<double> &newton_update)
+std::pair<unsigned int,double> ElasticProblem<dim>::solve_linear_sys(const AllParameters &param,BlockVector<double> &newton_update)
 {
 
   unsigned int lin_ite = 0;
   double lin_res = 0;
   newton_update = 0;    // (solution)
 
-  SolverControl           solver_control (tangent_matrix_m.m(),
-                                          param.linearsolver.cg_tol*system_rhs_m.l2_norm());
+  SolverControl           solver_control (tangent_matrix_m.block(u_dof_m,u_dof_m).m(),
+                                          param.linearsolver.cg_tol*system_rhs_m.block(u_dof_m).l2_norm());
   GrowingVectorMemory<Vector<double> > GVM;
   SolverCG<Vector<double>>    cg (solver_control,GVM);
   PreconditionSSOR<> preconditioner;
-  preconditioner.initialize(tangent_matrix_m, param.linearsolver.relax_prm);
-  cg.solve (tangent_matrix_m, newton_update, system_rhs_m,
-            preconditioner);
+  preconditioner.initialize(tangent_matrix_m.block(u_dof_m,u_dof_m), param.linearsolver.relax_prm);
+  cg.solve (tangent_matrix_m.block(u_dof_m,u_dof_m), newton_update.block(u_dof_m), system_rhs_m.block(u_dof_m),preconditioner);
 
   lin_ite = solver_control.last_step();
   lin_res = solver_control.last_value();
@@ -355,14 +370,14 @@ template <int dim>
 void ElasticProblem<dim>::get_error_residual(Error& error_residual){
 
 
-    Vector<double> err_res(dof_handler_m.n_dofs());
+    BlockVector<double> err_res(dofs_per_block_m);
     for (unsigned int i=0;i<dof_handler_m.n_dofs();++i) {
         if(!constraints_m.is_constrained(i)){
             err_res(i)=system_rhs_m(i);
            }
 
         }
-    error_residual.u = err_res.l2_norm();
+    error_residual.u = err_res.block(u_dof_m).l2_norm();
 
 }
 
@@ -392,7 +407,7 @@ void ElasticProblem<dim>::run(const AllParameters &param){
 
     using namespace constants;
 
-    Vector<double>       solution_delta(dof_handler_m.n_dofs());
+    BlockVector<double>       solution_delta(dofs_per_block_m);
 
     long double present_time_tol;
     present_time_tol = time_tol_fac * param.time.delta_t;
