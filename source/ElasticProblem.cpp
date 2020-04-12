@@ -10,14 +10,17 @@ using namespace parameters;
 
 template <int dim>
 ElasticProblem<dim>::ElasticProblem(const AllParameters &param)
-  : fe_m(FE_Q<dim>(param.fesys.fe_degree),dim)
+  :fe_m(FE_Q<dim>(param.fesys.fe_degree),dim,
+	FE_Q<dim>(param.fesys.fe_degree),1)
   , quadrature_formula_m(param.fesys.fe_degree+1)
-  , disp_extractor(0)
+  , u_extractor(u_comp_first_m)
+  , d_extractor(d_comp_m)
   , dofs_per_block_m(n_blocks_m)
 {
     import_mesh(param);
     dof_handler_m.initialize(triangulation_m, fe_m);
     setup_system();
+    determine_comp_extractor();
 }
 
 
@@ -34,12 +37,20 @@ void ElasticProblem<dim>::setup_system ()
 {
 
   std::vector<unsigned int> block_component(n_components_m,u_dof_m);
+  block_component[d_comp_m] = d_dof_m;
 
   dof_handler_m.distribute_dofs (fe_m);
   DoFRenumbering::Cuthill_McKee(dof_handler_m);
   DoFRenumbering::component_wise(dof_handler_m, block_component);
   DoFTools::count_dofs_per_block(dof_handler_m, dofs_per_block_m,
                                    block_component);
+
+  std::cout << "   Number of active cells:       "
+                            << triangulation_m.n_active_cells()
+                            << std::endl;
+  std::cout << "   Number of degrees of freedom: "
+                            << dof_handler_m.n_dofs()
+                            << std::endl;
 
   constraints_m.clear ();
   DoFTools::make_hanging_node_constraints (dof_handler_m,
@@ -49,8 +60,16 @@ void ElasticProblem<dim>::setup_system ()
 
   {
   const types::global_dof_index n_dofs_u = dofs_per_block_m[u_dof_m];
+  const types::global_dof_index n_dofs_d = dofs_per_block_m[d_dof_m];
+  
   BlockDynamicSparsityPattern dsp(n_blocks_m,n_blocks_m);
+ 
   dsp.block(u_dof_m,u_dof_m).reinit(n_dofs_u,n_dofs_u);
+  dsp.block(u_dof_m,d_dof_m).reinit(n_dofs_u,n_dofs_d);
+  dsp.block(d_dof_m,u_dof_m).reinit(n_dofs_d,n_dofs_u);
+  dsp.block(d_dof_m,d_dof_m).reinit(n_dofs_d,n_dofs_d);
+  dsp.collect_sizes();
+
   DoFTools::make_sparsity_pattern(dof_handler_m
                                   ,dsp
                                   ,constraints_m
@@ -65,13 +84,29 @@ void ElasticProblem<dim>::setup_system ()
 
   solution_m.reinit (dofs_per_block_m);
   solution_m.collect_sizes();
+}
 
-  std::cout << "   Number of active cells:       "
-                            << triangulation_m.n_active_cells()
-                            << std::endl;
-  std::cout << "   Number of degrees of freedom: "
-                            << dof_handler_m.n_dofs()
-                            << std::endl;
+template <int dim>
+void
+ElasticProblem<dim>::determine_comp_extractor()
+{
+  u_element_indices_m.clear();
+  d_element_indices_m.clear();
+	
+  const unsigned int   dofs_per_cell = fe_m.dofs_per_cell;
+
+   for (unsigned int k = 0; k < dofs_per_cell; ++k)
+      {
+        const unsigned int k_group = fe_m.system_to_base_index(k).first.first;//Return for shape function index(k) the base element it belongs to.
+        if (k_group == u_dof_m)
+          u_element_indices_m.push_back(k);
+        else if (k_group == d_dof_m)
+          d_element_indices_m.push_back(k);
+        else
+          {
+            Assert(k_group <= d_dof_m, ExcInternalError());
+          }
+      }
 }
 
 template <int dim>
@@ -104,7 +139,7 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,BlockVecto
       cell->get_dof_indices (local_dof_indices);
 
       std::vector<SymmetricTensor<2,dim>> epsilon_vals(n_q_points);
-      fe_values[disp_extractor].get_function_symmetric_gradients(newton_update.block(u_dof_m),epsilon_vals);
+      fe_values[u_extractor].get_function_symmetric_gradients(newton_update,epsilon_vals);
 
         for (unsigned int q = 0; q < n_q_points; ++q){
 
@@ -116,12 +151,12 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,BlockVecto
 
             for (unsigned int i = 0; i < dofs_per_cell; ++i){
 
-                const SymmetricTensor<2, dim> sym_grad_shape_i = fe_values[disp_extractor].symmetric_gradient(i, q);
+                const SymmetricTensor<2, dim> sym_grad_shape_i = fe_values[u_extractor].symmetric_gradient(i, q);
 
                 cell_rhs(i) -= (sigma * sym_grad_shape_i)*fe_values.JxW(q);
 
                 for (unsigned int j = i; j < dofs_per_cell; ++j){
-                    const SymmetricTensor<2, dim> sym_grad_shape_j = fe_values[disp_extractor].symmetric_gradient(j, q);
+                    const SymmetricTensor<2, dim> sym_grad_shape_j = fe_values[u_extractor].symmetric_gradient(j, q);
 
                     cell_matrix(i, j) += (sym_grad_shape_i *
                                           BigC *
@@ -294,15 +329,18 @@ void ElasticProblem<dim>::output_results (const double cycle) const
     {
     case 1:
       solution_names.emplace_back("displacement");
+      solution_names.emplace_back("phase_field");
       break;
     case 2:
       solution_names.emplace_back("x_displacement");
       solution_names.emplace_back("y_displacement");
+      solution_names.emplace_back("phase_field");
       break;
     case 3:
       solution_names.emplace_back("x_displacement");
       solution_names.emplace_back("y_displacement");
       solution_names.emplace_back("z_displacement");
+      solution_names.emplace_back("phase_field");
       break;
     default:
       Assert (false, ExcNotImplemented());
@@ -393,9 +431,9 @@ void ElasticProblem<dim>::make_constraints(unsigned int &itr){
 
    VectorTools::interpolate_boundary_values (dof_handler_m,
                                               0,
-                                              Functions::ZeroFunction<dim>(dim),
+                                              Functions::ZeroFunction<dim>(n_components_m),
                                               constraints_m
-                                              ,fe_m.component_mask(disp_extractor));
+                                              ,fe_m.component_mask(u_extractor));
 
     constraints_m.close ();
 }
@@ -412,6 +450,10 @@ void ElasticProblem<dim>::run(const AllParameters &param){
     long double present_time_tol;
     present_time_tol = time_tol_fac * param.time.delta_t;
     current_time = param.time.start_time;
+	
+    std::cout<<"FESystem:n_blocks:"<<fe_m.n_blocks()<<std::endl;
+    std::cout<<"FESystem:n_components:"<<fe_m.n_components()<<std::endl;
+    std::cout<<"FESystem:n_base_elements:"<<fe_m.n_base_elements()<<std::endl;
 
     while (current_time < param.time.end_time + present_time_tol)
     {

@@ -43,7 +43,6 @@
 #include <fstream>
 #include <iostream>
 
-
 namespace thesis
 {
     template <int dim>
@@ -132,17 +131,25 @@ namespace thesis
       /*Calculate error residual from system_rhs*/
       void get_error_residual(Error & error_residual);
 
-      dealii::FEValuesExtractors::Vector disp_extractor;
+      dealii::FEValuesExtractors::Vector u_extractor;
+      dealii::FEValuesExtractors::Scalar d_extractor;
 	
-      static const unsigned int n_blocks_m = 1;
-      static const unsigned int n_components_m = dim;
+      static const unsigned int n_blocks_m = 2;
+      static const unsigned int n_components_m = dim+1;
+      static const unsigned int u_comp_first_m = 0;
+      static const unsigned int d_comp_m = dim;
 
       enum
       {
-      u_dof_m = 0
+      u_dof_m = 0,
+      d_dof_m = 1
       };
-
+	
       std::vector<dealii::types::global_dof_index> dofs_per_block_m;
+      std::vector<dealii::types::global_dof_index> u_element_indices_m;
+      std::vector<dealii::types::global_dof_index> d_element_indices_m;
+	
+      void determine_comp_extractor();
     };
 
 }
