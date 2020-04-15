@@ -138,7 +138,7 @@ namespace thesis
       static const unsigned int n_components_m = dim+1;
       static const unsigned int u_dof_start_m = 0;
       static const unsigned int d_dof_start_m = dim;
-
+          
       enum
       {
       u_dof_m = 0,
@@ -148,7 +148,10 @@ namespace thesis
       std::vector<dealii::types::global_dof_index> dofs_per_block_m;
       std::vector<dealii::types::global_dof_index> u_element_indices_m;
       std::vector<dealii::types::global_dof_index> d_element_indices_m;
-	
+
+      std::vector<unsigned int> element_indices_m;
+      std::vector<unsigned int> n_comp_per_block{std::vector<unsigned int>(dim,1)};
+
       void determine_comp_extractor();
     };
 

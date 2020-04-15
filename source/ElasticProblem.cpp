@@ -35,18 +35,17 @@ ElasticProblem<dim>::~ElasticProblem ()
 template <int dim>
 void ElasticProblem<dim>::setup_system ()
 {
-
+ 
   dof_handler_m.distribute_dofs (fe_m);
   DoFRenumbering::block_wise(dof_handler_m); 
   DoFTools::count_dofs_per_block (dof_handler_m, dofs_per_block_m);
-  
+
   std::cout << "   Number of active cells:       "
                             << triangulation_m.n_active_cells()
                             << std::endl;
   std::cout << "   Number of degrees of freedom: "
                             << dof_handler_m.n_dofs()
-                            <<"\t u_dof:"<<dofs_per_block_m[0]
-			    << std::endl;
+                            << std::endl;
 
   constraints_m.clear ();
   DoFTools::make_hanging_node_constraints (dof_handler_m,
@@ -55,16 +54,7 @@ void ElasticProblem<dim>::setup_system ()
   tangent_matrix_m.clear();
 
   {
-  const types::global_dof_index n_dofs_u = dofs_per_block_m[u_dof_m];
-  const types::global_dof_index n_dofs_d = dofs_per_block_m[d_dof_m];
-  
   BlockDynamicSparsityPattern dsp(dofs_per_block_m,dofs_per_block_m);
-
-  dsp.block(u_dof_m,u_dof_m).reinit(n_dofs_u,n_dofs_u);
-  dsp.block(u_dof_m,d_dof_m).reinit(n_dofs_u,n_dofs_d);
-  dsp.block(d_dof_m,u_dof_m).reinit(n_dofs_d,n_dofs_u);
-  dsp.block(d_dof_m,d_dof_m).reinit(n_dofs_d,n_dofs_d);
-
   dsp.collect_sizes();
 
   DoFTools::make_sparsity_pattern(dof_handler_m
@@ -104,6 +94,9 @@ ElasticProblem<dim>::determine_comp_extractor()
             Assert(k_group <= d_dof_m, ExcInternalError());
           }
       }
+	element_indices_m.clear();
+	for(unsigned int k=0;k<dofs_per_cell;++k)
+		element_indices_m.push_back(fe_m.system_to_base_index(k).first.first);
 }
 
 template <int dim>
@@ -121,9 +114,7 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,BlockVecto
   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
   SymmetricTensor<4,dim> BigC;
-
   SymmetricTensor<4,dim> Big_C;
-
   Big_C = get_const_BigC<dim>(param.materialmodel.lambda,param.materialmodel.mu);
 
   for (const auto &cell : dof_handler_m.active_cell_iterators())
@@ -149,18 +140,18 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,BlockVecto
             for (unsigned int i = 0; i < dofs_per_cell; ++i){
 
                 const SymmetricTensor<2, dim> sym_grad_shape_i = fe_values[u_extractor].symmetric_gradient(i, q);
-
                 cell_rhs(i) -= (sigma * sym_grad_shape_i)*fe_values.JxW(q);
 
                 for (unsigned int j = i; j < dofs_per_cell; ++j){
                     const SymmetricTensor<2, dim> sym_grad_shape_j = fe_values[u_extractor].symmetric_gradient(j, q);
 
-                    cell_matrix(i, j) += (sym_grad_shape_i *
+			if((element_indices_m[i] == u_dof_m) && (element_indices_m[j] == u_dof_m)){
+                 	 cell_matrix(i, j) += (sym_grad_shape_i *
                                           BigC *
                                           sym_grad_shape_j
                                           ) *
                                          fe_values.JxW(q);
-
+			}
                 }
             }
           }
@@ -168,8 +159,8 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,BlockVecto
         for(unsigned int i=0;i<dofs_per_cell;++i)
             for(unsigned int j=0;j<i;++j)
                 cell_matrix(i,j)=cell_matrix(j,i);
-
-       constraints_m.distribute_local_to_global(cell_matrix,cell_rhs,
+  
+     constraints_m.distribute_local_to_global(cell_matrix,cell_rhs,
                                   local_dof_indices,tangent_matrix_m,system_rhs_m,false);  //copy local to global
   }
 
@@ -362,7 +353,7 @@ void ElasticProblem<dim>::import_mesh(const AllParameters &param){
 
     triangulation_m.refine_global (param.geometrymodel.gl_ref);
 
-    const bool write_grid = true;
+    const bool write_grid = false;
     GridOut::OutputFormat meshOutputFormat = GridOut::vtk;
     if (write_grid)
     {
@@ -378,6 +369,7 @@ void ElasticProblem<dim>::import_mesh(const AllParameters &param){
         std::cout << "The mesh has been written to " << outMeshFileName
                   << std::endl;
     }
+
 }
 
 
