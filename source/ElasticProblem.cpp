@@ -10,11 +10,11 @@ using namespace parameters;
 
 template <int dim>
 ElasticProblem<dim>::ElasticProblem(const AllParameters &param)
-  :fe_m(FE_Q<dim>(param.fesys.fe_degree),dim,
+  : fe_m(FESystem<dim>(FE_Q<dim>(param.fesys.fe_degree),dim),1,
 	FE_Q<dim>(param.fesys.fe_degree),1)
   , quadrature_formula_m(param.fesys.fe_degree+1)
-  , u_extractor(u_comp_first_m)
-  , d_extractor(d_comp_m)
+  , u_extractor(u_dof_start_m)
+  , d_extractor(d_dof_start_m)
   , dofs_per_block_m(n_blocks_m)
 {
     import_mesh(param);
@@ -36,21 +36,17 @@ template <int dim>
 void ElasticProblem<dim>::setup_system ()
 {
 
-  std::vector<unsigned int> block_component(n_components_m,u_dof_m);
-  block_component[d_comp_m] = d_dof_m;
-
   dof_handler_m.distribute_dofs (fe_m);
-  DoFRenumbering::Cuthill_McKee(dof_handler_m);
-  DoFRenumbering::component_wise(dof_handler_m, block_component);
-  DoFTools::count_dofs_per_block(dof_handler_m, dofs_per_block_m,
-                                   block_component);
-
+  DoFRenumbering::block_wise(dof_handler_m); 
+  DoFTools::count_dofs_per_block (dof_handler_m, dofs_per_block_m);
+  
   std::cout << "   Number of active cells:       "
                             << triangulation_m.n_active_cells()
                             << std::endl;
   std::cout << "   Number of degrees of freedom: "
                             << dof_handler_m.n_dofs()
-                            << std::endl;
+                            <<"\t u_dof:"<<dofs_per_block_m[0]
+			    << std::endl;
 
   constraints_m.clear ();
   DoFTools::make_hanging_node_constraints (dof_handler_m,
@@ -62,18 +58,19 @@ void ElasticProblem<dim>::setup_system ()
   const types::global_dof_index n_dofs_u = dofs_per_block_m[u_dof_m];
   const types::global_dof_index n_dofs_d = dofs_per_block_m[d_dof_m];
   
-  BlockDynamicSparsityPattern dsp(n_blocks_m,n_blocks_m);
- 
+  BlockDynamicSparsityPattern dsp(dofs_per_block_m,dofs_per_block_m);
+
   dsp.block(u_dof_m,u_dof_m).reinit(n_dofs_u,n_dofs_u);
   dsp.block(u_dof_m,d_dof_m).reinit(n_dofs_u,n_dofs_d);
   dsp.block(d_dof_m,u_dof_m).reinit(n_dofs_d,n_dofs_u);
   dsp.block(d_dof_m,d_dof_m).reinit(n_dofs_d,n_dofs_d);
+
   dsp.collect_sizes();
 
   DoFTools::make_sparsity_pattern(dof_handler_m
                                   ,dsp
                                   ,constraints_m
-                                  ,true);/*keep_constrained_dofs = */
+                                  ,false);
   sparsity_pattern_m.copy_from (dsp);
   }
 
@@ -364,6 +361,23 @@ void ElasticProblem<dim>::import_mesh(const AllParameters &param){
     grid_in.read_abaqus(input_file,false);
 
     triangulation_m.refine_global (param.geometrymodel.gl_ref);
+
+    const bool write_grid = true;
+    GridOut::OutputFormat meshOutputFormat = GridOut::vtk;
+    if (write_grid)
+    {
+        const auto &      inputMeshFile =  param.geometrymodel.meshfile;
+        GridOut  	  gridOut;
+        const auto &      startPos = inputMeshFile.find_last_of("/\\") + 1;
+        const auto &      endPos   = inputMeshFile.find_last_of('.');
+        const std::string outMeshFileName =
+                inputMeshFile.substr(startPos, endPos - startPos) +
+                GridOut::default_suffix(meshOutputFormat);
+        std::ofstream gridOutStream(outMeshFileName);
+        gridOut.write(triangulation_m, gridOutStream, meshOutputFormat);
+        std::cout << "The mesh has been written to " << outMeshFileName
+                  << std::endl;
+    }
 }
 
 

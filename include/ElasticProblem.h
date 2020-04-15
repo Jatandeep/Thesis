@@ -136,8 +136,8 @@ namespace thesis
 	
       static const unsigned int n_blocks_m = 2;
       static const unsigned int n_components_m = dim+1;
-      static const unsigned int u_comp_first_m = 0;
-      static const unsigned int d_comp_m = dim;
+      static const unsigned int u_dof_start_m = 0;
+      static const unsigned int d_dof_start_m = dim;
 
       enum
       {
