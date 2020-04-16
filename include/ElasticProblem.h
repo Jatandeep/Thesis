@@ -149,7 +149,7 @@ namespace thesis
       std::vector<dealii::types::global_dof_index> u_element_indices_m;
       std::vector<dealii::types::global_dof_index> d_element_indices_m;
 
-      std::vector<unsigned int> element_indices_m;
+      std::vector<unsigned int> dof_block_identifier_m;
       std::vector<unsigned int> n_comp_per_block{std::vector<unsigned int>(dim,1)};
 
       void determine_comp_extractor();

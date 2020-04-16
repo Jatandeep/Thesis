@@ -94,9 +94,9 @@ ElasticProblem<dim>::determine_comp_extractor()
             Assert(k_group <= d_dof_m, ExcInternalError());
           }
       }
-	element_indices_m.clear();
+	dof_block_identifier_m.clear();
 	for(unsigned int k=0;k<dofs_per_cell;++k)
-		element_indices_m.push_back(fe_m.system_to_base_index(k).first.first);
+		dof_block_identifier_m.push_back(fe_m.system_to_base_index(k).first.first);
 }
 
 template <int dim>
@@ -145,7 +145,7 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,BlockVecto
                 for (unsigned int j = i; j < dofs_per_cell; ++j){
                     const SymmetricTensor<2, dim> sym_grad_shape_j = fe_values[u_extractor].symmetric_gradient(j, q);
 
-			if((element_indices_m[i] == u_dof_m) && (element_indices_m[j] == u_dof_m)){
+			if((dof_block_identifier_m[i] == u_dof_m) && (dof_block_identifier_m[j] == u_dof_m)){
                  	 cell_matrix(i, j) += (sym_grad_shape_i *
                                           BigC *
                                           sym_grad_shape_j
