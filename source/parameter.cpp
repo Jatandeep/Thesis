@@ -112,8 +112,8 @@ void LinearSolver::parse_param(ParameterHandler &prm){
 void Time::declare_param(ParameterHandler &prm){
     prm.enter_subsection("Time");
     {
-        prm.declare_entry("Starting time", "0", Patterns::Integer());
-        prm.declare_entry("End time", "1", Patterns::Integer(0));
+        prm.declare_entry("Starting time", "0", Patterns::Double(0));
+        prm.declare_entry("End time", "1", Patterns::Double(0));
         prm.declare_entry("Delta time", "0.1", Patterns::Double(0));
         prm.declare_entry("Time tolerance", "1", Patterns::Anything());
     }
@@ -123,8 +123,8 @@ void Time::declare_param(ParameterHandler &prm){
 void Time::parse_param(ParameterHandler &prm){
     prm.enter_subsection("Time");
     {
-        start_time = prm.get_integer("Starting time");
-        end_time = prm.get_integer("End time");
+        start_time = prm.get_double("Starting time");
+        end_time = prm.get_double("End time");
         delta_t = prm.get_double("Delta time");
         time_tol = prm.get_double("Time tolerance");
     }

@@ -61,7 +61,7 @@ namespace thesis
 
     class Time{
     public:
-        unsigned int start_time, end_time;
+        double start_time, end_time;
         double delta_t, time_tol;
 
         static void declare_param(dealii::ParameterHandler& prm);

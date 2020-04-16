@@ -199,7 +199,7 @@ void ElasticProblem<dim>::assemble_body_forces(const AllParameters &param)
                 const unsigned int
                 component_i = fe_m.system_to_component_index(i).first;
                 cell_rhs(i) += fe_values.shape_value(i,q) *
-                               rhs_values[q][component_i] *step_fraction*
+                               rhs_values[q][component_i] * /* step_fraction* */
                                fe_values.JxW(q);
             }
 
@@ -434,6 +434,8 @@ void ElasticProblem<dim>::make_constraints(unsigned int &itr){
     }
 
    constraints_m.clear();
+   DoFTools::make_hanging_node_constraints (dof_handler_m,
+                                           constraints_m);
 
    VectorTools::interpolate_boundary_values (dof_handler_m,
                                               0,
@@ -461,23 +463,23 @@ void ElasticProblem<dim>::run(const AllParameters &param){
     std::cout<<"FESystem:n_components:"<<fe_m.n_components()<<std::endl;
     std::cout<<"FESystem:n_base_elements:"<<fe_m.n_base_elements()<<std::endl;
 
-    while (current_time < param.time.end_time + present_time_tol)
+    while (current_time < param.time.end_time - present_time_tol)
     {
-        if(current_time > param.time.delta_t + present_time_tol)
-/*	To be implemented
+        if(current_time >param.time.start_time)
 	{
             	refine_grid(param);
 		setup_system();
-		solution_delta.reinit(dof_handler_m.n_dofs());
+		solution_delta.reinit(dofs_per_block_m);
 	}
-*/
-        solution_delta = 0.0;
+        
+	solution_delta = 0.0;
         solve_nonlinear_newton(param,solution_delta);
         solution_m = solution_delta;
         output_results(current_time);
 	
         std::cout<<" solution.norm():"<<solution_m.l2_norm()<<std::endl;
-//	std::cout<<"solution at node(1000):"<<solution_m(1000)<<std::endl;
+	std::cout<<"solution at node(10):"<<solution_m(10)<<std::endl;
+	
         current_time += param.time.delta_t;
     }
 
