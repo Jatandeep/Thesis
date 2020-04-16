@@ -10,13 +10,17 @@ using namespace parameters;
 
 template <int dim>
 ElasticProblem<dim>::ElasticProblem(const AllParameters &param)
-  : fe_m(FE_Q<dim>(param.fesys.fe_degree),dim)
+  : fe_m(FESystem<dim>(FE_Q<dim>(param.fesys.fe_degree),dim),1,
+	FE_Q<dim>(param.fesys.fe_degree),1)
   , quadrature_formula_m(param.fesys.fe_degree+1)
-  , disp_extractor(0)
+  , u_extractor(u_dof_start_m)
+  , d_extractor(d_dof_start_m)
+  , dofs_per_block_m(n_blocks_m)
 {
     import_mesh(param);
     dof_handler_m.initialize(triangulation_m, fe_m);
     setup_system();
+    determine_comp_extractor();
 }
 
 
@@ -31,24 +35,10 @@ ElasticProblem<dim>::~ElasticProblem ()
 template <int dim>
 void ElasticProblem<dim>::setup_system ()
 {
-
+ 
   dof_handler_m.distribute_dofs (fe_m);
-  //DoFRenumbering::Cuthill_McKee(dof_handler_m);
-  constraints_m.clear ();
-  DoFTools::make_hanging_node_constraints (dof_handler_m,
-                                           constraints_m);
-  constraints_m.close ();
-  tangent_matrix_m.clear();
-
-  DynamicSparsityPattern dsp(dof_handler_m.n_dofs(), dof_handler_m.n_dofs());
-  DoFTools::make_sparsity_pattern(dof_handler_m
-                                  ,dsp
-                                  ,constraints_m
-                                  ,true);/*keep_constrained_dofs = */
-  sparsity_pattern_m.copy_from (dsp);
-  tangent_matrix_m.reinit (sparsity_pattern_m);
-  system_rhs_m.reinit (dof_handler_m.n_dofs());
-  solution_m.reinit (dof_handler_m.n_dofs());
+  DoFRenumbering::block_wise(dof_handler_m); 
+  DoFTools::count_dofs_per_block (dof_handler_m, dofs_per_block_m);
 
   std::cout << "   Number of active cells:       "
                             << triangulation_m.n_active_cells()
@@ -56,10 +46,61 @@ void ElasticProblem<dim>::setup_system ()
   std::cout << "   Number of degrees of freedom: "
                             << dof_handler_m.n_dofs()
                             << std::endl;
+
+  constraints_m.clear ();
+  DoFTools::make_hanging_node_constraints (dof_handler_m,
+                                           constraints_m);
+  constraints_m.close ();
+  tangent_matrix_m.clear();
+
+  {
+  BlockDynamicSparsityPattern dsp(dofs_per_block_m,dofs_per_block_m);
+  dsp.collect_sizes();
+
+  DoFTools::make_sparsity_pattern(dof_handler_m
+                                  ,dsp
+                                  ,constraints_m
+                                  ,false);
+  sparsity_pattern_m.copy_from (dsp);
+  }
+
+  tangent_matrix_m.reinit (sparsity_pattern_m);
+
+  system_rhs_m.reinit (dofs_per_block_m);
+  system_rhs_m.collect_sizes();
+
+  solution_m.reinit (dofs_per_block_m);
+  solution_m.collect_sizes();
 }
 
 template <int dim>
-void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<double> & newton_update)
+void
+ElasticProblem<dim>::determine_comp_extractor()
+{
+  u_element_indices_m.clear();
+  d_element_indices_m.clear();
+	
+  const unsigned int   dofs_per_cell = fe_m.dofs_per_cell;
+
+   for (unsigned int k = 0; k < dofs_per_cell; ++k)
+      {
+        const unsigned int k_group = fe_m.system_to_base_index(k).first.first;//Return for shape function index(k) the base element it belongs to.
+        if (k_group == u_dof_m)
+          u_element_indices_m.push_back(k);
+        else if (k_group == d_dof_m)
+          d_element_indices_m.push_back(k);
+        else
+          {
+            Assert(k_group <= d_dof_m, ExcInternalError());
+          }
+      }
+	dof_block_identifier_m.clear();
+	for(unsigned int k=0;k<dofs_per_cell;++k)
+		dof_block_identifier_m.push_back(fe_m.system_to_base_index(k).first.first);
+}
+
+template <int dim>
+void ElasticProblem<dim>::assemble_system (const AllParameters &param,BlockVector<double> & newton_update)
 
 {
 
@@ -73,9 +114,7 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<dou
   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
   SymmetricTensor<4,dim> BigC;
-
   SymmetricTensor<4,dim> Big_C;
-
   Big_C = get_const_BigC<dim>(param.materialmodel.lambda,param.materialmodel.mu);
 
   for (const auto &cell : dof_handler_m.active_cell_iterators())
@@ -88,7 +127,7 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<dou
       cell->get_dof_indices (local_dof_indices);
 
       std::vector<SymmetricTensor<2,dim>> epsilon_vals(n_q_points);
-      fe_values[disp_extractor].get_function_symmetric_gradients(newton_update,epsilon_vals);
+      fe_values[u_extractor].get_function_symmetric_gradients(newton_update,epsilon_vals);
 
         for (unsigned int q = 0; q < n_q_points; ++q){
 
@@ -100,19 +139,19 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<dou
 
             for (unsigned int i = 0; i < dofs_per_cell; ++i){
 
-                const SymmetricTensor<2, dim> sym_grad_shape_i = fe_values[disp_extractor].symmetric_gradient(i, q);
-
+                const SymmetricTensor<2, dim> sym_grad_shape_i = fe_values[u_extractor].symmetric_gradient(i, q);
                 cell_rhs(i) -= (sigma * sym_grad_shape_i)*fe_values.JxW(q);
 
                 for (unsigned int j = i; j < dofs_per_cell; ++j){
-                    const SymmetricTensor<2, dim> sym_grad_shape_j = fe_values[disp_extractor].symmetric_gradient(j, q);
+                    const SymmetricTensor<2, dim> sym_grad_shape_j = fe_values[u_extractor].symmetric_gradient(j, q);
 
-                    cell_matrix(i, j) += (sym_grad_shape_i *
+			if((dof_block_identifier_m[i] == u_dof_m) && (dof_block_identifier_m[j] == u_dof_m)){
+                 	 cell_matrix(i, j) += (sym_grad_shape_i *
                                           BigC *
                                           sym_grad_shape_j
                                           ) *
                                          fe_values.JxW(q);
-
+			}
                 }
             }
           }
@@ -120,8 +159,8 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,Vector<dou
         for(unsigned int i=0;i<dofs_per_cell;++i)
             for(unsigned int j=0;j<i;++j)
                 cell_matrix(i,j)=cell_matrix(j,i);
-
-       constraints_m.distribute_local_to_global(cell_matrix,cell_rhs,
+  
+     constraints_m.distribute_local_to_global(cell_matrix,cell_rhs,
                                   local_dof_indices,tangent_matrix_m,system_rhs_m,false);  //copy local to global
   }
 
@@ -175,9 +214,9 @@ void ElasticProblem<dim>::assemble_body_forces(const AllParameters &param)
 
 template <int dim>
 void ElasticProblem<dim>::solve_nonlinear_newton(const AllParameters &param,
-                                                 Vector<double> &solution_delta){
+                                                 BlockVector<double> &solution_delta){
 
-    Vector<double> newton_update(dof_handler_m.n_dofs());
+    BlockVector<double> newton_update(dofs_per_block_m);
 
     error_residual.reset();
     error_residual_0.reset();
@@ -228,21 +267,20 @@ void ElasticProblem<dim>::solve_nonlinear_newton(const AllParameters &param,
 }
 
 template <int dim>
-std::pair<unsigned int,double> ElasticProblem<dim>::solve_linear_sys(const AllParameters &param,Vector<double> &newton_update)
+std::pair<unsigned int,double> ElasticProblem<dim>::solve_linear_sys(const AllParameters &param,BlockVector<double> &newton_update)
 {
 
   unsigned int lin_ite = 0;
   double lin_res = 0;
   newton_update = 0;    // (solution)
 
-  SolverControl           solver_control (tangent_matrix_m.m(),
-                                          param.linearsolver.cg_tol*system_rhs_m.l2_norm());
+  SolverControl           solver_control (tangent_matrix_m.block(u_dof_m,u_dof_m).m(),
+                                          param.linearsolver.cg_tol*system_rhs_m.block(u_dof_m).l2_norm());
   GrowingVectorMemory<Vector<double> > GVM;
   SolverCG<Vector<double>>    cg (solver_control,GVM);
   PreconditionSSOR<> preconditioner;
-  preconditioner.initialize(tangent_matrix_m, param.linearsolver.relax_prm);
-  cg.solve (tangent_matrix_m, newton_update, system_rhs_m,
-            preconditioner);
+  preconditioner.initialize(tangent_matrix_m.block(u_dof_m,u_dof_m), param.linearsolver.relax_prm);
+  cg.solve (tangent_matrix_m.block(u_dof_m,u_dof_m), newton_update.block(u_dof_m), system_rhs_m.block(u_dof_m),preconditioner);
 
   lin_ite = solver_control.last_step();
   lin_res = solver_control.last_value();
@@ -279,15 +317,18 @@ void ElasticProblem<dim>::output_results (const double cycle) const
     {
     case 1:
       solution_names.emplace_back("displacement");
+      solution_names.emplace_back("phase_field");
       break;
     case 2:
       solution_names.emplace_back("x_displacement");
       solution_names.emplace_back("y_displacement");
+      solution_names.emplace_back("phase_field");
       break;
     case 3:
       solution_names.emplace_back("x_displacement");
       solution_names.emplace_back("y_displacement");
       solution_names.emplace_back("z_displacement");
+      solution_names.emplace_back("phase_field");
       break;
     default:
       Assert (false, ExcNotImplemented());
@@ -311,6 +352,24 @@ void ElasticProblem<dim>::import_mesh(const AllParameters &param){
     grid_in.read_abaqus(input_file,false);
 
     triangulation_m.refine_global (param.geometrymodel.gl_ref);
+
+    const bool write_grid = false;
+    GridOut::OutputFormat meshOutputFormat = GridOut::vtk;
+    if (write_grid)
+    {
+        const auto &      inputMeshFile =  param.geometrymodel.meshfile;
+        GridOut  	  gridOut;
+        const auto &      startPos = inputMeshFile.find_last_of("/\\") + 1;
+        const auto &      endPos   = inputMeshFile.find_last_of('.');
+        const std::string outMeshFileName =
+                inputMeshFile.substr(startPos, endPos - startPos) +
+                GridOut::default_suffix(meshOutputFormat);
+        std::ofstream gridOutStream(outMeshFileName);
+        gridOut.write(triangulation_m, gridOutStream, meshOutputFormat);
+        std::cout << "The mesh has been written to " << outMeshFileName
+                  << std::endl;
+    }
+
 }
 
 
@@ -355,14 +414,14 @@ template <int dim>
 void ElasticProblem<dim>::get_error_residual(Error& error_residual){
 
 
-    Vector<double> err_res(dof_handler_m.n_dofs());
+    BlockVector<double> err_res(dofs_per_block_m);
     for (unsigned int i=0;i<dof_handler_m.n_dofs();++i) {
         if(!constraints_m.is_constrained(i)){
             err_res(i)=system_rhs_m(i);
            }
 
         }
-    error_residual.u = err_res.l2_norm();
+    error_residual.u = err_res.block(u_dof_m).l2_norm();
 
 }
 
@@ -378,9 +437,9 @@ void ElasticProblem<dim>::make_constraints(unsigned int &itr){
 
    VectorTools::interpolate_boundary_values (dof_handler_m,
                                               0,
-                                              Functions::ZeroFunction<dim>(dim),
+                                              Functions::ZeroFunction<dim>(n_components_m),
                                               constraints_m
-                                              ,fe_m.component_mask(disp_extractor));
+                                              ,fe_m.component_mask(u_extractor));
 
     constraints_m.close ();
 }
@@ -392,11 +451,15 @@ void ElasticProblem<dim>::run(const AllParameters &param){
 
     using namespace constants;
 
-    Vector<double>       solution_delta(dof_handler_m.n_dofs());
+    BlockVector<double>       solution_delta(dofs_per_block_m);
 
     long double present_time_tol;
     present_time_tol = time_tol_fac * param.time.delta_t;
     current_time = param.time.start_time;
+	
+    std::cout<<"FESystem:n_blocks:"<<fe_m.n_blocks()<<std::endl;
+    std::cout<<"FESystem:n_components:"<<fe_m.n_components()<<std::endl;
+    std::cout<<"FESystem:n_base_elements:"<<fe_m.n_base_elements()<<std::endl;
 
     while (current_time < param.time.end_time + present_time_tol)
     {

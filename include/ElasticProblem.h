@@ -38,10 +38,10 @@
 #include <deal.II/base/symmetric_tensor.h>
 #include <deal.II/dofs/dof_renumbering.h>
 #include <deal.II/numerics/solution_transfer.h>
-
+#include <deal.II/lac/block_sparse_matrix.h>
+#include <deal.II/lac/block_vector.h>
 #include <fstream>
 #include <iostream>
-
 
 namespace thesis
 {
@@ -67,18 +67,18 @@ namespace thesis
 
       /*!Newton-Raphson algorithm looping over all newton iterations*/
       void solve_nonlinear_newton(const parameters::AllParameters &param
-                                  ,dealii::Vector<double> &solution_delta);
+                                  ,dealii::BlockVector<double> &solution_delta);
 
       /*!Solve the linear system as assembled via assemble_system()*/
       std::pair<unsigned int,double> solve_linear_sys (const parameters::AllParameters &param,
-                                                       dealii::Vector<double> & newton_update);
+                                                       dealii::BlockVector<double> & newton_update);
 
       /*!Set hanging node and Dirichlet constraints.*/
       void make_constraints(unsigned int &itr);
 
       /*!Assemble the linear system for the elasticity problem*/
       void assemble_system (const parameters::AllParameters &param,
-                            dealii::Vector<double> & newton_update);
+                            dealii::BlockVector<double> & newton_update);
 
       /*Assemble External forces(body forces + Neumann forces)*/
       void assemble_body_forces(const parameters::AllParameters &param);
@@ -97,10 +97,10 @@ namespace thesis
       dealii::ConstraintMatrix     constraints_m;
       const dealii::QGauss<dim>    quadrature_formula_m;
 
-      dealii::SparsityPattern      sparsity_pattern_m;
-      dealii::SparseMatrix<double> tangent_matrix_m;
-      dealii::Vector<double>       solution_m;
-      dealii::Vector<double>       system_rhs_m;
+      dealii::BlockSparsityPattern      sparsity_pattern_m;
+      dealii::BlockSparseMatrix<double> tangent_matrix_m;
+      dealii::BlockVector<double>       solution_m;
+      dealii::BlockVector<double>       system_rhs_m;
 
       double                       current_time;
 
@@ -131,8 +131,28 @@ namespace thesis
       /*Calculate error residual from system_rhs*/
       void get_error_residual(Error & error_residual);
 
-      dealii::FEValuesExtractors::Vector disp_extractor;
+      dealii::FEValuesExtractors::Vector u_extractor;
+      dealii::FEValuesExtractors::Scalar d_extractor;
+	
+      static const unsigned int n_blocks_m = 2;
+      static const unsigned int n_components_m = dim+1;
+      static const unsigned int u_dof_start_m = 0;
+      static const unsigned int d_dof_start_m = dim;
+          
+      enum
+      {
+      u_dof_m = 0,
+      d_dof_m = 1
+      };
+	
+      std::vector<dealii::types::global_dof_index> dofs_per_block_m;
+      std::vector<dealii::types::global_dof_index> u_element_indices_m;
+      std::vector<dealii::types::global_dof_index> d_element_indices_m;
 
+      std::vector<unsigned int> dof_block_identifier_m;
+      std::vector<unsigned int> n_comp_per_block{std::vector<unsigned int>(dim,1)};
+
+      void determine_comp_extractor();
     };
 
 }
