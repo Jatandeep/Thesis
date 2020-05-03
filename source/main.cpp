@@ -5,7 +5,7 @@
 #include <deal.II/base/tensor.h>
 #include "../include/ElasticProblem.h"
 #include "../include/parameter.h"
-
+#include "../include/Phasefield.h"
 
 int main(int argc, char *argv[]){
 
@@ -16,8 +16,8 @@ int main(int argc, char *argv[]){
        const std::string filename = argv[1];
 
        thesis::parameters::AllParameters param(filename);
-       thesis::ElasticProblem<2> elastic_problem_2d(param);
-       elastic_problem_2d.run(param);
+       thesis::Phasefield<2> phasefield_2d(param);
+       phasefield_2d.run(param);
       }
     catch (std::exception &exc)
       {

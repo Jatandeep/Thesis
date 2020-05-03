@@ -23,6 +23,7 @@ namespace thesis
         double elastic_mod;
         double poisson_ratio;
         double lambda,mu;
+	double viscosity;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
@@ -63,7 +64,16 @@ namespace thesis
     public:
         double start_time, end_time;
         double delta_t, time_tol;
+	unsigned int max_timesteps;
 
+        static void declare_param(dealii::ParameterHandler& prm);
+        void parse_param(dealii::ParameterHandler &prm);
+    };
+	
+    class PhaseFieldMethod{
+    public:
+        double g_c,l,k;
+       
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
     };
@@ -78,6 +88,7 @@ namespace thesis
 	NewtonRaphson newtonraphson;
 	LinearSolver linearsolver;
 	Time time;	
+	PhaseFieldMethod pf;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);

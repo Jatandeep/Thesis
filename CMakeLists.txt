@@ -15,7 +15,8 @@ set(CMAKE_CXX_FLAGS "-DDEAL_II_DEBUG")
 # declare source files and header files
 SET(SOURCES
     source/main.cpp
-    source/ElasticProblem.cpp
+#    source/ElasticProblem.cpp
+    source/Phasefield.cpp
     source/parameter.cpp
     source/others.cpp
     source/constitutive.cpp
@@ -23,12 +24,13 @@ SET(SOURCES
 )
 
 SET(HEADERS
-    include/ElasticProblem.h
-    include/parameter.h
+#    include/ElasticProblem.h
     include/others.h
+    include/parameter.h
     include/constants.h    
     include/constitutive.h
     include/utilities.h
+    include/Phasefield.h
 )
 
 

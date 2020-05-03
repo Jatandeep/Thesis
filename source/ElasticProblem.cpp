@@ -12,7 +12,7 @@ template <int dim>
 ElasticProblem<dim>::ElasticProblem(const AllParameters &param)
   : fe_m(FESystem<dim>(FE_Q<dim>(param.fesys.fe_degree),dim),1,
 	FE_Q<dim>(param.fesys.fe_degree),1)
-  , quadrature_formula_m(param.fesys.fe_degree+1)
+  , quadrature_formula_m(param.fesys.quad_order)
   , u_extractor(u_dof_start_m)
   , d_extractor(d_dof_start_m)
   , dofs_per_block_m(n_blocks_m)
@@ -463,9 +463,12 @@ void ElasticProblem<dim>::run(const AllParameters &param){
     std::cout<<"FESystem:n_components:"<<fe_m.n_components()<<std::endl;
     std::cout<<"FESystem:n_base_elements:"<<fe_m.n_base_elements()<<std::endl;
 
-    while (current_time < param.time.end_time - present_time_tol)
+    output_results(current_time);
+    current_time += param.time.delta_t;
+
+    while (current_time < param.time.end_time + present_time_tol)
     {
-        if(current_time >param.time.start_time)
+        if(current_time >param.time.delta_t)
 	{
             	refine_grid(param);
 		setup_system();
@@ -478,8 +481,8 @@ void ElasticProblem<dim>::run(const AllParameters &param){
         output_results(current_time);
 	
         std::cout<<" solution.norm():"<<solution_m.l2_norm()<<std::endl;
-	std::cout<<"solution at node(10):"<<solution_m(10)<<std::endl;
-	
+	std::cout<<" solution at node(10):"<<solution_m(10)<<std::endl;
+	std::cout<<std::endl;
         current_time += param.time.delta_t;
     }
 

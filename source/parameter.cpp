@@ -37,6 +37,8 @@ void MaterialModel::declare_param(ParameterHandler &prm){
         prm.declare_entry("Poisson ratio", "0.3", Patterns::Anything());
         prm.declare_entry("Lambda", "1", Patterns::Double(0));
         prm.declare_entry("Mu", "1", Patterns::Double(0));
+        prm.declare_entry("Viscosity", "1", Patterns::Double(0));
+
     }
     prm.leave_subsection();
 }
@@ -48,6 +50,7 @@ void MaterialModel::parse_param(ParameterHandler &prm){
         poisson_ratio = prm.get_double("Poisson ratio");
         lambda = prm.get_double("Lambda");
         mu = prm.get_double("Mu");
+        viscosity = prm.get_double("Viscosity");
     }
     prm.leave_subsection();
 }
@@ -115,6 +118,7 @@ void Time::declare_param(ParameterHandler &prm){
         prm.declare_entry("Starting time", "0", Patterns::Double(0));
         prm.declare_entry("End time", "1", Patterns::Double(0));
         prm.declare_entry("Delta time", "0.1", Patterns::Double(0));
+        prm.declare_entry("Max no of timesteps", "1", Patterns::Integer());
         prm.declare_entry("Time tolerance", "1", Patterns::Anything());
     }
     prm.leave_subsection();
@@ -126,7 +130,29 @@ void Time::parse_param(ParameterHandler &prm){
         start_time = prm.get_double("Starting time");
         end_time = prm.get_double("End time");
         delta_t = prm.get_double("Delta time");
+   	max_timesteps =  prm.get_integer("Max no of timesteps");
         time_tol = prm.get_double("Time tolerance");
+    }
+    prm.leave_subsection();
+}
+
+
+void PhaseFieldMethod::declare_param(ParameterHandler &prm){
+    prm.enter_subsection("PhaseField");
+    {
+        prm.declare_entry("Critical energy release rate", "1", Patterns::Double(0));
+        prm.declare_entry("Length scale parameter", "1", Patterns::Double(0));
+	prm.declare_entry("Small positive parameter", "1", Patterns::Double(0));
+    }
+    prm.leave_subsection();
+}
+
+void PhaseFieldMethod::parse_param(ParameterHandler &prm){
+    prm.enter_subsection("PhaseField");
+    {
+        g_c = prm.get_double("Critical energy release rate");
+        l = prm.get_double("Length scale parameter");
+        k = prm.get_double("Small positive parameter");
     }
     prm.leave_subsection();
 }
@@ -146,6 +172,7 @@ void AllParameters::declare_param(ParameterHandler &prm){
     NewtonRaphson::declare_param(prm);
     LinearSolver::declare_param(prm);
     Time::declare_param(prm);
+    PhaseFieldMethod::declare_param(prm);
 }
 
 void AllParameters::parse_param(ParameterHandler &prm){
@@ -155,5 +182,6 @@ void AllParameters::parse_param(ParameterHandler &prm){
     newtonraphson.parse_param(prm);
     linearsolver.parse_param(prm);
     time.parse_param(prm);
+    pf.parse_param(prm);
 }
 

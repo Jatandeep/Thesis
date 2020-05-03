@@ -2,8 +2,8 @@
 ##################  Geometry  ##################
 
 subsection Geometry Model
-    set Mesh File = ../thesis/meshes/Job-2.inp
-    set Global refinement = 4
+    set Mesh File = ../thesis/meshes/tension_unit_slit.inp
+    set Global refinement = 1
     set Act_ref = 0.3
     set Act_cors = 0.03
 end
@@ -11,10 +11,11 @@ end
 ###################  Material  ##################
 
 subsection Material Model
-    set Elastic modulus = 6000
+    set Elastic modulus = 1
     set Poisson ratio = 0.3
-    set Lambda = 1
-    set Mu = 1
+    set Lambda = 121.15e+3
+    set Mu = 80.77e+3
+    set Viscosity = 1e-6 
 end
 
 ##################  FE System  #####################
@@ -41,9 +42,20 @@ end
 ###################  Time   ##################
 
 subsection Time
-    set Starting time = 0
-    set End time = 1
-    set Delta time = 0.1
+    set Starting time = 0.0
+    set End time = 1.0
+    set Delta time = 1e-4
+    set Max no of timesteps = 50
     set Time tolerance = 1e-6
 end
+
+################## Phase Field ###############
+
+subsection PhaseField
+    set Critical energy release rate = 2.7
+    set Length scale parameter = 7.5e-3
+    set Small positive parameter = 1e-10
+end
+
+
 
