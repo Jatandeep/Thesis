@@ -44,23 +44,20 @@ namespace thesis
 	double time_;
     };
 
+    template <int dim>
+    class ElasticBodyForce:public dealii::Function<dim>{
+    public:
+        ElasticBodyForce():dealii::Function<dim>(1){}
 
-  template <class MatrixType, class PreconditionerType>
-  class InverseMatrix : public dealii::Subscriptor
-  {
-  public:
-    InverseMatrix(const MatrixType &        m,
-                  const PreconditionerType &preconditioner);
-    void vmult(dealii::Vector<double> &dst, const dealii::Vector<double> &src) const;
-  private:
-    const dealii::SmartPointer<const MatrixType>         matrix;
-    const dealii::SmartPointer<const PreconditionerType> preconditioner;
-  };
+        virtual void vector_value (const dealii::Point<dim> &p,
+                             dealii::Vector<double>  &value)const;
 
+    };
 }
 
-
+/*
 template <int dim>
 double get_history(const double lambda
 		,const double mu
-		,dealii::SymmetricTensor<2,dim> &epsilon);
+		,dealii::BlockVector<double> &solution);
+*/

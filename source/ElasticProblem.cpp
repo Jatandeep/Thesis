@@ -181,7 +181,7 @@ void ElasticProblem<dim>::assemble_body_forces(const AllParameters &param)
   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
   std::vector<Vector<double> >      rhs_values (n_q_points,Vector<double>(dim+1));
-  const Others<dim> right_hand_side;
+  const ElasticBodyForce<dim> right_hand_side;
 
   for (const auto &cell : dof_handler_m.active_cell_iterators())
     {

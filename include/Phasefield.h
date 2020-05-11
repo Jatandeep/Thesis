@@ -24,6 +24,7 @@
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/error_estimator.h>
+#include <deal.II/numerics/solution_transfer.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_values.h>
@@ -165,11 +166,13 @@ namespace thesis
       void determine_comp_extractor();
       void set_boundary_id();
 
-      double history_m;
-      double old_history_m = 0;     
-//      double prev_error_norm_m =0;
-//      std::shared_ptr<typename InnerPreconditioner<dim>::type/*SparseDirectUMFPACK*/> A_preconditioner;
+      double old_history_m = 0; 
+      double old_old_history_m = 0; 
+      double get_history(const double lambda
+                	,const double mu
+                	,dealii::BlockVector<double> &solution);
 
+      void compute_load(const double lambda,const double mu,dealii::BlockVector<double> &solution);    
     };
 
 }

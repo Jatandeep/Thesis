@@ -18,6 +18,8 @@ int main(int argc, char *argv[]){
        thesis::parameters::AllParameters param(filename);
        thesis::Phasefield<2> phasefield_2d(param);
        phasefield_2d.run(param);
+//	thesis::ElasticProblem<2> elastic_2d(param);
+//	elastic_2d.run(param);
       }
     catch (std::exception &exc)
       {
