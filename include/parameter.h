@@ -12,7 +12,7 @@ namespace thesis
     public:
         std::string meshfile;
 	double act_ref, act_cors;
-	unsigned int gl_ref;
+	unsigned int gl_ref,lc_ref;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
@@ -44,7 +44,7 @@ namespace thesis
     class NewtonRaphson{
     public:
         unsigned int max_new_ite;
-        double res_tol;
+        double res_tol_u,res_tol_d,nu_tol_u,nu_tol_d;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);

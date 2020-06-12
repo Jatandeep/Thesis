@@ -11,12 +11,18 @@ double BoundaryTension<dim>::value (const Point<dim>  &p,
   Assert (component < this->n_components,
           ExcIndexRange (component, 0, this->n_components));
 
-  double u_step_per_timestep = 1.0;
+//  double u_step_per_timestep = 1.0;
+  
+  double delta_u = 1e-5;
+  double u_total = delta_u*500;
 
   if (component == 1)
     {
       return ( ((p(1) == 1.0) && (p(0) <= 1.0) && (p(0) >= 0.0))
-               ? (time_ * u_step_per_timestep) : 0 );
+               ? ( load_ratio_ * u_total) : 0 );
+//      return ( ((p(1) == 1.0) && (p(0) <= 1.0) && (p(0) >= -1.0))
+//               ? ( load_ratio_ * u_total) : 0 );			//For Reference solution
+
 
     }
 
@@ -31,11 +37,7 @@ void BoundaryTension<dim>::vector_value (const Point<dim> &p,
     values (c) = BoundaryTension<dim>::value (p, c);
 }
 
-
-template <int dim>
-BoundaryForce<dim>::BoundaryForce ()
-:Function<dim>(dim+1){}
-   
+  
 template <int dim>
 double BoundaryForce<dim>::value (const Point<dim> &,
                                const unsigned int) const
@@ -51,6 +53,62 @@ void BoundaryForce<dim>::vector_value (const Point<dim> &p,
         values(c) = BoundaryForce<dim>::value(p, c);
 }
 
+
+
+template <int dim>
+double InitialCrack<dim>::value (const Point<dim>  &p,
+                                    const unsigned int component) const
+{
+// 0 = no crack
+// 1 = crack  
+//  double tol = 0.5*7.5e-3;		//no effect
+  
+  if (component == dim)
+    {
+	    if((p(0)>=0.5) && (p(0)<=1) && (p(1)>=0.5-_min_cell_diameter/* tol*/) && (p(1)<= 0.5 + _min_cell_diameter/* tol*/))
+		    return 1;
+//	    if((p(0)>=0) && (p(0)<=1) && (p(1)>=0.0-_min_cell_diameter/* tol*/) && (p(1)<= 0.0 + _min_cell_diameter/* tol*/))
+//		    return 1;											//For Reference solution
+	    else
+		    return 0;
+    }
+
+  return 0;
+}
+
+template <int dim>
+void InitialCrack<dim>::vector_value (const Point<dim> &p,
+                                            Vector<double>   &values) const
+{
+  for (unsigned int c=0; c<this->n_components; ++c)
+    values (c) = InitialCrack<dim>::value (p, c);
+}
+
+template <int dim>
+double Reference_solution<dim>::value(const Point<dim> &   p,
+                          const unsigned int component) const
+{
+    Assert(component <= 2 + 1, ExcIndexRange(component, 0, 2 + 1));
+ 
+    using numbers::PI;
+ 
+    const double x = p(0);
+    const double y = p(1);
+    
+    const double K_I = 1e+4;
+    const double mu = 87500;
+    const double k = 2.20;
+
+    const double r = std::sqrt(x*x +y*y);
+    const double theta = atan(y/x);
+
+    if (component == 0)
+      return ( (K_I/(4*mu))*std::sqrt(r/(2*PI))*(-(2*k - 1)*sin(theta/2) - sin(3*theta/2)) ); 
+    if (component == 1)
+      return ( (K_I/(4*mu))*std::sqrt(r/(2*PI))*( (2*k + 1)*cos(theta/2) + cos(3*theta/2)) );
+   
+    return 0;
+}
 
 template <int dim>
 double get_epsplus_sq(SymmetricTensor<2,dim> &eps)
@@ -73,36 +131,73 @@ return result;
 }
 
 template <int dim>
+double get_epsminus_sq(SymmetricTensor<2,dim> &eps)
+{
+	std::array<double,std::integral_constant<int,dim>::value> eps_eigenval;
+	eps_eigenval = eigenvalues(eps);
+
+	std::array<double,std::integral_constant<int,dim>::value> eps_eigenval_minus;
+
+	for(unsigned int i=0;i<dim;++i){
+		eps_eigenval_minus[i]=(eps_eigenval[i]>0) ? 0:eps_eigenval[i];
+	}
+
+	double result=0;
+	for(unsigned int i=0;i<dim;++i){
+	result += eps_eigenval_minus[i]*eps_eigenval_minus[i];
+	}
+	
+return result;
+}
+template <int dim>
 double Phasefield<dim>::get_history(const double lambda
 	  	  ,const double mu
-	  	  ,BlockVector<double> &solution)
+		  ,SymmetricTensor<2,dim> &eps)
 {
-	
-	FEValues<dim> fe_values (fe_m, quadrature_formula_m,
-                           update_values   | update_gradients |
-                           update_quadrature_points | update_JxW_values);
-	const unsigned int   n_q_points    = quadrature_formula_m.size();
- 	double history;
+	double history = 0;
+			
+	double tr_eps = trace(eps);
+	double tr_eps_plus = (tr_eps>0) ? tr_eps:0;
+	double tr_epsplus_sq = get_epsplus_sq(eps); 	
 
-	for (const auto &cell : dof_handler_m.active_cell_iterators())
-	{
-		fe_values.reinit(cell);
-		
-		std::vector<SymmetricTensor<2,dim>> eps(n_q_points);
-		fe_values[u_extractor].get_function_symmetric_gradients(solution,eps);
+	history = 0.5*lambda*tr_eps_plus*tr_eps_plus + mu*tr_epsplus_sq;	
 
-        	for (unsigned int q = 0; q < n_q_points; ++q)
-		{
-			double tr_eps = trace(eps[q]);
-			double tr_eps_plus = (tr_eps>0) ? tr_eps:0;
-			double tr_epsplus_sq = get_epsplus_sq(eps[q]); 	
 
-			history += 0.5*lambda*tr_eps_plus*tr_eps_plus + mu*tr_epsplus_sq;	//+= ??
-		}
-	}
 return history;
 }
 
+template <int dim>
+double get_energy_density_plus(const double lambda
+			  	  	       ,const double mu
+				  	       ,SymmetricTensor<2,dim> &eps)
+{
+	double energy_plus = 0;
+			
+	double tr_eps = trace(eps);
+	double tr_eps_plus = (tr_eps>0) ? tr_eps:0;
+	double tr_epsplus_sq = get_epsplus_sq(eps); 	
+
+	energy_plus = 0.5*lambda*tr_eps_plus*tr_eps_plus + mu*tr_epsplus_sq;	
+
+
+return energy_plus;
+}
+
+template <int dim>
+double get_energy_density_minus(const double lambda
+			  	  	       ,const double mu
+				  	       ,SymmetricTensor<2,dim> &eps)
+{
+	double energy_minus = 0;
+			
+	double tr_eps = trace(eps);
+	double tr_eps_minus = (tr_eps>0) ? 0:tr_eps;
+	double tr_epsminus_sq = get_epsminus_sq(eps); 	
+
+	energy_minus = 0.5*lambda*tr_eps_minus*tr_eps_minus + mu*tr_epsminus_sq;	
+
+return energy_minus;
+}
 
 template <int dim>
 void Phasefield<dim>::compute_load(const double lambda
@@ -202,8 +297,13 @@ template class thesis::BoundaryForce<2>;
 template class thesis::BoundaryForce<3>;
 template class thesis::BoundaryTension<2>;
 template class thesis::BoundaryTension<3>;
-template double thesis::Phasefield<2>::get_history(const double,const double,BlockVector<double>&);
-template double thesis::Phasefield<3>::get_history(const double,const double,BlockVector<double>&);
-//template double get_history(const double,const double,SymmetricTensor<2,3>&);
-//template void compute_load(const double,const double,BlockVector<double>&);
-
+template double thesis::Phasefield<2>::get_history(const double,const double,SymmetricTensor<2,2>&/*BlockVector<double>&*/);
+template double thesis::Phasefield<3>::get_history(const double,const double,SymmetricTensor<2,3>&/*BlockVector<double>&*/);
+template double get_energy_density_plus(const double,const double,SymmetricTensor<2,2>&);
+template double get_energy_density_plus(const double,const double,SymmetricTensor<2,3>&);
+template double get_energy_density_minus(const double,const double,SymmetricTensor<2,2>&);
+template double get_energy_density_minus(const double,const double,SymmetricTensor<2,3>&);
+template class thesis::InitialCrack<2>;
+template class thesis::InitialCrack<3>;
+template class thesis::Reference_solution<2>;
+template class thesis::Reference_solution<3>;

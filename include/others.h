@@ -17,7 +17,8 @@ namespace thesis
     template <int dim>
     class BoundaryForce:public dealii::Function<dim>{
     public:
-        BoundaryForce();
+        BoundaryForce():dealii::Function<dim>(dim+1)
+	{}
 	
 	virtual double value (const dealii::Point<dim> &p,
                     const unsigned int component = 0) const;
@@ -30,9 +31,9 @@ namespace thesis
     template <int dim>
     class BoundaryTension:public dealii::Function<dim>{
     public:
-        BoundaryTension(const double time):dealii::Function<dim>(dim+1)
+        BoundaryTension(const double load_ratio):dealii::Function<dim>(dim+1)
 	{
-	time_ = time;
+	load_ratio_ = load_ratio;
 	}
 	
 	virtual double value (const dealii::Point<dim> &p,
@@ -41,8 +42,27 @@ namespace thesis
         virtual void vector_value (const dealii::Point<dim> &p,
                              dealii::Vector<double>  &value)const;
     private:
-	double time_;
+	double load_ratio_;
     };
+
+ 
+    template <int dim>
+    class InitialCrack:public dealii::Function<dim>{
+    public:
+        InitialCrack(const double min_cell_diameter):dealii::Function<dim>(dim+1)
+	{
+	_min_cell_diameter = min_cell_diameter;
+	}
+	
+	virtual double value (const dealii::Point<dim> &p,
+                    const unsigned int component = 0) const;
+
+        virtual void vector_value (const dealii::Point<dim> &p,
+                             dealii::Vector<double>  &value)const;
+    private:
+	double _min_cell_diameter;
+    };
+
 
     template <int dim>
     class ElasticBodyForce:public dealii::Function<dim>{
@@ -53,11 +73,26 @@ namespace thesis
                              dealii::Vector<double>  &value)const;
 
     };
+
+    template <int dim>
+    class Reference_solution : public dealii::Function<dim>
+    {
+    public:
+      Reference_solution(): dealii::Function<dim>(dim+1)
+      {}
+      virtual double value(const dealii::Point<dim> & p,
+                       const unsigned int component = 0) const override;
+    };
+
 }
 
-/*
+
 template <int dim>
-double get_history(const double lambda
-		,const double mu
-		,dealii::BlockVector<double> &solution);
-*/
+double get_energy_density_plus(const double lambda
+			      ,const double mu
+			      ,dealii::SymmetricTensor<2,dim> &eps);
+template <int dim>
+double get_energy_density_minus(const double lambda
+			      ,const double mu
+			      ,dealii::SymmetricTensor<2,dim> &eps);
+

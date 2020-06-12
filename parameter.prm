@@ -2,8 +2,9 @@
 ##################  Geometry  ##################
 
 subsection Geometry Model
-    set Mesh File = ../thesis/meshes/tension_unit_slit.inp #../thesis/meshes/Job-2.inp 
-    set Global refinement = 1
+    set Mesh File = ../thesis/meshes/tension_unit_slit.inp #../thesis/meshes/unit_slit.inp #../thesis/meshes/Job-2.inp 
+    set Global refinement = 5  #4  
+    set Local refinement = 4  #6
     set Act_ref = 0.3
     set Act_cors = 0.03
 end
@@ -22,14 +23,17 @@ end
 
 subsection FE System
     set Finite element degree = 1
-    set Quad order = 3 #2
+    set Quad order = 2 #3
 end
 
 ############  Non Linear System  ##################
 
 subsection Newton Raphson
-    set Max newton iterations = 10
-    set Residual tolerance = 1e-7
+    set Max newton iterations = 30
+    set Residual tolerance u = 1e-7 
+    set Residual tolerance d = 1e-7 
+    set Newton update tolerance u = 1e-9 
+    set Newton update tolerance d = 1e-9
 end
 
 ################  Linear Solver  ##################
@@ -43,9 +47,9 @@ end
 
 subsection Time
     set Starting time = 0.0
-    set End time = 1.0
-    set Delta time = 1e-4 #0.1 
-    set Max no of timesteps = 20 #50
+    set End time = 5e-3
+    set Delta time = 1e-5 #1e-5  #1e-4 #0.1 
+    set Max no of timesteps = 500 #10 # 100 #50
     set Time tolerance = 1e-6
 end
 
@@ -54,7 +58,7 @@ end
 subsection PhaseField
     set Critical energy release rate = 2.7
     set Length scale parameter = 7.5e-3 #1.5e-2 
-    set Small positive parameter = 0 #1e-10
+    set Small positive parameter = 1e-10 #0
 end
 
 

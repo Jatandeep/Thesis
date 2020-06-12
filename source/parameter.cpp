@@ -13,6 +13,7 @@ void GeometryModel::declare_param(ParameterHandler &prm){
     {
         prm.declare_entry("Mesh File", "grid.inp", Patterns::Anything());
         prm.declare_entry("Global refinement", "0", Patterns::Integer());
+        prm.declare_entry("Local refinement", "0", Patterns::Integer());
         prm.declare_entry("Act_ref", "0.3", Patterns::Double(0));
         prm.declare_entry("Act_cors", "0.03", Patterns::Double(0));
     }
@@ -24,7 +25,8 @@ void GeometryModel::parse_param(ParameterHandler &prm){
     {
         meshfile = prm.get("Mesh File");
 	gl_ref = prm.get_integer("Global refinement");
-        act_ref = prm.get_double("Act_ref");
+       	lc_ref = prm.get_integer("Local refinement");
+	act_ref = prm.get_double("Act_ref");
         act_cors = prm.get_double("Act_cors");
     }
     prm.leave_subsection();
@@ -79,7 +81,10 @@ void NewtonRaphson::declare_param(ParameterHandler &prm){
     prm.enter_subsection("Newton Raphson");
     {
         prm.declare_entry("Max newton iterations", "10", Patterns::Anything());
-        prm.declare_entry("Residual tolerance", "1", Patterns::Double(0));
+        prm.declare_entry("Residual tolerance u", "1", Patterns::Double(0));
+        prm.declare_entry("Residual tolerance d", "1", Patterns::Double(0));
+        prm.declare_entry("Newton update tolerance u", "1", Patterns::Double(0));
+        prm.declare_entry("Newton update tolerance d", "1", Patterns::Double(0));
     }
     prm.leave_subsection();
 }
@@ -88,7 +93,10 @@ void NewtonRaphson::parse_param(ParameterHandler &prm){
     prm.enter_subsection("Newton Raphson");
     {
         max_new_ite = prm.get_integer("Max newton iterations");
-        res_tol = prm.get_double("Residual tolerance");
+        res_tol_u = prm.get_double("Residual tolerance u");
+        res_tol_d = prm.get_double("Residual tolerance d");
+        nu_tol_u = prm.get_double("Newton update tolerance u");
+        nu_tol_d = prm.get_double("Newton update tolerance d");
     }
     prm.leave_subsection();
 }

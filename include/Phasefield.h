@@ -3,6 +3,7 @@
 #include <deal.II/base/function.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/quadrature_point_data.h>
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/sparse_matrix.h>
@@ -29,10 +30,11 @@
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_values_extractors.h>
-
+#include <deal.II/fe/fe_dgq.h>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/grid_out.h>
+#include <deal.II/grid/grid_tools.h>
 #include "parameter.h"
 #include "others.h"
 #include <deal.II/base/timer.h>
@@ -78,15 +80,15 @@ namespace thesis
                                                        dealii::BlockVector<double> & newton_update);
 
       /*!Set hanging node and apply Dirichlet bc.*/
-      void make_constraints(unsigned int &itr,const double time);
+      void make_constraints(unsigned int &itr,const double load_ratio);
 
       /*!Assemble the linear system for the elasticity problem*/
       void assemble_system (const parameters::AllParameters &param,
-                            dealii::BlockVector<double> & newton_update);
+                            dealii::BlockVector<double> & update);
 
       /*Assemble External forces(body forces + Neumann forces)*/
       void assemble_rhs(const parameters::AllParameters &param,
-			       dealii::BlockVector<double> & newton_update);
+			       dealii::BlockVector<double> & update);
      
        /*Print header and footer for newton iterations*/
       void print_header();
@@ -137,10 +139,13 @@ namespace thesis
               double norm,u,d;
           };
 
-      Error error_residual, error_residual_0, error_residual_norm;
+      Error error_residual, error_residual_0, error_residual_norm,
+	    error_update, error_update_0, error_update_norm;
 
       /*Calculate error residual from system_rhs*/
       void get_error_residual(Error & error_residual);
+      void get_newton_update_error(const dealii::BlockVector<double> &newton_update
+		      		  ,Error & error_update);
 
       dealii::FEValuesExtractors::Vector u_extractor;
       dealii::FEValuesExtractors::Scalar d_extractor;
@@ -166,13 +171,42 @@ namespace thesis
       void determine_comp_extractor();
       void set_boundary_id();
 
-      double old_history_m = 0; 
-      double old_old_history_m = 0; 
+      /*History class, variables and functions*/
+
+      const dealii::FE_DGQ<dim>  history_fe_m;
+      dealii::DoFHandler<dim>    history_dof_handler_m;
+      dealii::ConstraintMatrix   history_constraints_m;
+      
+      struct PointHistory
+      {
+	      double history;
+      };
+
+      void setup_quadrature_point_history(); 
+      std::vector<PointHistory> quadrature_point_history;
+
+      std::vector< std::vector< dealii::/*Block*/Vector<double> > >
+             history_field {std::vector< std::vector< dealii::/*Block*/Vector<double> > >
+				(/*dim*/1, std::vector< dealii::/*Block*/Vector<double> >(/*dim*/1)) },
+             local_history_values_at_qpoints {std::vector< std::vector< dealii::/*Block*/Vector<double> > >
+				(/*dim*/1, std::vector< dealii::/*Block*/Vector<double> >(/*dim*/1)) },
+             local_history_fe_values {std::vector< std::vector< dealii::/*Block*/Vector<double> > >
+				(/*dim*/1, std::vector< dealii::/*Block*/Vector<double> >(/*dim*/1)) };
+     
+      void history_quadrature_to_global();
+      void history_global_to_quadrature();
       double get_history(const double lambda
                 	,const double mu
-                	,dealii::BlockVector<double> &solution);
+    			,dealii::SymmetricTensor<2,dim> &eps);
+
 
       void compute_load(const double lambda,const double mu,dealii::BlockVector<double> &solution);    
-    };
+      void project_back_phase_field(dealii::BlockVector<double> &sol);
 
+      double get_energy(const parameters::AllParameters &param,
+                            dealii::BlockVector<double> & update);
+      
+      void compute_lefm_errors(const parameters::AllParameters &param);
+
+    };
 }
