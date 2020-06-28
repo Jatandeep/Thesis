@@ -151,6 +151,7 @@ void PhaseFieldMethod::declare_param(ParameterHandler &prm){
         prm.declare_entry("Critical energy release rate", "1", Patterns::Double(0));
         prm.declare_entry("Length scale parameter", "1", Patterns::Double(0));
 	prm.declare_entry("Small positive parameter", "1", Patterns::Double(0));
+	prm.declare_entry("Total displacement", "1", Patterns::Double(0));
     }
     prm.leave_subsection();
 }
@@ -161,6 +162,7 @@ void PhaseFieldMethod::parse_param(ParameterHandler &prm){
         g_c = prm.get_double("Critical energy release rate");
         l = prm.get_double("Length scale parameter");
         k = prm.get_double("Small positive parameter");
+	u_total = prm.get_double("Total displacement");
     }
     prm.leave_subsection();
 }

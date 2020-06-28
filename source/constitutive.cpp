@@ -113,6 +113,7 @@ SymmetricTensor<2,dim> get_stress_minus(const double lambda
 */
 return stress_minus; 
 }
+
 //Gives stress at particular quadrature point
 template<int dim>
 SymmetricTensor<2,dim> get_stress(const double lambda
@@ -126,7 +127,7 @@ SymmetricTensor<2,dim> get_stress(const double lambda
 
 return stress; 
 }
-
+/*
 //Gives an array of stress eigenvalues
 template <int dim>
 std::array<double,std::integral_constant< int, dim >::value> get_stress_eigenval(const double lambda
@@ -141,7 +142,7 @@ std::array<double,std::integral_constant< int, dim >::value> get_stress_eigenval
 		stress_eigenval[i] = lambda*tr_eps + 2*mu*eps_eigenval[i];
 return stress_eigenval;
 }
-
+*/
 //Gives an array of +ve stress eigenvalues
 template <int dim>
 std::array<double,std::integral_constant< int, dim >::value> get_stress_eigenval_plus(const double lambda
@@ -446,7 +447,7 @@ SymmetricTensor<4,dim> get_BigC_minus(const double lambda
 			 for (unsigned int k = 0; k < dim; ++k)
 				for (unsigned int l = k; l < dim; ++l)
 		 		C_total_minus[i][j][k][l] = C_1_minus[i][j][k][l] + C_2_minus[i][j][k][l];
- /*
+/*
 /////Printing/////////////
   static bool once_1=false;
   if(!once_1){
@@ -459,16 +460,18 @@ SymmetricTensor<4,dim> get_BigC_minus(const double lambda
 return C_total_minus;
 }
 
+
+
 /*Gives BigC: both definitions works- with and without splitting into +ve & -ve*/
 template <int dim>
 SymmetricTensor<4,dim> get_BigC(const double lambda
                                ,const double mu
                                ,SymmetricTensor<2,dim> &eps)
 {
-	Tensor<4,dim> C_1;
+/*	Tensor<4,dim> C_1;
 	Tensor<4,dim> C_2;
 	SymmetricTensor<4,dim> C_total;
-
+*/
 	Tensor<4,dim> C_1_plus;
 	Tensor<4,dim> C_1_minus;
 	Tensor<4,dim> C_2_plus;
@@ -483,7 +486,7 @@ SymmetricTensor<4,dim> get_BigC(const double lambda
 	//Gives an array of dim pair of eigenvalues and eigenvectors of eps 
 	std::array <std::pair< double, Tensor< 1, dim, double > >,std::integral_constant< int, dim >::value> eigen;
   	eigen = eigenvectors(eps,SymmetricTensorEigenvectorMethod::ql_implicit_shifts);
-
+/*
 	//Gives an array of eps eigenvalues
 	std::array <double,std::integral_constant< int, dim >::value> eps_eigenval;
 	eps_eigenval = eigenvalues(eps);
@@ -536,9 +539,9 @@ SymmetricTensor<4,dim> get_BigC(const double lambda
 
 
 	//Calculates an array of +ve stress eigenvalues
-//	std::array <double,std::integral_constant< int, dim >::value> stress_eigenval_plus;
-//	stress_eigenval_plus = get_stress_eigenval_plus(lambda,mu,eps,eps_eigenval); 
-	
+	std::array <double,std::integral_constant< int, dim >::value> stress_eigenval_plus;
+	stress_eigenval_plus = get_stress_eigenval_plus(lambda,mu,eps,eps_eigenval); 
+*/	
 
 	//Testing PhaseField get_stress_plus function
 
@@ -550,7 +553,6 @@ SymmetricTensor<4,dim> get_BigC(const double lambda
 	stress_eigenval_plus[c] = eigen_stress_p[c].first; 
 	
 
-//std::cout<<"Big C "<<std::endl;
 	//Calculating C_1_plus:
 	double scalar_4 = 0;
   	for (unsigned int a = 0;a < dim; ++a){

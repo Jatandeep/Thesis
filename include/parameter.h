@@ -72,7 +72,7 @@ namespace thesis
 	
     class PhaseFieldMethod{
     public:
-        double g_c,l,k;
+        double g_c,l,k,u_total;
        
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);

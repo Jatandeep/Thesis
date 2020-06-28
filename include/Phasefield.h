@@ -80,7 +80,7 @@ namespace thesis
                                                        dealii::BlockVector<double> & newton_update);
 
       /*!Set hanging node and apply Dirichlet bc.*/
-      void make_constraints(unsigned int &itr,const double load_ratio);
+      void make_constraints(unsigned int &itr,const double load_ratio,const double u_total);
 
       /*!Assemble the linear system for the elasticity problem*/
       void assemble_system (const parameters::AllParameters &param,
@@ -111,7 +111,8 @@ namespace thesis
       dealii::BlockVector<double>       system_rhs_m;
       dealii::BlockVector<double>       old_solution_m;//for time discretization of phasefield
 
-      double                       current_time_m;
+      double		                current_time_m;
+//      mutable dealii::TimerOutput	timer;
 
       /*!A struct used to keep track of data needed as convergence criteria.*/
       struct Error
@@ -201,7 +202,7 @@ namespace thesis
 
 
       void compute_load(const double lambda,const double mu,dealii::BlockVector<double> &solution);    
-      void project_back_phase_field(dealii::BlockVector<double> &sol);
+      void project_back_phase_field(/*dealii::BlockVector<double> &sol*/);
 
       double get_energy(const parameters::AllParameters &param,
                             dealii::BlockVector<double> & update);

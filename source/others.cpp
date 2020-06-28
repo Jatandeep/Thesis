@@ -3,31 +3,25 @@
 #include "../include/Phasefield.h"
 using namespace dealii;
 using namespace thesis;
-
+/*
 template <int dim>
 double BoundaryTension<dim>::value (const Point<dim>  &p,
                                     const unsigned int component) const
 {
-  Assert (component < this->n_components,
+ Assert (component < this->n_components,
           ExcIndexRange (component, 0, this->n_components));
-
-//  double u_step_per_timestep = 1.0;
-  
-  double delta_u = 1e-5;
-  double u_total = delta_u*500;
 
   if (component == 1)
     {
-      return ( ((p(1) == 1.0) && (p(0) <= 1.0) && (p(0) >= 0.0))
-               ? ( load_ratio_ * u_total) : 0 );
+      return ( ( (p(0) <= 1.0) && (p(0) >= 0.0) )
+               ? ( load_ratio_ * u_total_) : 0 );
 //      return ( ((p(1) == 1.0) && (p(0) <= 1.0) && (p(0) >= -1.0))
 //               ? ( load_ratio_ * u_total) : 0 );			//For Reference solution
-
-
     }
 
   return 0;
-}
+
+ }
 
 template <int dim>
 void BoundaryTension<dim>::vector_value (const Point<dim> &p,
@@ -36,8 +30,47 @@ void BoundaryTension<dim>::vector_value (const Point<dim> &p,
   for (unsigned int c=0; c<this->n_components; ++c)
     values (c) = BoundaryTension<dim>::value (p, c);
 }
+*/
 
+template <int dim>
+double BoundaryTension<dim>::value (const Point<dim>  &p,
+                                    const unsigned int component) const
+{}
+
+template <int dim>
+void BoundaryTension<dim>::vector_value (const Point<dim> &p,
+                                           Vector<double>   &vectorValue) const
+{
+  if(itr_ >0)
+	  vectorValue = 0.0;
+  else
+  {
+	vectorValue[0] = 0.0;
+	vectorValue[1] = ((p(0) <= 1.0) && (p(0) >= 0.0)) ? load_ratio_*u_total_ :0 ;
+
+  }
   
+} 
+
+template <int dim>
+double BoundaryShear<dim>::value (const Point<dim>  &p,
+                                    const unsigned int component) const
+{}
+
+template <int dim>
+void BoundaryShear<dim>::vector_value (const Point<dim> &p,
+                                           Vector<double>   &vectorValue) const
+{
+  if(itr_ >0)
+	  vectorValue = 0.0;
+  else
+  {
+	vectorValue[0] =  ((p(0) <= 1.0) && (p(0) >= 0.0)) ? load_ratio_*u_total_ :0 ;
+	vectorValue[1] = 0.0;
+
+  }
+  
+}
 template <int dim>
 double BoundaryForce<dim>::value (const Point<dim> &,
                                const unsigned int) const
@@ -65,7 +98,7 @@ double InitialCrack<dim>::value (const Point<dim>  &p,
   
   if (component == dim)
     {
-	    if((p(0)>=0.5) && (p(0)<=1) && (p(1)>=0.5-_min_cell_diameter/* tol*/) && (p(1)<= 0.5 + _min_cell_diameter/* tol*/))
+	    if((p(0)>=0.5) && (p(0)<=1) && (p(1)>=0.5-_min_cell_diameter) && (p(1)<= 0.5 + _min_cell_diameter))
 		    return 1;
 //	    if((p(0)>=0) && (p(0)<=1) && (p(1)>=0.0-_min_cell_diameter/* tol*/) && (p(1)<= 0.0 + _min_cell_diameter/* tol*/))
 //		    return 1;											//For Reference solution
@@ -99,6 +132,9 @@ double Reference_solution<dim>::value(const Point<dim> &   p,
     const double mu = 87500;
     const double k = 2.20;
 
+    //make get_theta function to ensure it is between 0 and 2 PI (like 215 degrees) and not between 0 and PI/2(or -PI/2 to PI/2)
+    //Also change inp file point 5 & 6 to 1,delta,0 & 1,-delta,0.
+ 
     const double r = std::sqrt(x*x +y*y);
     const double theta = atan(y/x);
 
@@ -199,6 +235,11 @@ double get_energy_density_minus(const double lambda
 return energy_minus;
 }
 
+double get_deg_func(const double d)
+{
+return ( pow((1-d),2.0) );
+}
+
 template <int dim>
 void Phasefield<dim>::compute_load(const double lambda
                  ,const double mu
@@ -207,7 +248,8 @@ void Phasefield<dim>::compute_load(const double lambda
 
   FEFaceValues<dim> fe_values_face(fe_m, face_quadrature_formula_m,
                                    update_values | update_quadrature_points |
-                                   update_normal_vectors | update_JxW_values);
+                                   update_normal_vectors | update_gradients |
+				   update_JxW_values);
 
   const unsigned int   dofs_per_cell = fe_m.dofs_per_cell;
   const unsigned int   n_face_q_points    = face_quadrature_formula_m.size();
@@ -218,17 +260,15 @@ void Phasefield<dim>::compute_load(const double lambda
   for (const auto &cell : dof_handler_m.active_cell_iterators())
     {
 
-        fe_values_face.reinit(cell);
-
-        std::vector<SymmetricTensor<2,dim>> epsilon_vals(n_face_q_points);
-        fe_values_face[u_extractor].get_function_symmetric_gradients(solution,epsilon_vals);
-
-	for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
+        for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
         {
                   if (cell->face(face)->at_boundary() && cell->face(face)->boundary_id() == 3)
                   {
                         fe_values_face.reinit(cell, face);
-        
+        		
+			std::vector<SymmetricTensor<2,dim>> epsilon_vals(n_face_q_points);
+        		fe_values_face[u_extractor].get_function_symmetric_gradients(solution,epsilon_vals);
+
                         for (unsigned int q_point = 0; q_point < n_face_q_points;++q_point)
                         {
               
@@ -241,14 +281,17 @@ void Phasefield<dim>::compute_load(const double lambda
 
                         }
                   }
-		 if(cell->face(face)->at_boundary() && (/*cell->face(face)->boundary_id() == 0 ||
-                                                        cell->face(face)->boundary_id() == 1 ||*/
+/*		 if(cell->face(face)->at_boundary() && (cell->face(face)->boundary_id() == 0 ||
+                                                        cell->face(face)->boundary_id() == 1 ||
                                                         cell->face(face)->boundary_id() == 2) )
                  {
                         fe_values_face.reinit(cell, face);
-                                for (unsigned int q_point = 0; q_point < n_face_q_points;++q_point)
-                        {
+                         
+			std::vector<SymmetricTensor<2,dim>> epsilon_vals(n_face_q_points);
+        		fe_values_face[u_extractor].get_function_symmetric_gradients(solution,epsilon_vals);
 
+       			for (unsigned int q_point = 0; q_point < n_face_q_points;++q_point)
+                        {
                                 Tensor<2,dim> stress_display_1;
                                 double tr_eps;
                                 tr_eps = trace(epsilon_vals[q_point]);
@@ -257,12 +300,13 @@ void Phasefield<dim>::compute_load(const double lambda
                                 load_value_1 += stress_display_1*fe_values_face.normal_vector(q_point)*fe_values_face.JxW(q_point);
                         }
                 }
-        }
+*/
+	}
   }
-/*
-std::cout<<std::endl;
 std::cout<<"Boundary3_Load_x: "<<load_value[0]<<std::endl;
 std::cout<<"Boundary3_Load_y: "<<load_value[1]<<std::endl;
+std::cout<<std::endl;
+/*
 std::cout<<"Boundary012_Load_x: "<<load_value_1[0]<<std::endl;
 std::cout<<"Boundary012_Load_y: "<<load_value_1[1]<<std::endl;
 */
@@ -297,6 +341,8 @@ template class thesis::BoundaryForce<2>;
 template class thesis::BoundaryForce<3>;
 template class thesis::BoundaryTension<2>;
 template class thesis::BoundaryTension<3>;
+template class thesis::BoundaryShear<2>;
+template class thesis::BoundaryShear<3>;
 template double thesis::Phasefield<2>::get_history(const double,const double,SymmetricTensor<2,2>&/*BlockVector<double>&*/);
 template double thesis::Phasefield<3>::get_history(const double,const double,SymmetricTensor<2,3>&/*BlockVector<double>&*/);
 template double get_energy_density_plus(const double,const double,SymmetricTensor<2,2>&);
@@ -307,3 +353,5 @@ template class thesis::InitialCrack<2>;
 template class thesis::InitialCrack<3>;
 template class thesis::Reference_solution<2>;
 template class thesis::Reference_solution<3>;
+template void thesis::Phasefield<2>::compute_load(const double,const double,BlockVector<double> &);
+template void thesis::Phasefield<3>::compute_load(const double,const double,BlockVector<double> &);

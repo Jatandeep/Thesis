@@ -199,7 +199,7 @@ void ElasticProblem<dim>::assemble_body_forces(const AllParameters &param)
                 const unsigned int
                 component_i = fe_m.system_to_component_index(i).first;
                 cell_rhs(i) += fe_values.shape_value(i,q) *
-                               rhs_values[q][component_i] * /* step_fraction* */
+                               rhs_values[q][component_i] * param.time.delta_t* /* step_fraction**/ 
                                fe_values.JxW(q);
             }
 
@@ -244,7 +244,7 @@ void ElasticProblem<dim>::solve_nonlinear_newton(const AllParameters &param,
         error_residual_norm = error_residual;
         error_residual_norm.normalize(error_residual_0);
 
-        if(new_iter > 0 && error_residual_norm.u < param.newtonraphson.res_tol){
+        if(new_iter > 0 && error_residual_norm.u < 1e-7 /*param.newtonraphson.res_tol*/){
             std::cout<<"Converged"<<std::endl;
             print_footer();
             break;
@@ -466,18 +466,20 @@ void ElasticProblem<dim>::run(const AllParameters &param){
     output_results(current_time);
     current_time += param.time.delta_t;
 
+    solution_delta.reinit(dofs_per_block_m);
+
     while (current_time < param.time.end_time + present_time_tol)
     {
-        if(current_time >param.time.delta_t)
+/*        if(current_time >param.time.delta_t)
 	{
             	refine_grid(param);
 		setup_system();
 		solution_delta.reinit(dofs_per_block_m);
 	}
-        
+*/
 	solution_delta = 0.0;
         solve_nonlinear_newton(param,solution_delta);
-        solution_m = solution_delta;
+        solution_m += solution_delta;
         output_results(current_time);
 	
         std::cout<<" solution.norm():"<<solution_m.l2_norm()<<std::endl;

@@ -31,9 +31,12 @@ namespace thesis
     template <int dim>
     class BoundaryTension:public dealii::Function<dim>{
     public:
-        BoundaryTension(const double load_ratio):dealii::Function<dim>(dim+1)
+        BoundaryTension(unsigned int itr,const double load_ratio,const double u_total):dealii::Function<dim>(dim+1)
 	{
+	itr_ = itr;
 	load_ratio_ = load_ratio;
+	u_total_ = u_total;
+	
 	}
 	
 	virtual double value (const dealii::Point<dim> &p,
@@ -42,7 +45,28 @@ namespace thesis
         virtual void vector_value (const dealii::Point<dim> &p,
                              dealii::Vector<double>  &value)const;
     private:
-	double load_ratio_;
+	double load_ratio_,u_total_;
+	unsigned int itr_;
+    };
+
+    template <int dim>
+    class BoundaryShear:public dealii::Function<dim>{
+    public:
+        BoundaryShear(unsigned int itr,const double load_ratio,const double u_total):dealii::Function<dim>(dim+1)
+	{
+	itr_ = itr;
+	load_ratio_ = load_ratio;
+	u_total_ = u_total;
+	}
+	
+	virtual double value (const dealii::Point<dim> &p,
+                    const unsigned int component = 0) const;
+
+        virtual void vector_value (const dealii::Point<dim> &p,
+                             dealii::Vector<double>  &value)const;
+    private:
+	double load_ratio_,u_total_;
+	unsigned int itr_;
     };
 
  
@@ -95,4 +119,6 @@ template <int dim>
 double get_energy_density_minus(const double lambda
 			      ,const double mu
 			      ,dealii::SymmetricTensor<2,dim> &eps);
+
+double get_deg_func(const double d);
 
