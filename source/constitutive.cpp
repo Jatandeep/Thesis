@@ -1,4 +1,3 @@
-#include "../include/ElasticProblem.h"
 #include "../include/utilities.h"
 
 using namespace dealii;

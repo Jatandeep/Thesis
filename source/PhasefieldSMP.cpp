@@ -1,4 +1,5 @@
-#include "../include/Phasefield.h"
+//#include "../include/Phasefield.h"
+#include "../include/PhasefieldSMP.h"
 #include "../include/others.h"
 #include "../include/constants.h"
 #include "../include/constitutive.h"
@@ -10,15 +11,16 @@ using namespace parameters;
 
 template <int dim>
 Phasefield<dim>::Phasefield(const AllParameters &param)
-  : timer(std::cout,TimerOutput::summary,TimerOutput::wall_times)
-  , fe_m(FESystem<dim>(FE_Q<dim>(param.fesys.fe_degree),dim),1,
+  : fe_m(/*FESystem<dim>(*/FE_Q<dim>(param.fesys.fe_degree),dim,/*),1,*/
 	FE_Q<dim>(param.fesys.fe_degree),1)
   , quadrature_formula_m(param.fesys.quad_order)
   , face_quadrature_formula_m(param.fesys.quad_order)
   , u_extractor(u_dof_start_m)
   , d_extractor(d_dof_start_m)
   , dofs_per_block_m(n_blocks_m)
-  , history_fe_m(1)					//history
+  , history_fe_m(1)	
+  , timer(std::cout,TimerOutput::summary,TimerOutput::wall_times)
+				//history
 {
     import_mesh(param);
     dof_handler_m.initialize(triangulation_m, fe_m);
@@ -37,7 +39,7 @@ Phasefield<dim>::~Phasefield ()
   history_dof_handler_m.clear();			//history
 }
 
-
+/*
 template <int dim>
 void Phasefield<dim>::setup_system ()
 {
@@ -72,10 +74,95 @@ void Phasefield<dim>::setup_system ()
                                   ,dsp
                                   ,constraints_m
                                   ,false);
+  std::cout<<"setup dsp.size rows: "<<dsp.n_rows()<<std::endl;
+
   sparsity_pattern_m.copy_from (dsp);
   }
 
   tangent_matrix_m.reinit (sparsity_pattern_m);
+
+  system_rhs_m.reinit (dofs_per_block_m);
+  system_rhs_m.collect_sizes();
+
+  solution_m.reinit (dofs_per_block_m);
+  solution_m.collect_sizes();
+
+//  std::cout<<"setup tangent_matrix.size: "<<tangent_matrix_m.m()<<std::endl;
+//  std::cout<<"setup dsp.size: "<<sparsity_pattern_m.m()<<std::endl;
+//  std::cout<<"setup solution_d.size: "<<solution_m.block(d_dof_m).size()<<std::endl;
+
+  old_solution_m.reinit (dofs_per_block_m);
+  old_solution_m.collect_sizes();
+
+  timer.leave_subsection();
+}
+*/
+template <int dim>
+void Phasefield<dim>::setup_system ()
+{
+  timer.enter_subsection("Setup system");
+  tangent_matrix_m.clear(); 
+  dof_handler_m.distribute_dofs (fe_m);
+    
+  std::vector<unsigned int> block_component(n_components_m, u_dof_m); // Displacement
+  block_component[dim] = d_dof_m;
+
+  DoFRenumbering::Cuthill_McKee(dof_handler_m);  
+  DoFRenumbering::component_wise(dof_handler_m,block_component); 
+  DoFTools::count_dofs_per_block (dof_handler_m, dofs_per_block_m,block_component);
+
+  std::cout<<std::endl;
+  std::cout << "   Number of active cells:       "
+                            << triangulation_m.n_active_cells()
+                            << std::endl;
+  std::cout << "   Number of degrees of freedom: "
+                            << dof_handler_m.n_dofs()
+                            << std::endl;
+/*
+  constraints_m.clear ();
+  DoFTools::make_hanging_node_constraints (dof_handler_m,
+                                           constraints_m);
+  constraints_m.close ();
+*/
+//  make_constraints(current_time_m);  
+//  tangent_matrix_m.clear();
+
+  {
+  const types::global_dof_index n_dofs_u = dofs_per_block_m[u_dof_m];
+  const types::global_dof_index n_dofs_d = dofs_per_block_m[d_dof_m];
+
+  BlockDynamicSparsityPattern dsp(n_blocks_m,n_blocks_m);
+
+  dsp.block(u_dof_m, u_dof_m).reinit(n_dofs_u, n_dofs_u);
+  dsp.block(u_dof_m, d_dof_m).reinit(n_dofs_u, n_dofs_d);
+  dsp.block(d_dof_m, u_dof_m).reinit(n_dofs_d, n_dofs_u);
+  dsp.block(d_dof_m, d_dof_m).reinit(n_dofs_d, n_dofs_d);
+  dsp.collect_sizes();
+/*
+  Table<2, DoFTools::Coupling> coupling(n_components_m, n_components_m);
+      for (unsigned int ii = 0; ii < n_components_m; ++ii)
+        for (unsigned int jj = 0; jj < n_components_m; ++jj)
+          if (((ii < p_component) && (jj == J_component))
+              || ((ii == J_component) && (jj < p_component))
+              || ((ii == p_component) && (jj == p_component)))
+            coupling[ii][jj] = DoFTools::none;
+          else
+            coupling[ii][jj] = DoFTools::always;
+*/
+  DoFTools::make_sparsity_pattern(dof_handler_m
+                                  ,dsp
+                                  ,constraints_m
+                                  ,false);
+  sparsity_pattern_m.copy_from (dsp);
+  }
+
+  tangent_matrix_m.reinit (sparsity_pattern_m);
+/*
+  constraints_m.clear ();
+  DoFTools::make_hanging_node_constraints (dof_handler_m,
+                                           constraints_m);
+  constraints_m.close ();
+*/
 
   system_rhs_m.reinit (dofs_per_block_m);
   system_rhs_m.collect_sizes();
@@ -92,6 +179,7 @@ void Phasefield<dim>::setup_system ()
 
   timer.leave_subsection();
 }
+
 
 
 template <int dim>
@@ -184,12 +272,12 @@ void Phasefield<dim>::setup_quadrature_point_history()
 //    std::cout << "    Setting up quadrature point data..." << std::endl;
     
     history_dof_handler_m.distribute_dofs(history_fe_m);	//history
-    
+/*    
     history_constraints_m.clear ();
     DoFTools::make_hanging_node_constraints (history_dof_handler_m,
                                            history_constraints_m);
     history_constraints_m.close ();
-
+*/
     for (unsigned int i=0; i<1; i++)
       for (unsigned int j=0; j<1; j++)
       {								
@@ -338,13 +426,231 @@ return Total_energy;
 
 
 template <int dim>
-void Phasefield<dim>::assemble_system (const AllParameters &param,BlockVector<double> & update)
+struct Phasefield<dim>::PerTaskData_K
+{
+    FullMatrix<double>        cell_matrix;
+    std::vector<types::global_dof_index> local_dof_indices;
+    PerTaskData_K(const FiniteElement<dim> &fe)
+      :
+      cell_matrix(fe.dofs_per_cell, fe.dofs_per_cell),
+      local_dof_indices(fe.dofs_per_cell)
+    {}
+
+    void reset()
+    {
+      cell_matrix = 0.0;
+    }
+};
+
+template <int dim>
+struct Phasefield<dim>::ScratchData_K
+{
+    FEValues<dim> fe_values;
+
+    std::vector<SymmetricTensor<2,dim>> epsilon_vals;
+    std::vector<SymmetricTensor<2,dim>> old_epsilon_vals;
+    std::vector<double> d_vals;
+    SymmetricTensor<2,dim> tmp1,tmp2;
+    SymmetricTensor<4,dim> BigC_plus;
+    SymmetricTensor<4,dim> BigC_minus;
+    SymmetricTensor<2,dim> sigma_plus;
+
+    const BlockVector<double> & update;
+    const BlockVector<double> & old_solution_m;
+    std::vector<double> shape_d;
+    std::vector<Tensor<2, dim>> grad_shape_u;
+    std::vector<Tensor<1, dim>> grad_shape_d;
+    std::vector<SymmetricTensor<2, dim>> sym_grad_shape_u;
+
+    ScratchData_K( const FiniteElement<dim> &fe_cell
+                  ,const QGauss<dim> &qf_cell
+                  ,const UpdateFlags uf_cell
+	          ,const BlockVector<double> &upd
+		  ,const BlockVector<double> &old_sol_m)
+     	    :fe_values(fe_cell, qf_cell, uf_cell)
+		,epsilon_vals(qf_cell.size())
+		,old_epsilon_vals(qf_cell.size())
+		,d_vals(qf_cell.size())
+		,update(upd)
+		,old_solution_m(old_sol_m)
+		,shape_d(fe_cell.dofs_per_cell)
+		,grad_shape_u(fe_cell.dofs_per_cell)
+		,grad_shape_d(fe_cell.dofs_per_cell)
+		,sym_grad_shape_u(fe_cell.dofs_per_cell)
+		{}
+
+    ScratchData_K(const ScratchData_K &Scratch)
+      		:fe_values(Scratch.fe_values.get_fe()
+                ,Scratch.fe_values.get_quadrature()
+                ,Scratch.fe_values.get_update_flags())
+      		,epsilon_vals(Scratch.epsilon_vals)
+		,old_epsilon_vals(Scratch.old_epsilon_vals)
+      		,d_vals(Scratch.d_vals)
+		,update(Scratch.update)
+		,old_solution_m(Scratch.old_solution_m)
+		,shape_d(Scratch.shape_d)
+		,grad_shape_u(Scratch.grad_shape_u)
+       		,grad_shape_d(Scratch.grad_shape_d)
+		,sym_grad_shape_u(Scratch.sym_grad_shape_u)
+		,tmp1(Scratch.tmp1)
+		,tmp2(Scratch.tmp2)
+		,BigC_plus(Scratch.BigC_plus)
+		,BigC_minus(Scratch.BigC_minus)
+		,sigma_plus(Scratch.sigma_plus)
+		{}
+
+    void reset()
+    {
+    const unsigned int n_q_points = epsilon_vals.size();
+    for(unsigned int q=0;q<n_q_points;++q)
+    {
+	epsilon_vals[q] = 0.0;
+    	old_epsilon_vals[q] = 0.0;
+    	d_vals[q] = 0.0;
+    }
+
+    }
+};
+
+template <int dim>
+void Phasefield<dim>::assemble_system_tangent (const AllParameters &param,BlockVector<double> & update)
+{
+  timer.enter_subsection("Assemble tangent matrix");
+  std::cout << " ASM_K " << std::flush;
+
+  tangent_matrix_m = 0.0;
+  const unsigned int   dofs_per_cell = fe_m.dofs_per_cell;
+
+  const UpdateFlags uf_cell(update_values    |  update_gradients |
+                            update_quadrature_points |
+			      update_JxW_values);
+
+  PerTaskData_K per_task_data(fe_m);
+  ScratchData_K scratch_data(fe_m, quadrature_formula_m, uf_cell,update,old_solution_m);
+
+  WorkStream::run (dof_handler_m.begin_active(),
+                   dof_handler_m.end(),
+                   std::bind(&Phasefield<dim>::assemble_system_tangent_one_cell
+                             ,this
+                             ,param
+                             ,std::placeholders::_1
+                             ,std::placeholders::_2
+                             ,std::placeholders::_3),
+                   std::bind(&Phasefield<dim>::copy_local_to_global_K,
+                             this,
+                             std::placeholders::_1),
+		   scratch_data,
+                   per_task_data);
+
+  timer.leave_subsection();
+} 
+
+template <int dim>
+void Phasefield<dim>::copy_local_to_global_K(const PerTaskData_K &data)
+{
+  const unsigned int   dofs_per_cell = fe_m.dofs_per_cell;
+
+  for (unsigned int i = 0; i < dofs_per_cell; ++i)
+      for (unsigned int j = 0; j < dofs_per_cell; ++j)
+        tangent_matrix_m.add(data.local_dof_indices[i],
+                             data.local_dof_indices[j],
+                             data.cell_matrix(i, j));
+}	
+
+template <int dim>
+void Phasefield<dim>::assemble_system_tangent_one_cell (const parameters::AllParameters &param,
+                      		                        const typename DoFHandler<dim>::active_cell_iterator &cell
+                                		       ,ScratchData_K &scratch
+                                             	       ,PerTaskData_K &data)const
+{
+  data.reset();
+  scratch.reset();
+  scratch.fe_values.reinit(cell);
+  
+  const unsigned int   dofs_per_cell = fe_m.dofs_per_cell;
+  const unsigned int   n_q_points    = quadrature_formula_m.size();
+
+  double History;
+
+  PointHistory *local_quadrature_point_data =
+            reinterpret_cast<PointHistory *>(cell->user_pointer());
+
+  scratch.fe_values[u_extractor].get_function_symmetric_gradients(scratch.update,scratch.epsilon_vals);
+  scratch.fe_values[u_extractor].get_function_symmetric_gradients(scratch.old_solution_m,scratch.old_epsilon_vals);
+  scratch.fe_values[d_extractor].get_function_values(scratch.update,scratch.d_vals);
+
+
+  for (unsigned int q = 0; q < n_q_points; ++q)
+  {
+
+	if(current_time_m == param.time.delta_t)
+		History = 0;
+	else
+		History = std::max(local_quadrature_point_data[q].history,get_history(param.materialmodel.lambda,param.materialmodel.mu,scratch.old_epsilon_vals[q]));
+
+        local_quadrature_point_data[q].history = History;
+
+	scratch.sigma_plus= get_stress_plus(param.materialmodel.lambda,param.materialmodel.mu,scratch.epsilon_vals[q]);
+	scratch.BigC_plus = get_BigC_plus(param.materialmodel.lambda,param.materialmodel.mu,scratch.epsilon_vals[q]);
+	scratch.BigC_minus = get_BigC_minus(param.materialmodel.lambda,param.materialmodel.mu,scratch.epsilon_vals[q]);
+
+	for(unsigned int k=0;k<dofs_per_cell;++k)
+	{
+		scratch.shape_d[k] = scratch.fe_values[d_extractor].value(k,q);
+		scratch.grad_shape_u[k] =  scratch.fe_values[u_extractor].gradient(k, q);
+		scratch.grad_shape_d[k] =  scratch.fe_values[d_extractor].gradient(k, q);
+		scratch.sym_grad_shape_u[k] =  scratch.fe_values[u_extractor].symmetric_gradient(k, q);
+	}
+            for (unsigned int i = 0; i < dofs_per_cell; ++i){
+
+    		    for (unsigned int j = i/*0*/; j < dofs_per_cell; ++j){
+
+			if((dof_block_identifier_m[i] == d_dof_m) && (dof_block_identifier_m[j] == d_dof_m))
+			{
+                 	data.cell_matrix(i, j) +=( (param.pf.g_c/param.pf.l)*scratch.shape_d[i]*scratch.shape_d[j] 
+						  + (param.pf.g_c*param.pf.l)* scalar_product(scratch.grad_shape_d[i],scratch.grad_shape_d[j])
+					           + 2*scratch.shape_d[i]*scratch.shape_d[j]*History
+					           + (param.materialmodel.viscosity/param.time.delta_t)*scratch.shape_d[i]*scratch.shape_d[j]) *scratch.fe_values.JxW(q);
+			}
+			else if((dof_block_identifier_m[i] == d_dof_m) && (dof_block_identifier_m[j] == u_dof_m))
+			{
+			data.cell_matrix(i,j) += 0;
+			}
+			else if((dof_block_identifier_m[i] == u_dof_m) && (dof_block_identifier_m[j] == d_dof_m))
+			{
+			data.cell_matrix(i,j) += ( 2*scalar_product(scratch.grad_shape_u[i],scratch.sigma_plus)*(1-scratch.d_vals[q])*scratch.shape_d[j])*scratch.fe_values.JxW(q);
+			}
+			else if((dof_block_identifier_m[i] == u_dof_m) && (dof_block_identifier_m[j] == u_dof_m))
+			{
+			double_contract(scratch.tmp1, scratch.BigC_plus, scratch.sym_grad_shape_u[j]);
+			double_contract(scratch.tmp2, scratch.BigC_minus,scratch.sym_grad_shape_u[j]);
+
+			data.cell_matrix(i,j) += (- scalar_product(scratch.grad_shape_u[i],scratch.tmp1)*(1 - scratch.d_vals[q])*(1 - scratch.d_vals[q])
+					          - param.pf.k*scalar_product(scratch.grad_shape_u[i],scratch.tmp1)
+					          - scalar_product(scratch.grad_shape_u[i],scratch.tmp2)  )*scratch.fe_values.JxW(q);
+			}
+                }
+            }
+          }
+
+        for(unsigned int i=0;i<dofs_per_cell;++i)
+            for(unsigned int j=0;j<i;++j)
+                data.cell_matrix(i,j) = data.cell_matrix(j,i);
+
+  cell->get_dof_indices(data.local_dof_indices);
+
+}
+
+/*
+template <int dim>
+void Phasefield<dim>::assemble_system_tangent (const AllParameters &param,BlockVector<double> & update)
 {
   timer.enter_subsection("Assemble tangent matrix");
   
   FEValues<dim> fe_values (fe_m, quadrature_formula_m,
                            update_values   | update_gradients |
                            update_quadrature_points | update_JxW_values);
+ 
   const unsigned int   dofs_per_cell = fe_m.dofs_per_cell;
   const unsigned int   n_q_points    = quadrature_formula_m.size();
   FullMatrix<double>   cell_matrix (dofs_per_cell, dofs_per_cell);
@@ -381,15 +687,15 @@ void Phasefield<dim>::assemble_system (const AllParameters &param,BlockVector<do
 		History = std::max(local_quadrature_point_data[q].history,get_history(param.materialmodel.lambda,param.materialmodel.mu,old_epsilon_vals[q]));
 
 //Printing///////////////////
-/*	    if(cell==dof_handler_m.begin_active() && q==2){
-		std::cout<<std::endl;
-		std::cout<<"vertex_index: "<<cell->vertex_index(q)<<std::endl;
-		std::cout<<"get_history(): "<<get_history(param.materialmodel.lambda,param.materialmodel.mu,old_epsilon_vals[q])<<std::endl;
-		std::cout<<"local_quadrature_point_data[q].history "<<local_quadrature_point_data[q].history<<std::endl;
-		std::cout<<"History: "<<History<<std::endl;
-	    }	    	
+//	    if(cell==dof_handler_m.begin_active() && q==2){
+//		std::cout<<std::endl;
+//		std::cout<<"vertex_index: "<<cell->vertex_index(q)<<std::endl;
+//		std::cout<<"get_history(): "<<get_history(param.materialmodel.lambda,param.materialmodel.mu,old_epsilon_vals[q])<<std::endl;
+//		std::cout<<"local_quadrature_point_data[q].history "<<local_quadrature_point_data[q].history<<std::endl;
+//		std::cout<<"History: "<<History<<std::endl;
+//	    }	    	
 ////////////////////////////	    
-*/	
+	
 		local_quadrature_point_data[q].history = History;
 
 	    const SymmetricTensor<2,dim> sigma_plus = get_stress_plus(param.materialmodel.lambda,param.materialmodel.mu,epsilon_vals[q]);
@@ -397,21 +703,20 @@ void Phasefield<dim>::assemble_system (const AllParameters &param,BlockVector<do
 	    const SymmetricTensor<4,dim> BigC_minus = get_BigC_minus(param.materialmodel.lambda,param.materialmodel.mu,epsilon_vals[q]);
 
 //Printing/////////////////
-/*	    if(cell==dof_handler_m.begin_active() && q==2){
-		std::cout<<std::endl;
-		std::cout<<"d_vals[q] _system "<<d_vals[q]<<std::endl;
-		std::cout<<"After: local_quadrature_point_data[q].history "<<local_quadrature_point_data[q].history<<std::endl;
+//	    if(cell==dof_handler_m.begin_active() && q==2){
+//		std::cout<<std::endl;
+//		std::cout<<"d_vals[q] _system "<<d_vals[q]<<std::endl;
+//		std::cout<<"After: local_quadrature_point_data[q].history "<<local_quadrature_point_data[q].history<<std::endl;
 //		std::cout<<"newton update norm_system : "<<update.l2_norm()<<std::endl;
-	}*/
-/*		std::cout<<"History_assemble_system: "<<History<<std::endl;
-		std::cout<<"sigma_plus_assem_sys:"<<std::endl;
-		print_tensor(sigma_plus);
-		std::cout<<"BigC_plus:"<<std::endl;
-		print_tensor(BigC_plus);
-		std::cout<<"BigC_minus:"<<std::endl;
-		print_tensor(BigC_minus);
-		}
-*/
+//		std::cout<<"History_assemble_system: "<<History<<std::endl;
+//		std::cout<<"sigma_plus_assem_sys:"<<std::endl;
+//		print_tensor(sigma_plus);
+//		std::cout<<"BigC_plus:"<<std::endl;
+//		print_tensor(BigC_plus);
+//		std::cout<<"BigC_minus:"<<std::endl;
+//		print_tensor(BigC_minus);
+//		}
+
 //////////////////////////
 
             for (unsigned int i = 0; i < dofs_per_cell; ++i){
@@ -466,7 +771,7 @@ void Phasefield<dim>::assemble_system (const AllParameters &param,BlockVector<do
   }
   timer.leave_subsection();
 }
-
+*/
 
 template <int dim>
 void Phasefield<dim>::assemble_rhs(const AllParameters &param,BlockVector<double> & update)
@@ -655,9 +960,11 @@ void Phasefield<dim>::solve_nonlinear_newton(const AllParameters &param,
 
 	BlockVector<double> current_sol = solution_m;//Includes previous timestep solution also
 	current_sol += solution_delta;		//Gives updated solution till now 
-	assemble_system(param,current_sol/*solution_delta*/);	//Evaluation at solution calculated until now
+	assemble_system_tangent(param,current_sol/*solution_delta*/);	//Evaluation at solution calculated until now
       	assemble_rhs(param,current_sol/*solution_delta*/);
-	
+
+	constraints_m.condense(tangent_matrix_m);
+
         get_error_residual(error_residual);
 
         if(new_iter==0)
@@ -738,7 +1045,7 @@ std::pair<unsigned int,double> Phasefield<dim>::solve_linear_sys(const AllParame
   Vector<double> tmp1(newton_update.block(u_dof_m).size());
   Vector<double> tmp2(newton_update.block(u_dof_m).size());
 
-/*
+
   SolverControl           solver_control (tangent_matrix_m.block(d_dof_m,d_dof_m).m(),
                                           param.linearsolver.cg_tol*system_rhs_m.block(d_dof_m).l2_norm());
   GrowingVectorMemory<Vector<double> > GVM;
@@ -746,15 +1053,15 @@ std::pair<unsigned int,double> Phasefield<dim>::solve_linear_sys(const AllParame
   PreconditionSSOR<> preconditioner;
   preconditioner.initialize(tangent_matrix_m.block(d_dof_m,d_dof_m), param.linearsolver.relax_prm);
   cg.solve (tangent_matrix_m.block(d_dof_m,d_dof_m), newton_update.block(d_dof_m), system_rhs_m.block(d_dof_m),preconditioner);
-*/
 
+/*
   SparseDirectUMFPACK k_dd;
   k_dd.initialize(tangent_matrix_m.block(d_dof_m,d_dof_m)); 
   k_dd.vmult(newton_update.block(d_dof_m),system_rhs_m.block(d_dof_m));
-/*
+*/
   lin_ite = solver_control.last_step();
   lin_res = solver_control.last_value();
-*/
+
   timer.leave_subsection();
 /*
   std::cout<<std::endl;
@@ -1068,9 +1375,10 @@ void Phasefield<dim>::make_constraints(unsigned int &itr,const double load_ratio
     }
 
    constraints_m.clear();
+/*
    DoFTools::make_hanging_node_constraints (dof_handler_m,
                                            constraints_m);
-
+*/
    std::vector<bool> component_mask(dim+1, false);
      
    //Tension test

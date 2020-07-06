@@ -1,9 +1,18 @@
 #pragma once
+#include <deal.II/base/timer.h>
+#include <deal.II/base/tensor_function.h>
+#include <deal.II/base/function.h>
+#include <deal.II/base/symmetric_tensor.h>
+#include <deal.II/base/geometry_info.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_point_data.h>
+#include <deal.II/base/work_stream.h>
+#include <deal.II/base/parameter_handler.h>
+#include <deal.II/base/parameter_handler.h>
+
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/sparse_matrix.h>
@@ -13,39 +22,45 @@
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/precondition.h>
 #include <deal.II/lac/constraint_matrix.h>
+#include <deal.II/lac/linear_operator.h>
+#include <deal.II/lac/packaged_operation.h>
+#include <deal.II/lac/precondition_selector.h>
+#include <deal.II/lac/solver_selector.h>
+#include <deal.II/lac/block_sparse_matrix.h>
+#include <deal.II/lac/block_vector.h>
+
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_refinement.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
+#include <deal.II/grid/grid_in.h>
+#include <deal.II/grid/grid_out.h>
+#include <deal.II/grid/grid_tools.h>
+
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_tools.h>
+#include <deal.II/dofs/dof_renumbering.h>
+
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/solution_transfer.h>
+#include <deal.II/numerics/solution_transfer.h>
+
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_values_extractors.h>
 #include <deal.II/fe/fe_dgq.h>
-#include <deal.II/base/parameter_handler.h>
-#include <deal.II/grid/grid_in.h>
-#include <deal.II/grid/grid_out.h>
-#include <deal.II/grid/grid_tools.h>
+#include <deal.II/fe/fe_tools.h>
+#include <deal.II/fe/mapping_q_eulerian.h>
+
 #include "parameter.h"
 #include "others.h"
-#include <deal.II/base/timer.h>
-#include <deal.II/base/tensor_function.h>
-#include <deal.II/base/function.h>
-#include <deal.II/base/symmetric_tensor.h>
-#include <deal.II/base/geometry_info.h>
-#include <deal.II/dofs/dof_renumbering.h>
-#include <deal.II/numerics/solution_transfer.h>
-#include <deal.II/lac/block_sparse_matrix.h>
-#include <deal.II/lac/block_vector.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -60,6 +75,9 @@ namespace thesis
       void run (const parameters::AllParameters &param);
 
     private:
+
+      struct PerTaskData_K;
+      struct ScratchData_K;
 
       /*!Read mesh from external file*/
       void import_mesh(const parameters::AllParameters &param);
@@ -83,8 +101,16 @@ namespace thesis
       void make_constraints(unsigned int &itr,const double load_ratio,const double u_total);
 
       /*!Assemble the linear system for the elasticity problem*/
-      void assemble_system (const parameters::AllParameters &param,
-                            dealii::BlockVector<double> & update);
+      void assemble_system_tangent (const parameters::AllParameters &param,
+                                    dealii::BlockVector<double> & update);
+  
+      void assemble_system_tangent_one_cell (const parameters::AllParameters &param,
+					     const typename dealii::DoFHandler<dim>::active_cell_iterator &cell,
+                                     	     ScratchData_K &scratch,
+                                     	     PerTaskData_K &data)const;
+
+      void copy_local_to_global_K(const PerTaskData_K &data);
+
 
       /*Assemble External forces(body forces + Neumann forces)*/
       void assemble_rhs(const parameters::AllParameters &param,
@@ -111,8 +137,8 @@ namespace thesis
       dealii::BlockVector<double>       system_rhs_m;
       dealii::BlockVector<double>       old_solution_m;//for time discretization of phasefield
 
-      double		                current_time_m;
-      mutable dealii::TimerOutput	timer;
+      dealii::FEValuesExtractors::Vector u_extractor;
+      dealii::FEValuesExtractors::Scalar d_extractor;
 
       /*!A struct used to keep track of data needed as convergence criteria.*/
       struct Error
@@ -148,9 +174,6 @@ namespace thesis
       void get_newton_update_error(const dealii::BlockVector<double> &newton_update
 		      		  ,Error & error_update);
 
-      dealii::FEValuesExtractors::Vector u_extractor;
-      dealii::FEValuesExtractors::Scalar d_extractor;
-	
       static const unsigned int n_blocks_m = 2;
       static const unsigned int n_components_m = dim+1;
       static const unsigned int u_dof_start_m = 0;
@@ -198,7 +221,7 @@ namespace thesis
       void history_global_to_quadrature();
       double get_history(const double lambda
                 	,const double mu
-    			,dealii::SymmetricTensor<2,dim> &eps);
+    			,const dealii::SymmetricTensor<2,dim> &eps)const;
 
 
       void compute_load(const double lambda,const double mu,dealii::BlockVector<double> &solution);    
@@ -209,5 +232,7 @@ namespace thesis
       
       void compute_lefm_errors(const parameters::AllParameters &param);
 
+      double		                current_time_m;
+      mutable dealii::TimerOutput	timer;
     };
 }

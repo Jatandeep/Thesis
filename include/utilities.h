@@ -1,6 +1,8 @@
 #pragma once
-
-#include "../include/ElasticProblem.h"
+//#include "../include/ElasticTrial.h"
+//#include "../include/ElasticProblem.h"
+//#include "../include/Phasefield.h"
+#include "../include/PhasefieldSMP.h"
 
 template<int dim>
 void print_tensor(const dealii::SymmetricTensor<4,dim>&C);

@@ -1,6 +1,9 @@
-#include "../include/ElasticProblem.h"
+//#include "../include/ElasticTrial.h"
+//#include "../include/ElasticProblem.h"
 #include "../include/others.h"
-#include "../include/Phasefield.h"
+//#include "../include/Phasefield.h"
+#include "../include/PhasefieldSMP.h"
+
 using namespace dealii;
 using namespace thesis;
 /*
@@ -13,7 +16,7 @@ double BoundaryTension<dim>::value (const Point<dim>  &p,
 
   if (component == 1)
     {
-      return ( ( (p(0) <= 1.0) && (p(0) >= 0.0) )
+      return ( ( (p(1) == 1.0) && (p(0) <= 1.0) && (p(0) >= 0.0) )
                ? ( load_ratio_ * u_total_) : 0 );
 //      return ( ((p(1) == 1.0) && (p(0) <= 1.0) && (p(0) >= -1.0))
 //               ? ( load_ratio_ * u_total) : 0 );			//For Reference solution
@@ -52,6 +55,7 @@ void BoundaryTension<dim>::vector_value (const Point<dim> &p,
   
 } 
 
+/*
 template <int dim>
 double BoundaryShear<dim>::value (const Point<dim>  &p,
                                     const unsigned int component) const
@@ -71,6 +75,8 @@ void BoundaryShear<dim>::vector_value (const Point<dim> &p,
   }
   
 }
+*/
+
 template <int dim>
 double BoundaryForce<dim>::value (const Point<dim> &,
                                const unsigned int) const
@@ -147,7 +153,7 @@ double Reference_solution<dim>::value(const Point<dim> &   p,
 }
 
 template <int dim>
-double get_epsplus_sq(SymmetricTensor<2,dim> &eps)
+double get_epsplus_sq(const SymmetricTensor<2,dim> &eps)
 {
 	std::array<double,std::integral_constant<int,dim>::value> eps_eigenval;
 	eps_eigenval = eigenvalues(eps);
@@ -185,10 +191,12 @@ double get_epsminus_sq(SymmetricTensor<2,dim> &eps)
 	
 return result;
 }
+
+
 template <int dim>
 double Phasefield<dim>::get_history(const double lambda
 	  	  ,const double mu
-		  ,SymmetricTensor<2,dim> &eps)
+		  ,const SymmetricTensor<2,dim> &eps)const
 {
 	double history = 0;
 			
@@ -197,7 +205,6 @@ double Phasefield<dim>::get_history(const double lambda
 	double tr_epsplus_sq = get_epsplus_sq(eps); 	
 
 	history = 0.5*lambda*tr_eps_plus*tr_eps_plus + mu*tr_epsplus_sq;	
-
 
 return history;
 }
@@ -341,10 +348,10 @@ template class thesis::BoundaryForce<2>;
 template class thesis::BoundaryForce<3>;
 template class thesis::BoundaryTension<2>;
 template class thesis::BoundaryTension<3>;
-template class thesis::BoundaryShear<2>;
-template class thesis::BoundaryShear<3>;
-template double thesis::Phasefield<2>::get_history(const double,const double,SymmetricTensor<2,2>&/*BlockVector<double>&*/);
-template double thesis::Phasefield<3>::get_history(const double,const double,SymmetricTensor<2,3>&/*BlockVector<double>&*/);
+//template class thesis::BoundaryShear<2>;
+//template class thesis::BoundaryShear<3>;
+template double thesis::Phasefield<2>::get_history(const double,const double,const SymmetricTensor<2,2>&)const;
+template double thesis::Phasefield<3>::get_history(const double,const double,const SymmetricTensor<2,3>&)const;
 template double get_energy_density_plus(const double,const double,SymmetricTensor<2,2>&);
 template double get_energy_density_plus(const double,const double,SymmetricTensor<2,3>&);
 template double get_energy_density_minus(const double,const double,SymmetricTensor<2,2>&);

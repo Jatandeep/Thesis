@@ -9,14 +9,16 @@ set(CMAKE_CXX_FLAGS "-pthread -O3")
 set(CMAKE_CXX_FLAGS "-fmax-errors=1")
 set(CMAKE_CXX_FLAGS "-DDEAL_II_DEBUG")
 
-#set(CMAKE_CXX_COMPILER "mpicxx")
+set(CMAKE_CXX_COMPILER "mpicxx")
 #set(CMAKE_C_COMPILER "mpicc")
 
 # declare source files and header files
 SET(SOURCES
     source/main.cpp
-#    source/ElasticProblem.cpp
-    source/Phasefield.cpp
+    #source/ElasticTrial.cpp   
+    #source/ElasticProblem.cpp
+    #source/Phasefield.cpp
+    source/PhasefieldSMP.cpp
     source/parameter.cpp
     source/others.cpp
     source/constitutive.cpp
@@ -24,13 +26,15 @@ SET(SOURCES
 )
 
 SET(HEADERS
-#    include/ElasticProblem.h
+    #include/ElasticTrial.h
+    #include/ElasticProblem.h
     include/others.h
     include/parameter.h
     include/constants.h    
     include/constitutive.h
     include/utilities.h
-    include/Phasefield.h
+    #include/Phasefield.h
+    include/PhasefieldSMP.h
 )
 
 
