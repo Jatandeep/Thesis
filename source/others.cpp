@@ -1,39 +1,7 @@
-//#include "../include/ElasticTrial.h"
-//#include "../include/ElasticProblem.h"
 #include "../include/others.h"
-//#include "../include/Phasefield.h"
-#include "../include/PhasefieldSMP.h"
 
 using namespace dealii;
 using namespace thesis;
-/*
-template <int dim>
-double BoundaryTension<dim>::value (const Point<dim>  &p,
-                                    const unsigned int component) const
-{
- Assert (component < this->n_components,
-          ExcIndexRange (component, 0, this->n_components));
-
-  if (component == 1)
-    {
-      return ( ( (p(1) == 1.0) && (p(0) <= 1.0) && (p(0) >= 0.0) )
-               ? ( load_ratio_ * u_total_) : 0 );
-//      return ( ((p(1) == 1.0) && (p(0) <= 1.0) && (p(0) >= -1.0))
-//               ? ( load_ratio_ * u_total) : 0 );			//For Reference solution
-    }
-
-  return 0;
-
- }
-
-template <int dim>
-void BoundaryTension<dim>::vector_value (const Point<dim> &p,
-                                           Vector<double>   &values) const
-{
-  for (unsigned int c=0; c<this->n_components; ++c)
-    values (c) = BoundaryTension<dim>::value (p, c);
-}
-*/
 
 template <int dim>
 double BoundaryTension<dim>::value (const Point<dim>  &p,
@@ -49,7 +17,7 @@ void BoundaryTension<dim>::vector_value (const Point<dim> &p,
   else
   {
 	vectorValue[0] = 0.0;
-	vectorValue[1] = ((p(0) <= 1.0) && (p(0) >= 0.0)) ? load_ratio_*u_total_ :0 ;
+	vectorValue[1] =/* ((p(0) <= 1.0) && (p(0) >= 0.0)) ?*/ load_ratio_ *u_total_;/* :0 ;*/
 
   }
   
@@ -104,11 +72,9 @@ double InitialCrack<dim>::value (const Point<dim>  &p,
   
   if (component == dim)
     {
-	    if((p(0)>=0.5) && (p(0)<=1) && (p(1)>=0.5-_min_cell_diameter) && (p(1)<= 0.5 + _min_cell_diameter))
-		    return 1;
-//	    if((p(0)>=0) && (p(0)<=1) && (p(1)>=0.0-_min_cell_diameter/* tol*/) && (p(1)<= 0.0 + _min_cell_diameter/* tol*/))
-//		    return 1;											//For Reference solution
-	    else
+	//    if((p(0)>=0.5) && (p(0)<=1) && (p(1)>=0.5-_min_cell_diameter) && (p(1)<= 0.5 + _min_cell_diameter))
+	//	    return 1;
+	//    else
 		    return 0;
     }
 
@@ -164,7 +130,7 @@ double get_epsplus_sq(const SymmetricTensor<2,dim> &eps)
 		eps_eigenval_plus[i]=(eps_eigenval[i]>0) ? eps_eigenval[i]:0;
 	}
 
-	double result=0;
+	double result; //=0;
 	for(unsigned int i=0;i<dim;++i){
 	result += eps_eigenval_plus[i]*eps_eigenval_plus[i];
 	}
@@ -184,7 +150,7 @@ double get_epsminus_sq(SymmetricTensor<2,dim> &eps)
 		eps_eigenval_minus[i]=(eps_eigenval[i]>0) ? 0:eps_eigenval[i];
 	}
 
-	double result=0;
+	double result;//=0;
 	for(unsigned int i=0;i<dim;++i){
 	result += eps_eigenval_minus[i]*eps_eigenval_minus[i];
 	}
@@ -198,7 +164,7 @@ double Phasefield<dim>::get_history(const double lambda
 	  	  ,const double mu
 		  ,const SymmetricTensor<2,dim> &eps)const
 {
-	double history = 0;
+	double history;// = 0;
 			
 	double tr_eps = trace(eps);
 	double tr_eps_plus = (tr_eps>0) ? tr_eps:0;
@@ -258,11 +224,11 @@ void Phasefield<dim>::compute_load(const double lambda
                                    update_normal_vectors | update_gradients |
 				   update_JxW_values);
 
-  const unsigned int   dofs_per_cell = fe_m.dofs_per_cell;
+
   const unsigned int   n_face_q_points    = face_quadrature_formula_m.size();
 
   Tensor<1,dim> load_value;
-  Tensor<1,dim> load_value_1;
+
 
   for (const auto &cell : dof_handler_m.active_cell_iterators())
     {
@@ -288,35 +254,10 @@ void Phasefield<dim>::compute_load(const double lambda
 
                         }
                   }
-/*		 if(cell->face(face)->at_boundary() && (cell->face(face)->boundary_id() == 0 ||
-                                                        cell->face(face)->boundary_id() == 1 ||
-                                                        cell->face(face)->boundary_id() == 2) )
-                 {
-                        fe_values_face.reinit(cell, face);
-                         
-			std::vector<SymmetricTensor<2,dim>> epsilon_vals(n_face_q_points);
-        		fe_values_face[u_extractor].get_function_symmetric_gradients(solution,epsilon_vals);
-
-       			for (unsigned int q_point = 0; q_point < n_face_q_points;++q_point)
-                        {
-                                Tensor<2,dim> stress_display_1;
-                                double tr_eps;
-                                tr_eps = trace(epsilon_vals[q_point]);
-                                stress_display_1 = lambda*tr_eps*unit_symmetric_tensor<dim>()
-                                                + 2*mu*epsilon_vals[q_point];
-                                load_value_1 += stress_display_1*fe_values_face.normal_vector(q_point)*fe_values_face.JxW(q_point);
-                        }
-                }
-*/
 	}
   }
-std::cout<<"Boundary3_Load_x: "<<load_value[0]<<std::endl;
-std::cout<<"Boundary3_Load_y: "<<load_value[1]<<std::endl;
-std::cout<<std::endl;
-/*
-std::cout<<"Boundary012_Load_x: "<<load_value_1[0]<<std::endl;
-std::cout<<"Boundary012_Load_y: "<<load_value_1[1]<<std::endl;
-*/
+double load_y = load_value[1];
+statistics.add_value("Load y",load_y);
 }
 
 

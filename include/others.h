@@ -6,13 +6,9 @@
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/tensor.h>
-//#include "../include/ElasticTrial.h"
-//#include "../include/ElasticProblem.h"
-//#include "../include/Phasefield.h"
-#include "../include/PhasefieldSMP.h"
 #include <deal.II/lac/sparse_direct.h>
 #include <deal.II/lac/sparse_ilu.h>
-
+#include "../include/utilities.h"
 namespace thesis
 {
 

@@ -11,7 +11,7 @@ namespace thesis
     class GeometryModel{
     public:
         std::string meshfile;
-	double act_ref, act_cors;
+	double act_ref, act_cors,grid_scale;
 	unsigned int gl_ref,lc_ref;
 
         static void declare_param(dealii::ParameterHandler& prm);
@@ -63,8 +63,8 @@ namespace thesis
     class Time{
     public:
         double start_time, end_time;
-        double delta_t, time_tol;
-	unsigned int max_timesteps;
+        double delta_t, time_tol,delta_t_f,time_change_interval;
+	unsigned int op_freq;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);

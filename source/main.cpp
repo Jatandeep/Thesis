@@ -3,11 +3,9 @@
 #include <fstream>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/tensor.h>
-//#include "../include/ElasticTrial.h"
-//#include "../include/ElasticProblem.h"
 #include "../include/parameter.h"
-//#include "../include/Phasefield.h"
-#include "../include/PhasefieldSMP.h"
+#include "../include/Phasefield.h"
+//#include "../include/PhasefieldSMP.h"
 
 int main(int argc, char *argv[]){
 
@@ -15,8 +13,6 @@ int main(int argc, char *argv[]){
       {
        using namespace dealii;
 	
-//       Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
-
        const std::string filename = argv[1];
 
        thesis::parameters::AllParameters param(filename);

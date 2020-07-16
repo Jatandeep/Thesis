@@ -16,6 +16,7 @@ void GeometryModel::declare_param(ParameterHandler &prm){
         prm.declare_entry("Local refinement", "0", Patterns::Integer());
         prm.declare_entry("Act_ref", "0.3", Patterns::Double(0));
         prm.declare_entry("Act_cors", "0.03", Patterns::Double(0));
+        prm.declare_entry("Grid scale", "1", Patterns::Double(0));
     }
     prm.leave_subsection();
 }
@@ -28,6 +29,7 @@ void GeometryModel::parse_param(ParameterHandler &prm){
        	lc_ref = prm.get_integer("Local refinement");
 	act_ref = prm.get_double("Act_ref");
         act_cors = prm.get_double("Act_cors");
+   	grid_scale = prm.get_double("Grid scale");
     }
     prm.leave_subsection();
 }
@@ -126,8 +128,10 @@ void Time::declare_param(ParameterHandler &prm){
         prm.declare_entry("Starting time", "0", Patterns::Double(0));
         prm.declare_entry("End time", "1", Patterns::Double(0));
         prm.declare_entry("Delta time", "0.1", Patterns::Double(0));
-        prm.declare_entry("Max no of timesteps", "1", Patterns::Integer());
+        prm.declare_entry("Delta time final", "0.1", Patterns::Double(0));
+	prm.declare_entry("Time change interval", "1", Patterns::Anything());
         prm.declare_entry("Time tolerance", "1", Patterns::Anything());
+        prm.declare_entry("Output frequency", "5", Patterns::Integer());
     }
     prm.leave_subsection();
 }
@@ -138,8 +142,10 @@ void Time::parse_param(ParameterHandler &prm){
         start_time = prm.get_double("Starting time");
         end_time = prm.get_double("End time");
         delta_t = prm.get_double("Delta time");
-   	max_timesteps =  prm.get_integer("Max no of timesteps");
+   	delta_t_f = prm.get_double("Delta time final");
+	time_change_interval = prm.get_double("Time change interval");
         time_tol = prm.get_double("Time tolerance");
+        op_freq = prm.get_double("Output frequency");
     }
     prm.leave_subsection();
 }

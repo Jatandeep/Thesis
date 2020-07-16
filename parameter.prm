@@ -2,11 +2,12 @@
 ##################  Geometry  ##################
 
 subsection Geometry Model
-    set Mesh File =  ../thesis/meshes/tension_unit_slit.inp #../thesis/meshes/Job-2.inp #../thesis/meshes/unit_slit.inp #
-    set Global refinement = 5 #1 #4    
-    set Local refinement =  4 #4 #4  
+    set Mesh File =  ../thesis/meshes/tension_unit_slit.inp # ../thesis/meshes/Job-f_abaqus.inp # # #
+    set Global refinement = 7 #4 #1 #4    
+    set Local refinement =  0 #4  
     set Act_ref = 0.3
     set Act_cors = 0.03
+    set Grid scale = 1 #1e-3 #1
 end
 
 ###################  Material  ##################
@@ -16,20 +17,20 @@ subsection Material Model
     set Poisson ratio = 0.3
     set Lambda = 121.15e+3 #1 
     set Mu = 80.77e+3 #1 
-    set Viscosity = 1e-6 
+    set Viscosity = 1e-5 #1e-6 
 end
 
 ##################  FE System  #####################
 
 subsection FE System
     set Finite element degree = 1
-    set Quad order = 2 #3
+    set Quad order = 2 
 end
 
 ############  Non Linear System  ##################
 
 subsection Newton Raphson
-    set Max newton iterations = 10 #30
+    set Max newton iterations = 30 #30
     set Residual tolerance u = 1e-7 #1e-7 #1e-8 
     set Residual tolerance d = 1e-7 #1e-8 
     set Newton update tolerance u = 1e-9 #1e-10 
@@ -47,19 +48,21 @@ end
 
 subsection Time
     set Starting time = 0.0
-    set End time =  5e-3 #1
-    set Delta time = 1e-5 #0.1 #1e-5 #1e-6  
-    set Max no of timesteps = 500 #10 # 100 #50
+    set End time =  6.5e-3 #5e-3
+    set Delta time  = 1e-4 #1e-5   
+    set Delta time final = 1e-5 #1e-6 
+    set Time change interval = 5e-3
     set Time tolerance = 1e-6
+    set Output frequency = 2 #2 
 end
 
 ################## Phase Field ###############
 
 subsection PhaseField
     set Critical energy release rate = 2.7
-    set Length scale parameter = 7.5e-3 #4e-3 #1.5e-2 #.002 #.0075
-    set Small positive parameter = 1e-10 #0
-    set Total displacement = 5e-3 #5e-3
+    set Length scale parameter = 1.5e-2 #0.0825 #1.5e-2 #7.5e-3 #4e-3 
+    set Small positive parameter = 1e-10 
+    set Total displacement = 6.5e-3 #5e-3
 end
 
 

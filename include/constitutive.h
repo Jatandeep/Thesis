@@ -1,8 +1,7 @@
 #pragma once
-//#include "../include/ElasticTrial.h"
-//#include "../include/ElasticProblem.h"
-//#include "../include/Phasefield.h"
-#include "../include/PhasefieldSMP.h"
+#include "../include/utilities.h"
+
+
 template <int dim>
 dealii::SymmetricTensor<4, dim> get_const_BigC(const double lambda
                                                  	,const double mu);

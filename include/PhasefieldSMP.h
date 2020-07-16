@@ -12,6 +12,7 @@
 #include <deal.II/base/work_stream.h>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/parameter_handler.h>
+#include <deal.II/base/table_handler.h>
 
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>
@@ -79,6 +80,9 @@ namespace thesis
       struct PerTaskData_K;
       struct ScratchData_K;
 
+      struct PerTaskData_rhs;
+      struct ScratchData_rhs;
+
       /*!Read mesh from external file*/
       void import_mesh(const parameters::AllParameters &param);
 
@@ -113,15 +117,22 @@ namespace thesis
 
 
       /*Assemble External forces(body forces + Neumann forces)*/
-      void assemble_rhs(const parameters::AllParameters &param,
+      void assemble_system_rhs(const parameters::AllParameters &param,
 			       dealii::BlockVector<double> & update);
-     
+      void assemble_system_rhs_one_cell (const parameters::AllParameters &param,
+				  const typename dealii::DoFHandler<dim>::active_cell_iterator &cell,
+                                  ScratchData_rhs &scratch,
+                                  PerTaskData_rhs &data)const;
+
+      void copy_local_to_global_rhs(const PerTaskData_rhs &data);
+
+   
        /*Print header and footer for newton iterations*/
       void print_header();
       void print_footer();
 
       /*!Write output into files*/
-      void output_results (const double cycle) const;
+      void output_results (const parameters::AllParameters &param,unsigned int cycle) const;
 
       dealii::Triangulation<dim>   triangulation_m;
       const dealii::FESystem<dim>  fe_m;
@@ -225,7 +236,7 @@ namespace thesis
 
 
       void compute_load(const double lambda,const double mu,dealii::BlockVector<double> &solution);    
-      void project_back_phase_field(/*dealii::BlockVector<double> &sol*/);
+      void project_back_phase_field();
 
       double get_energy(const parameters::AllParameters &param,
                             dealii::BlockVector<double> & update);
@@ -234,5 +245,6 @@ namespace thesis
 
       double		                current_time_m;
       mutable dealii::TimerOutput	timer;
+      dealii::TableHandler		statistics;
     };
 }
