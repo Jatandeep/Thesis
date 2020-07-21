@@ -89,23 +89,34 @@ namespace thesis
       void refine_grid (const parameters::AllParameters &param);
 
       /*!Newton-Raphson algorithm looping over all newton iterations*/
-      void solve_nonlinear_newton(const parameters::AllParameters &param
-                                  ,dealii::BlockVector<double> &solution_delta);
+      unsigned int solve_nonlinear_newton(const parameters::AllParameters &param
+                                  ,dealii::BlockVector<double> &solution_delta
+                                  ,double delta_t);
 
       /*!Solve the linear system as assembled via assemble_system()*/
-      std::pair<unsigned int,double> solve_linear_sys (const parameters::AllParameters &param,
+      std::pair<unsigned int,double> solve_sys_d (const parameters::AllParameters &param,
+                                                       dealii::BlockVector<double> & newton_update);
+      /*!Solve the linear system as assembled via assemble_system()*/
+      std::pair<unsigned int,double> solve_sys_u (const parameters::AllParameters &param,
                                                        dealii::BlockVector<double> & newton_update);
 
       /*!Set hanging node and apply Dirichlet bc.*/
       void make_constraints(unsigned int &itr,const double load_ratio,const double u_total);
 
       /*!Assemble the linear system for the elasticity problem*/
-      void assemble_system (const parameters::AllParameters &param,
+      void assemble_system_d (const parameters::AllParameters &param,
+                            dealii::BlockVector<double> & update
+                            ,double delta_t);
+      
+      /*!Assemble the linear system for the elasticity problem*/
+      void assemble_system_u (const parameters::AllParameters &param,
                             dealii::BlockVector<double> & update);
 
       /*Print header and footer for newton iterations*/
-      void print_header();
-      void print_footer();
+      void print_header_d();
+      void print_footer_d();
+      void print_header_u();
+      void print_footer_u();
 
       /*!Write output into files*/
       void output_results (const parameters::AllParameters &param,unsigned int cycle) const;
@@ -158,9 +169,15 @@ namespace thesis
 	    error_update, error_update_0, error_update_norm;
 
       /*Calculate error residual from system_rhs*/
-      void get_error_residual(Error & error_residual);
-      void get_newton_update_error(const dealii::BlockVector<double> &newton_update
-		      		  ,Error & error_update);
+      void get_error_residual_d(Error & error_residual);
+      void get_newton_update_error_d(const dealii::BlockVector<double> &newton_update
+		      		                    ,Error & error_update);
+      
+      void get_error_residual_u(Error & error_residual);
+      void get_newton_update_error_u(const dealii::BlockVector<double> &newton_update
+		      		                    ,Error & error_update);
+      
+      
       static const unsigned int n_blocks_m = 2;
       static const unsigned int n_components_m = dim+1;
       static const unsigned int u_dof_start_m = 0;

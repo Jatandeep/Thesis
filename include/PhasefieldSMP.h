@@ -77,11 +77,11 @@ namespace thesis
 
     private:
 
-      struct PerTaskData_K;
-      struct ScratchData_K;
+      struct PerTaskData_d;
+      struct ScratchData_d;
 
-      struct PerTaskData_rhs;
-      struct ScratchData_rhs;
+      struct PerTaskData_u;
+      struct ScratchData_u;
 
       /*!Read mesh from external file*/
       void import_mesh(const parameters::AllParameters &param);
@@ -98,38 +98,43 @@ namespace thesis
                                   ,dealii::BlockVector<double> &solution_delta);
 
       /*!Solve the linear system as assembled via assemble_system()*/
-      std::pair<unsigned int,double> solve_linear_sys (const parameters::AllParameters &param,
+      std::pair<unsigned int,double> solve_sys_d (const parameters::AllParameters &param,
+                                                       dealii::BlockVector<double> & newton_update);
+      /*!Solve the linear system as assembled via assemble_system()*/
+      std::pair<unsigned int,double> solve_sys_u (const parameters::AllParameters &param,
                                                        dealii::BlockVector<double> & newton_update);
 
       /*!Set hanging node and apply Dirichlet bc.*/
       void make_constraints(unsigned int &itr,const double load_ratio,const double u_total);
 
       /*!Assemble the linear system for the elasticity problem*/
-      void assemble_system_tangent (const parameters::AllParameters &param,
+      void assemble_system_d (const parameters::AllParameters &param,
                                     dealii::BlockVector<double> & update);
   
-      void assemble_system_tangent_one_cell (const parameters::AllParameters &param,
-					     const typename dealii::DoFHandler<dim>::active_cell_iterator &cell,
-                                     	     ScratchData_K &scratch,
-                                     	     PerTaskData_K &data)const;
+      void assemble_system_d_one_cell (const parameters::AllParameters &param,
+					                            const typename dealii::DoFHandler<dim>::active_cell_iterator &cell,
+                                     	ScratchData_d &scratch,
+                                     	PerTaskData_d &data)const;
 
-      void copy_local_to_global_K(const PerTaskData_K &data);
+      void copy_local_to_global_d(const PerTaskData_d &data);
 
 
       /*Assemble External forces(body forces + Neumann forces)*/
-      void assemble_system_rhs(const parameters::AllParameters &param,
-			       dealii::BlockVector<double> & update);
-      void assemble_system_rhs_one_cell (const parameters::AllParameters &param,
-				  const typename dealii::DoFHandler<dim>::active_cell_iterator &cell,
-                                  ScratchData_rhs &scratch,
-                                  PerTaskData_rhs &data)const;
+      void assemble_system_u(const parameters::AllParameters &param,
+			                       dealii::BlockVector<double> & update);
+      void assemble_system_u_one_cell (const parameters::AllParameters &param,
+				                              const typename dealii::DoFHandler<dim>::active_cell_iterator &cell,
+                                      ScratchData_u &scratch,
+                                      PerTaskData_u &data)const;
 
-      void copy_local_to_global_rhs(const PerTaskData_rhs &data);
+      void copy_local_to_global_u(const PerTaskData_u &data);
 
    
        /*Print header and footer for newton iterations*/
-      void print_header();
-      void print_footer();
+      void print_header_d();
+      void print_footer_d();
+      void print_header_u();
+      void print_footer_u();
 
       /*!Write output into files*/
       void output_results (const parameters::AllParameters &param,unsigned int cycle) const;
@@ -181,10 +186,14 @@ namespace thesis
 	    error_update, error_update_0, error_update_norm;
 
       /*Calculate error residual from system_rhs*/
-      void get_error_residual(Error & error_residual);
-      void get_newton_update_error(const dealii::BlockVector<double> &newton_update
-		      		  ,Error & error_update);
-
+      void get_error_residual_d(Error & error_residual);
+      void get_newton_update_error_d(const dealii::BlockVector<double> &newton_update
+		      		                    ,Error & error_update);
+      
+      void get_error_residual_u(Error & error_residual);
+      void get_newton_update_error_u(const dealii::BlockVector<double> &newton_update
+		      		                    ,Error & error_update);
+      
       static const unsigned int n_blocks_m = 2;
       static const unsigned int n_components_m = dim+1;
       static const unsigned int u_dof_start_m = 0;

@@ -9,6 +9,7 @@
 #include <deal.II/lac/sparse_direct.h>
 #include <deal.II/lac/sparse_ilu.h>
 #include "../include/utilities.h"
+#include "../include/constitutive.h"
 namespace thesis
 {
 
@@ -119,4 +120,7 @@ double get_energy_density_minus(const double lambda
 			      ,dealii::SymmetricTensor<2,dim> &eps);
 
 double get_deg_func(const double d);
+
+template <int dim>
+void comparison(const double lambda,const double mu,dealii::SymmetricTensor<2,dim> &dummy);
 

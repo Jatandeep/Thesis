@@ -4,7 +4,8 @@
 
 template <int dim>
 dealii::SymmetricTensor<4, dim> get_const_BigC(const double lambda
-                                                 	,const double mu);
+                                              ,const double mu
+					      ,dealii::SymmetricTensor<2,dim> &dummy);
 
 template <int dim>
 dealii::SymmetricTensor<4,dim> get_BigC(const double lambda

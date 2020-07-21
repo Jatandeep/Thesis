@@ -1,4 +1,5 @@
 #include "../include/others.h"
+#include "../include/utilities.h"
 
 using namespace dealii;
 using namespace thesis;
@@ -23,27 +24,6 @@ void BoundaryTension<dim>::vector_value (const Point<dim> &p,
   
 } 
 
-/*
-template <int dim>
-double BoundaryShear<dim>::value (const Point<dim>  &p,
-                                    const unsigned int component) const
-{}
-
-template <int dim>
-void BoundaryShear<dim>::vector_value (const Point<dim> &p,
-                                           Vector<double>   &vectorValue) const
-{
-  if(itr_ >0)
-	  vectorValue = 0.0;
-  else
-  {
-	vectorValue[0] =  ((p(0) <= 1.0) && (p(0) >= 0.0)) ? load_ratio_*u_total_ :0 ;
-	vectorValue[1] = 0.0;
-
-  }
-  
-}
-*/
 
 template <int dim>
 double BoundaryForce<dim>::value (const Point<dim> &,
@@ -130,7 +110,7 @@ double get_epsplus_sq(const SymmetricTensor<2,dim> &eps)
 		eps_eigenval_plus[i]=(eps_eigenval[i]>0) ? eps_eigenval[i]:0;
 	}
 
-	double result; //=0;
+	double result=0;
 	for(unsigned int i=0;i<dim;++i){
 	result += eps_eigenval_plus[i]*eps_eigenval_plus[i];
 	}
@@ -150,7 +130,7 @@ double get_epsminus_sq(SymmetricTensor<2,dim> &eps)
 		eps_eigenval_minus[i]=(eps_eigenval[i]>0) ? 0:eps_eigenval[i];
 	}
 
-	double result;//=0;
+	double result=0;
 	for(unsigned int i=0;i<dim;++i){
 	result += eps_eigenval_minus[i]*eps_eigenval_minus[i];
 	}
@@ -164,7 +144,7 @@ double Phasefield<dim>::get_history(const double lambda
 	  	  ,const double mu
 		  ,const SymmetricTensor<2,dim> &eps)const
 {
-	double history;// = 0;
+	double history = 0;
 			
 	double tr_eps = trace(eps);
 	double tr_eps_plus = (tr_eps>0) ? tr_eps:0;
@@ -283,14 +263,239 @@ void ElasticBodyForce<dim>::vector_value (const Point<dim> &points,
 
 }
 
+template<int dim>
+void comparison(const double lambda,const double mu,SymmetricTensor<2,dim> &dummy)
+{
+  SymmetricTensor<2,dim> eps0,eps1,eps2,eps3,eps4,eps5;
+   
+  for(unsigned int i=0;i<dim;++i)
+	  for(unsigned int j=0;j<dim;++j)
+	  {
+		eps0[i][j]=0;
+	  }	
+	
+  for(unsigned int i=0;i<dim;++i)
+
+	  for(unsigned int j=0;j<dim;++j)
+	  {
+		  if(i==0 && j==0)
+			  eps1[i][j]=-0.1;
+		  else if(i==(dim-1) && j==(dim-1))
+			  eps1[i][j]=0.2;
+		  else
+			  eps1[i][j]=0;
+	  }
+
+ for(unsigned int i=0;i<dim;++i)
+	  for(unsigned int j=0;j<dim;++j)
+	  {
+		  if(i != j)
+			  eps2[i][j]=-0.1;
+		  else
+			  eps2[i][j]=0;
+	  }
+
+ 
+  for(unsigned int i=0;i<dim;++i)
+	  for(unsigned int j=0;j<dim;++j)
+	  {
+		  if(i==0 && j==0)
+			  eps3[i][j]=0.2;
+		  else if(i==(dim-1) && j==(dim-1))
+			  eps3[i][j]=0.1;
+		  else
+			  eps3[i][j]=0.05;
+	  }
+
+ for(unsigned int i=0;i<dim;++i)
+	  for(unsigned int j=0;j<dim;++j)
+	  {
+		  if(i != j)
+			  eps4[i][j]=0.1;
+		  else
+			  eps4[i][j]=0;
+	  }
+
+
+ for(unsigned int i=0;i<dim;++i)
+                for(unsigned int j=0;j<dim;++j){
+                        if(i==j)
+                        eps5[i][j]=-0.1;
+                        else
+                        eps5[i][j]=0;
+                }
+//Printing
+
+std::cout<<std::endl;
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps0);
+std::cout<<"BigC_plus:"<<std::endl;
+print_tensor( get_BigC_plus(lambda,mu,eps0) );
+std::cout<<"Norm:"<<get_BigC_plus(lambda,mu,eps0).norm()<<std::endl;
+std::cout<<std::endl;
+
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps1);
+std::cout<<"BigC_plus:"<<std::endl;
+print_tensor( get_BigC_plus(lambda,mu,eps1) );
+std::cout<<"Norm:"<<get_BigC_plus(lambda,mu,eps1).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<std::endl;
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps2);
+std::cout<<"BigC_plus:"<<std::endl;
+print_tensor( get_BigC_plus(lambda,mu,eps2) );
+std::cout<<"Norm:"<<get_BigC_plus(lambda,mu,eps2).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<std::endl;
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps3);
+std::cout<<"BigC_plus:"<<std::endl;
+print_tensor( get_BigC_plus(lambda,mu,eps3) );
+std::cout<<"Norm:"<<get_BigC_plus(lambda,mu,eps3).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<std::endl;
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps4);
+std::cout<<"BigC_plus:"<<std::endl;
+print_tensor( get_BigC_plus(lambda,mu,eps4) );
+std::cout<<"Norm:"<<get_BigC_plus(lambda,mu,eps4).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps5);
+std::cout<<"BigC_plus:"<<std::endl;
+print_tensor( get_BigC_plus(lambda,mu,eps5) );
+std::cout<<"Norm:"<<get_BigC_plus(lambda,mu,eps5).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<"------------------------------------------------"<<std::endl;
+std::cout<<std::endl;
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps0);
+std::cout<<"BigC_minus:"<<std::endl;
+print_tensor( get_BigC_minus(lambda,mu,eps0) );
+std::cout<<"Norm:"<<get_BigC_minus(lambda,mu,eps0).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps1);
+std::cout<<"BigC_minus:"<<std::endl;
+print_tensor( get_BigC_minus(lambda,mu,eps1) );
+std::cout<<"Norm:"<<get_BigC_minus(lambda,mu,eps1).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<std::endl;
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps2);
+std::cout<<"BigC_minus:"<<std::endl;
+print_tensor( get_BigC_minus(lambda,mu,eps2) );
+std::cout<<"Norm:"<<get_BigC_minus(lambda,mu,eps2).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<std::endl;
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps3);
+std::cout<<"BigC_minus:"<<std::endl;
+print_tensor( get_BigC_minus(lambda,mu,eps3) );
+std::cout<<"Norm:"<<get_BigC_minus(lambda,mu,eps3).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<std::endl;
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps4);
+std::cout<<"BigC_minus:"<<std::endl;
+print_tensor( get_BigC_minus(lambda,mu,eps4) );
+std::cout<<"Norm:"<<get_BigC_minus(lambda,mu,eps4).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps5);
+std::cout<<"BigC_minus:"<<std::endl;
+print_tensor( get_BigC_minus(lambda,mu,eps5) );
+std::cout<<"Norm:"<<get_BigC_minus(lambda,mu,eps5).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+
+std::cout<<"------------------------------------------------"<<std::endl;
+std::cout<<"Const_BigC"<<std::endl;
+print_tensor(get_const_BigC(lambda,mu,dummy));
+std::cout<<"Norm:"<<get_const_BigC(lambda,mu,dummy).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<std::endl;
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps0);
+std::cout<<"BigC_total_pm:"<<std::endl;
+print_tensor( get_BigC(lambda,mu,eps0) );
+std::cout<<"Norm:"<<get_BigC(lambda,mu,eps0).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps1);
+std::cout<<"BigC_total_pm:"<<std::endl;
+print_tensor( get_BigC(lambda,mu,eps1) );
+std::cout<<"Norm:"<<get_BigC(lambda,mu,eps1).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<std::endl;
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps2);
+std::cout<<"BigC_total_pm:"<<std::endl;
+print_tensor( get_BigC(lambda,mu,eps2) );
+std::cout<<"Norm:"<<get_BigC(lambda,mu,eps2).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<std::endl;
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps3);
+std::cout<<"BigC_total_pm:"<<std::endl;
+print_tensor( get_BigC(lambda,mu,eps3) );
+std::cout<<"Norm:"<<get_BigC(lambda,mu,eps3).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<std::endl;
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps4);
+std::cout<<"BigC_total_pm:"<<std::endl;
+print_tensor( get_BigC(lambda,mu,eps4) );
+std::cout<<"Norm:"<<get_BigC(lambda,mu,eps4).norm()<<std::endl;
+std::cout<<std::endl;
+
+
+std::cout<<"Epsilon:"<<std::endl;
+print_tensor(eps5);
+std::cout<<"BigC_total_pm:"<<std::endl;
+print_tensor( get_BigC(lambda,mu,eps5) );
+std::cout<<"Norm:"<<get_BigC(lambda,mu,eps5).norm()<<std::endl;
+std::cout<<std::endl;
+
+}
 template class thesis::ElasticBodyForce<2>;
 template class thesis::ElasticBodyForce<3>;
 template class thesis::BoundaryForce<2>;
 template class thesis::BoundaryForce<3>;
 template class thesis::BoundaryTension<2>;
 template class thesis::BoundaryTension<3>;
-//template class thesis::BoundaryShear<2>;
-//template class thesis::BoundaryShear<3>;
 template double thesis::Phasefield<2>::get_history(const double,const double,const SymmetricTensor<2,2>&)const;
 template double thesis::Phasefield<3>::get_history(const double,const double,const SymmetricTensor<2,3>&)const;
 template double get_energy_density_plus(const double,const double,SymmetricTensor<2,2>&);
@@ -303,3 +508,5 @@ template class thesis::Reference_solution<2>;
 template class thesis::Reference_solution<3>;
 template void thesis::Phasefield<2>::compute_load(const double,const double,BlockVector<double> &);
 template void thesis::Phasefield<3>::compute_load(const double,const double,BlockVector<double> &);
+template void comparison(const double lambda,const double mu,SymmetricTensor<2,2> &dummy);
+template void comparison(const double lambda,const double mu,SymmetricTensor<2,3> &dummy);

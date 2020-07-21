@@ -5,7 +5,8 @@ using namespace dealii;
 //Gives BigC without spectral decomposition as in LKM lecture notes
 template <int dim>
 SymmetricTensor<4, dim> get_const_BigC(const double lambda
-                                                ,const double mu)
+                                      ,const double mu
+				      ,SymmetricTensor<2,dim> &dummy)
 {
 
   SymmetricTensor<4, dim> C;
@@ -341,11 +342,13 @@ SymmetricTensor<4,dim> get_BigC_plus(const double lambda
 	double scalar_12=0;
         for (unsigned int a=0;a<dim;++a) 
                 for (unsigned int b=0;b<dim;++b){
-		scalar_11 = 0.5* ( stress_eigenval_plus[b] - stress_eigenval_plus[a] )/(eigen[b].first - eigen[a].first);
 		scalar_12 = 0.5* (delsig_dellmbda_b_plus(lambda,mu,eps,eigen[b].first) - delsig_dellmbda_plus(lambda,mu,a,b,eps,eigen[a].first));
 		Na_x_Nb = outer_product(eigen[a].second,eigen[b].second);
 		Nb_x_Na = outer_product(eigen[b].second,eigen[a].second);
 			if(a!=b){
+		
+				scalar_11 = 0.5* ( stress_eigenval_plus[b] - stress_eigenval_plus[a] )/(eigen[b].first - eigen[a].first);
+
 				if( !(std::fabs(eigen[a].first - eigen[b].first) < 1e-8)){
                         		C_2_plus += scalar_11 *( outer_product(Na_x_Nb,Na_x_Nb) + outer_product(Na_x_Nb,Nb_x_Na) );
 				}
@@ -425,11 +428,13 @@ SymmetricTensor<4,dim> get_BigC_minus(const double lambda
 	double scalar_15=0;
         for (unsigned int a=0;a<dim;++a) 
                 for (unsigned int b=0;b<dim;++b){
-		scalar_14  = 0.5* ( stress_eigenval_minus[b] - stress_eigenval_minus[a] )/(eigen[b].first - eigen[a].first);
 		scalar_15 =  0.5* (delsig_dellmbda_b_minus(lambda,mu,eps,eigen[b].first) - delsig_dellmbda_minus(lambda,mu,a,b,eps,eigen[a].first));
 		Na_x_Nb = outer_product(eigen[a].second,eigen[b].second);
 		Nb_x_Na = outer_product(eigen[b].second,eigen[a].second);
 			if(a!=b){
+		
+				scalar_14  = 0.5* ( stress_eigenval_minus[b] - stress_eigenval_minus[a] )/(eigen[b].first - eigen[a].first);
+
 				if( !(std::fabs(eigen[a].first - eigen[b].first) < 1e-8)){
                         		C_2_minus += scalar_14 *( outer_product(Na_x_Nb,Na_x_Nb) + outer_product(Na_x_Nb,Nb_x_Na) );
 				}
@@ -572,11 +577,16 @@ SymmetricTensor<4,dim> get_BigC(const double lambda
 	double scalar_6=0;
         for (unsigned int a=0;a<dim;++a) 
                 for (unsigned int b=0;b<dim;++b){
-		scalar_5  = 0.5* ( stress_eigenval_plus[b] - stress_eigenval_plus[a] )/(eigen[b].first - eigen[a].first);
+//		scalar_5  = 0.5* ( stress_eigenval_plus[b] - stress_eigenval_plus[a] )/(eigen[b].first - eigen[a].first);//(a==b)value nvrused
+//		std::cout<<"scalar_5"<<a<<b<<" "<<scalar_5<<std::endl;
+//		std::cout<<"eigen[b].first, eigen[a].first:"<<eigen[b].first<<" "<<eigen[a].first<<std::endl;
 		scalar_6 =  0.5* (delsig_dellmbda_b_plus(lambda,mu,eps,eigen[b].first) - delsig_dellmbda_plus(lambda,mu,a,b,eps,eigen[a].first));
 		Na_x_Nb = outer_product(eigen[a].second,eigen[b].second);
 		Nb_x_Na = outer_product(eigen[b].second,eigen[a].second);
 			if(a!=b){
+			
+				scalar_5  = 0.5* ( stress_eigenval_plus[b] - stress_eigenval_plus[a] )/(eigen[b].first - eigen[a].first);
+			
 				if( !(std::fabs(eigen[a].first - eigen[b].first) < 1e-8)){
                         		C_2_plus += scalar_5 *( outer_product(Na_x_Nb,Na_x_Nb) + outer_product(Na_x_Nb,Nb_x_Na) );
 				}
@@ -621,11 +631,14 @@ SymmetricTensor<4,dim> get_BigC(const double lambda
 	double scalar_9=0;
         for (unsigned int a=0;a<dim;++a) 
                 for (unsigned int b=0;b<dim;++b){
-		scalar_8  = 0.5* ( stress_eigenval_minus[b] - stress_eigenval_minus[a] )/(eigen[b].first - eigen[a].first);
+
 		scalar_9 =  0.5* (delsig_dellmbda_b_minus(lambda,mu,eps,eigen[b].first) - delsig_dellmbda_minus(lambda,mu,a,b,eps,eigen[a].first));
 		Na_x_Nb = outer_product(eigen[a].second,eigen[b].second);
 		Nb_x_Na = outer_product(eigen[b].second,eigen[a].second);
 			if(a!=b){
+
+				scalar_8  = 0.5* ( stress_eigenval_minus[b] - stress_eigenval_minus[a] )/(eigen[b].first - eigen[a].first);
+
 				if( !(std::fabs(eigen[a].first - eigen[b].first) < 1e-8)){
                         		C_2_minus += scalar_8 *( outer_product(Na_x_Nb,Na_x_Nb) + outer_product(Na_x_Nb,Nb_x_Na) );
 				}
@@ -634,14 +647,15 @@ SymmetricTensor<4,dim> get_BigC(const double lambda
 				}
        		}
  
-
+	//
+	unsigned int g=2;
 
 	//Calculating total of C_1_plus + C_2_plus + C_1_minus + C_2_minus::
 	for (unsigned int i = 0; i < dim; ++i)
 		for (unsigned int j = i; j < dim; ++j)
 			 for (unsigned int k = 0; k < dim; ++k)
 				for (unsigned int l = k; l < dim; ++l)
-		 		C_total_pm[i][j][k][l] = C_1_plus[i][j][k][l] + C_2_plus[i][j][k][l] + C_1_minus[i][j][k][l] + C_2_minus[i][j][k][l];
+		 		C_total_pm[i][j][k][l] = g*( C_1_plus[i][j][k][l] + C_2_plus[i][j][k][l]) + C_1_minus[i][j][k][l] + C_2_minus[i][j][k][l];
 
 /*Printing Different 4th order tensors:
 static bool once_2 = false;
@@ -665,8 +679,8 @@ return C_total_pm;
 //return tmp1+tmp2;
 }
 
-template SymmetricTensor<4,2> get_const_BigC(double,double);
-template SymmetricTensor<4,3> get_const_BigC(double,double);
+template SymmetricTensor<4,2> get_const_BigC(double,double,SymmetricTensor<2,2>&);
+template SymmetricTensor<4,3> get_const_BigC(double,double,SymmetricTensor<2,3>&);
 template SymmetricTensor<4,2> get_BigC(double,double,SymmetricTensor<2,2>&);
 template SymmetricTensor<4,3> get_BigC(double,double,SymmetricTensor<2,3>&);
 template SymmetricTensor<2,2> get_stress(const double,const double,SymmetricTensor<2,2>&);

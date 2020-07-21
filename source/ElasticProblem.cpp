@@ -1,4 +1,4 @@
-#include "../include/ElasticTrial.h"
+#include "../include/ElasticProblem.h"
 #include "../include/others.h"
 #include "../include/constants.h"
 #include "../include/constitutive.h"
@@ -114,9 +114,7 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,BlockVecto
   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
   SymmetricTensor<4,dim> BigC;
-  SymmetricTensor<4,dim> Big_C;
-  Big_C = get_const_BigC<dim>(param.materialmodel.lambda,param.materialmodel.mu);
-
+  
   for (const auto &cell : dof_handler_m.active_cell_iterators())
     {
       cell_matrix = 0;
@@ -244,7 +242,7 @@ void ElasticProblem<dim>::solve_nonlinear_newton(const AllParameters &param,
         error_residual_norm = error_residual;
         error_residual_norm.normalize(error_residual_0);
 
-        if(new_iter > 0 && error_residual_norm.u < 1e-7 /*param.newtonraphson.res_tol*/){
+        if(new_iter > 0 && (error_residual_norm.u < 1e-7 || error_residual.u <1e-7) /*param.newtonraphson.res_tol*/){
             std::cout<<"Converged"<<std::endl;
             print_footer();
             break;
@@ -257,7 +255,7 @@ void ElasticProblem<dim>::solve_nonlinear_newton(const AllParameters &param,
 
         std::cout << " | " << std::fixed << std::setprecision(3) << std::setw(7)
                             << std::scientific << lin_solver_output.first << "  "
-                            << lin_solver_output.second << "  " << error_residual_norm.u
+                            << lin_solver_output.second << "  " <<error_residual.u<<"  "<< error_residual_norm.u
                             << "  " << std::endl;
 
     }
@@ -273,7 +271,7 @@ std::pair<unsigned int,double> ElasticProblem<dim>::solve_linear_sys(const AllPa
   unsigned int lin_ite = 0;
   double lin_res = 0;
   newton_update = 0;    // (solution)
-/*
+
   SolverControl           solver_control (tangent_matrix_m.block(u_dof_m,u_dof_m).m(),
                                           param.linearsolver.cg_tol*system_rhs_m.block(u_dof_m).l2_norm());
   GrowingVectorMemory<Vector<double> > GVM;
@@ -281,16 +279,16 @@ std::pair<unsigned int,double> ElasticProblem<dim>::solve_linear_sys(const AllPa
   PreconditionSSOR<> preconditioner;
   preconditioner.initialize(tangent_matrix_m.block(u_dof_m,u_dof_m), param.linearsolver.relax_prm);
   cg.solve (tangent_matrix_m.block(u_dof_m,u_dof_m), newton_update.block(u_dof_m), system_rhs_m.block(u_dof_m),preconditioner);
-*/
 
+/*
   SparseDirectUMFPACK k_uu;
   k_uu.initialize(tangent_matrix_m.block(u_dof_m,u_dof_m));
   k_uu.vmult(newton_update.block(u_dof_m),system_rhs_m.block(u_dof_m));
-
- /*  
+*/
+   
   lin_ite = solver_control.last_step();
   lin_res = solver_control.last_value();
-*/
+
   constraints_m.distribute (newton_update);
   return std::make_pair(lin_ite,lin_res);
 }
@@ -389,8 +387,8 @@ void ElasticProblem<dim>::print_header(){
         }
         std::cout << std::endl;
 
-        std::cout << "           SOLVER STEP            "
-                    << " |  LIN_IT   LIN_RES    RES_NORM    "
+        std::cout << "  SOLVER STEP  "
+                    << " |  LIN_IT   LIN_RES   RES    RES_NORM    "
                     << std::endl;
 
         for (unsigned int i = 0; i < l_width; ++i)
@@ -476,6 +474,14 @@ void ElasticProblem<dim>::run(const AllParameters &param){
 
     while (current_time < param.time.end_time + present_time_tol)
     {
+
+/*	if(current_time == param.time.delta_t)
+	{
+	SymmetricTensor<2,dim> dummy;
+	comparison(param.materialmodel.lambda,param.materialmodel.mu,dummy);
+	exit(0);
+*/	}
+
 /*        if(current_time >param.time.delta_t)
 	{
             	refine_grid(param);
@@ -489,7 +495,6 @@ void ElasticProblem<dim>::run(const AllParameters &param){
         output_results(current_time);
 	
         std::cout<<" solution.norm():"<<solution_m.l2_norm()<<std::endl;
-	std::cout<<" solution at node(10):"<<solution_m(10)<<std::endl;
 	std::cout<<std::endl;
         current_time += param.time.delta_t;
     }
