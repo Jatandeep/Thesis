@@ -65,6 +65,7 @@ namespace thesis
         double start_time, end_time;
         double delta_t, time_tol,delta_t_f,time_change_interval;
 	unsigned int op_freq;
+        double alpha,beta;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);

@@ -132,6 +132,8 @@ void Time::declare_param(ParameterHandler &prm){
 	prm.declare_entry("Time change interval", "1", Patterns::Anything());
         prm.declare_entry("Time tolerance", "1", Patterns::Anything());
         prm.declare_entry("Output frequency", "5", Patterns::Integer());
+        prm.declare_entry("Alpha", "1", Patterns::Double(0));
+        prm.declare_entry("Beta", "1", Patterns::Double(0));
     }
     prm.leave_subsection();
 }
@@ -146,6 +148,8 @@ void Time::parse_param(ParameterHandler &prm){
 	time_change_interval = prm.get_double("Time change interval");
         time_tol = prm.get_double("Time tolerance");
         op_freq = prm.get_double("Output frequency");
+        alpha = prm.get_double("Alpha");
+        beta = prm.get_double("Beta");
     }
     prm.leave_subsection();
 }

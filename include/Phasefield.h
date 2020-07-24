@@ -96,6 +96,8 @@ namespace thesis
       /*!Solve the linear system as assembled via assemble_system()*/
       std::pair<unsigned int,double> solve_sys_d (const parameters::AllParameters &param,
                                                        dealii::BlockVector<double> & newton_update);
+                                                     /*dealii::Vector<double> & newton_update);*/
+
       /*!Solve the linear system as assembled via assemble_system()*/
       std::pair<unsigned int,double> solve_sys_u (const parameters::AllParameters &param,
                                                        dealii::BlockVector<double> & newton_update);
@@ -106,6 +108,7 @@ namespace thesis
       /*!Assemble the linear system for the elasticity problem*/
       void assemble_system_d (const parameters::AllParameters &param,
                             dealii::BlockVector<double> & update
+                          /*,dealii::Vector<double> & update*/
                             ,double delta_t);
       
       /*!Assemble the linear system for the elasticity problem*/
@@ -171,7 +174,8 @@ namespace thesis
       /*Calculate error residual from system_rhs*/
       void get_error_residual_d(Error & error_residual);
       void get_newton_update_error_d(const dealii::BlockVector<double> &newton_update
-		      		                    ,Error & error_update);
+                                   /*const dealii::Vector<double> &newton_update*/
+		      		                      ,Error & error_update);
       
       void get_error_residual_u(Error & error_residual);
       void get_newton_update_error_u(const dealii::BlockVector<double> &newton_update
@@ -197,7 +201,7 @@ namespace thesis
       std::vector<unsigned int> n_comp_per_block{std::vector<unsigned int>(dim,1)};
 
       void determine_comp_extractor();
-      void set_boundary_id(const parameters::AllParameters &param);
+      void set_boundary_id();
 
       /*History class, variables and functions*/
 
