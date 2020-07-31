@@ -4,8 +4,8 @@
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/tensor.h>
 #include "../include/parameter.h"
-#include "../include/Phasefield.h"
-//#include "../include/PhasefieldSMP.h"
+//#include "../include/Phasefield.h"
+#include "../include/PhasefieldSMP.h"
 //#include "../include/ElasticProblem.h"
 
 int main(int argc, char *argv[]){

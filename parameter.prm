@@ -2,12 +2,12 @@
 ##################  Geometry  ##################
 
 subsection Geometry Model
-    set Mesh File =  ../thesis/meshes/sample-g3.inp #../thesis/meshes/tension_unit_slit.inp # #../thesis/meshes/Elastic.inp # #  
+    set Mesh File = ../thesis/meshes/sample-g3.inp # ../thesis/meshes/Shear2.inp #  #../thesis/meshes/Elastic.inp # #  
     set Global refinement = 0 #7 #0 #4    
     set Local refinement =  0 #4  
     set Act_ref = 0.3
     set Act_cors = 0.03
-    set Grid scale = 1e-3 #1e-3 #1
+    set Grid scale = 1e-3 #1
 end
 
 ###################  Material  ##################
@@ -17,7 +17,7 @@ subsection Material Model
     set Poisson ratio = 0.3
     set Lambda = 121.15e+3 #1  
     set Mu = 80.77e+3 #1 
-    set Viscosity = 1e-6 #1e-5 
+    set Viscosity = 0 #1e-3  
 end
 
 ##################  FE System  #####################
@@ -48,14 +48,14 @@ end
 
 subsection Time
     set Starting time = 0.0
-    set End time =  6.6e-3 #5e-3 #1
-    set Delta time  =  1e-4 #0.000005 #1e-5   
-    set Delta time final = 1e-5 #1e-6 
-    set Time change interval = 5.4e-3
+    set End time = 9e-3 #6.6e-3 # 14e-3 #6.6e-3 
+    set Delta time  =  1e-5 #0.000005 #1e-5   
+    set Delta time final = 1e-6 #1e-6 
+    set Time change interval = 5e-3
     set Time tolerance = 1e-6
-    set Output frequency = 2 #2
+    set Output frequency = 10 #2
     set Alpha = 1e-1
-    set Beta = 1e-3 
+    set Beta = 1e-2
 end
 
 ################## Phase Field ###############
@@ -64,7 +64,7 @@ subsection PhaseField
     set Critical energy release rate = 2.7
     set Length scale parameter = 0.015 #1.5e-2 #0.0825 #1.5e-2 #7.5e-3 #4e-3 
     set Small positive parameter = 1e-10 
-    set Total displacement = 6.6e-3 #5e-3
+    set Total displacement = 9e-3 # 6.6e-3 #14e-3 #6.6e-3 ##5e-3
 end
 
 

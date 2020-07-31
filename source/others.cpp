@@ -18,8 +18,27 @@ void BoundaryTension<dim>::vector_value (const Point<dim> &p,
   else
   {
 	vectorValue[0] = 0.0;
-	vectorValue[1] =/* ((p(0) <= 1.0) && (p(0) >= 0.0)) ?*/ load_ratio_ *u_total_;/* :0 ;*/
+	vectorValue[1] = load_ratio_ *u_total_;
 
+  }
+  
+} 
+
+template <int dim>
+double BoundaryShear<dim>::value (const Point<dim>  &p,
+                                    const unsigned int component) const
+{}
+
+template <int dim>
+void BoundaryShear<dim>::vector_value (const Point<dim> &p,
+                                           Vector<double>   &vectorValue) const
+{
+  if(itr_ >0)
+	  vectorValue = 0.0;
+  else
+  {
+	vectorValue[0] = (-1)*load_ratio_ *u_total_;
+	vectorValue[1] =0.0;
   }
   
 } 
@@ -236,8 +255,14 @@ void Phasefield<dim>::compute_load(const double lambda
                   }
 	}
   }
+
 double load_y = load_value[1];
 statistics.add_value("Load y",load_y);
+/*
+load_value *= -1.0;
+double load_x = load_value[0];
+statistics.add_value("Load x",load_x);
+*/
 }
 
 
@@ -496,6 +521,8 @@ template class thesis::BoundaryForce<2>;
 template class thesis::BoundaryForce<3>;
 template class thesis::BoundaryTension<2>;
 template class thesis::BoundaryTension<3>;
+template class thesis::BoundaryShear<2>;
+template class thesis::BoundaryShear<3>;
 template double thesis::Phasefield<2>::get_history(const double,const double,const SymmetricTensor<2,2>&)const;
 template double thesis::Phasefield<3>::get_history(const double,const double,const SymmetricTensor<2,3>&)const;
 template double get_energy_density_plus(const double,const double,SymmetricTensor<2,2>&);

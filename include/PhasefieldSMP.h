@@ -94,8 +94,9 @@ namespace thesis
       void refine_grid (const parameters::AllParameters &param);
 
       /*!Newton-Raphson algorithm looping over all newton iterations*/
-      void solve_nonlinear_newton(const parameters::AllParameters &param
-                                  ,dealii::BlockVector<double> &solution_delta);
+      unsigned int  solve_nonlinear_newton(const parameters::AllParameters &param
+                                  ,dealii::BlockVector<double> &solution_delta
+                                  ,const double delta_t);
 
       /*!Solve the linear system as assembled via assemble_system()*/
       std::pair<unsigned int,double> solve_sys_d (const parameters::AllParameters &param,
@@ -109,7 +110,8 @@ namespace thesis
 
       /*!Assemble the linear system for the elasticity problem*/
       void assemble_system_d (const parameters::AllParameters &param,
-                                    dealii::BlockVector<double> & update);
+                                    dealii::BlockVector<double> & update
+                                    ,const double delta_t);
   
       void assemble_system_d_one_cell (const parameters::AllParameters &param,
 					                            const typename dealii::DoFHandler<dim>::active_cell_iterator &cell,
