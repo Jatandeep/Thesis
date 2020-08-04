@@ -223,11 +223,22 @@ double delsig_dellmbda_b_plus(const double lambda
                      	     ,SymmetricTensor<2,dim> & eps
 			     ,double eps_eigenvalue)
 {
-        double result;
+    double result;
 	double sgn_tr_eps, sgn_eps_eigenvalue;
-
-	sgn_tr_eps = (trace(eps)>0) ? 1:0 ;
-	sgn_eps_eigenvalue = (eps_eigenvalue>0) ? 1:0 ;
+/*
+	if(std::fabs(trace(eps)) < 1e-8)
+		sgn_tr_eps = 0;
+	else
+		sgn_tr_eps = (trace(eps)>0) ? 1:-1 ;
+*/
+	sgn_tr_eps = get_sign(trace(eps));
+/*	
+	if(std::fabs(eps_eigenvalue) < 1e-8)
+		sgn_eps_eigenvalue = 0;
+	else
+		sgn_eps_eigenvalue = (eps_eigenvalue>0) ? 1:-1 ;
+*/
+	sgn_eps_eigenvalue = get_sign(eps_eigenvalue);
 
 	result = 0.5*lambda*(1+sgn_tr_eps) + mu*(1+sgn_eps_eigenvalue);
 
@@ -241,12 +252,23 @@ double delsig_dellmbda_b_minus(const double lambda
                      	     ,SymmetricTensor<2,dim> & eps
 			     ,double eps_eigenvalue)
 {
-        double result;
+    double result;
 	double sgn_tr_eps, sgn_eps_eigenvalue;
-
-	sgn_tr_eps = (trace(eps)>0) ? 1:0 ;
-	sgn_eps_eigenvalue = (eps_eigenvalue>0) ? 1:0 ;
-
+/*
+	if(std::fabs(trace(eps)) < 1e-8)
+		sgn_tr_eps = 0;
+	else
+		sgn_tr_eps = (trace(eps)>0) ? 1:-1 ;
+*/
+	sgn_tr_eps = get_sign(trace(eps));
+/*
+	if(std::fabs(eps_eigenvalue) < 1e-8)
+		sgn_eps_eigenvalue = 0;
+	else
+		sgn_eps_eigenvalue = (eps_eigenvalue>0) ? 1:-1 ;
+*/
+	sgn_eps_eigenvalue = get_sign(eps_eigenvalue);
+	
 	result = 0.5*lambda*(1-sgn_tr_eps) + mu*(1-sgn_eps_eigenvalue);
 
 return result;
@@ -258,14 +280,25 @@ double delsig_dellmbda_plus(const double lambda
                            ,const double mu
                      	   ,unsigned int i
                      	   ,unsigned int j
-			   ,SymmetricTensor<2,dim> & eps
-			   ,double eps_eigenvalue)
+			   			   ,SymmetricTensor<2,dim> & eps
+			   			   ,double eps_eigenvalue)
 {
-        double result;
+    double result;
 	double sgn_tr_eps, sgn_eps_eigenvalue;
-
-	sgn_tr_eps = (trace(eps)>0) ? 1:0 ;
-	sgn_eps_eigenvalue = (eps_eigenvalue>0) ? 1:0 ;
+/*
+	if(std::fabs(trace(eps)) < 1e-8)
+		sgn_tr_eps = 0;
+	else
+		sgn_tr_eps = (trace(eps)>0) ? 1:-1 ;
+*/
+	sgn_tr_eps = get_sign(trace(eps));	
+/*
+	if(std::fabs(eps_eigenvalue) < 1e-8)
+		sgn_eps_eigenvalue = 0;
+	else
+		sgn_eps_eigenvalue = (eps_eigenvalue>0) ? 1:-1 ;
+*/
+	sgn_eps_eigenvalue = get_sign(eps_eigenvalue);
 
 	result = 0.5*lambda*(1+sgn_tr_eps) + ((i==j) ? mu*(1+sgn_eps_eigenvalue):0);
 
@@ -283,10 +316,21 @@ double delsig_dellmbda_minus(const double lambda
 {
         double result;
         double sgn_tr_eps, sgn_eps_eigenvalue;
+/*
+	if(std::fabs(trace(eps)) < 1e-8)
+		sgn_tr_eps = 0;
+	else
+		sgn_tr_eps = (trace(eps)>0) ? 1:-1 ;
+    
+	if(std::fabs(eps_eigenvalue) < 1e-8)
+		sgn_eps_eigenvalue = 0;
+	else
+		sgn_eps_eigenvalue = (eps_eigenvalue>0) ? 1:-1 ;
+*/
+	sgn_tr_eps = get_sign(trace(eps));
+	sgn_eps_eigenvalue = get_sign(eps_eigenvalue);
 
-        sgn_tr_eps = (trace(eps)>0) ? 1:0 ;
-        sgn_eps_eigenvalue = (eps_eigenvalue>0) ? 1:0 ;
-
+      
 	result = 0.5*lambda*(1-sgn_tr_eps) + ((i==j) ? mu*(1-sgn_eps_eigenvalue):0);
 
 return result;
@@ -577,9 +621,7 @@ SymmetricTensor<4,dim> get_BigC(const double lambda
 	double scalar_6=0;
         for (unsigned int a=0;a<dim;++a) 
                 for (unsigned int b=0;b<dim;++b){
-//		scalar_5  = 0.5* ( stress_eigenval_plus[b] - stress_eigenval_plus[a] )/(eigen[b].first - eigen[a].first);//(a==b)value nvrused
-//		std::cout<<"scalar_5"<<a<<b<<" "<<scalar_5<<std::endl;
-//		std::cout<<"eigen[b].first, eigen[a].first:"<<eigen[b].first<<" "<<eigen[a].first<<std::endl;
+
 		scalar_6 =  0.5* (delsig_dellmbda_b_plus(lambda,mu,eps,eigen[b].first) - delsig_dellmbda_plus(lambda,mu,a,b,eps,eigen[a].first));
 		Na_x_Nb = outer_product(eigen[a].second,eigen[b].second);
 		Nb_x_Na = outer_product(eigen[b].second,eigen[a].second);

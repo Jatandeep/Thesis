@@ -29,6 +29,7 @@
 #include <deal.II/lac/solver_selector.h>
 #include <deal.II/lac/block_sparse_matrix.h>
 #include <deal.II/lac/block_vector.h>
+#include <deal.II/dofs/block_info.h>
 
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_generator.h>
@@ -249,7 +250,9 @@ namespace thesis
       void compute_load(const double lambda,const double mu,dealii::BlockVector<double> &solution);    
       void project_back_phase_field();
 
-      double get_energy(const parameters::AllParameters &param,
+      std::pair<double,double> get_energy_p(const parameters::AllParameters &param,
+                            dealii::BlockVector<double> & update);
+      void get_energy_v(const parameters::AllParameters &param,
                             dealii::BlockVector<double> & update);
       
       void compute_lefm_errors(const parameters::AllParameters &param);

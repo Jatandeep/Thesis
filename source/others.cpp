@@ -13,8 +13,10 @@ template <int dim>
 void BoundaryTension<dim>::vector_value (const Point<dim> &p,
                                            Vector<double>   &vectorValue) const
 {
-  if(itr_ >0)
-	  vectorValue = 0.0;
+  if(itr_ >0){
+  vectorValue = 0.0;
+  
+  }
   else
   {
 	vectorValue[0] = 0.0;

@@ -21,3 +21,5 @@ dealii::SymmetricTensor<2,dim> biaxial();
 template <int dim>
 dealii::SymmetricTensor<2,dim> uniaxial();
 
+double get_sign(double x);
+

@@ -75,6 +75,17 @@ return u;
 
 }
 
+double get_sign(double x)
+{
+        double sgn_x;
+
+        if(std::fabs(x) < 1e-8)
+		sgn_x = 0;
+	else
+		sgn_x = (x>0) ? 1:-1 ;
+return sgn_x; 
+}
+
 
 template void print_tensor(const SymmetricTensor<4,2>&);
 template void print_tensor(const SymmetricTensor<4,3>&);
