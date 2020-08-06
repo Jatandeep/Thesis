@@ -73,8 +73,16 @@ namespace thesis
 	
     class PhaseFieldMethod{
     public:
-        double g_c,l,k,u_total;
+        double g_c,l,k,u_total,st_tol;
        
+        static void declare_param(dealii::ParameterHandler& prm);
+        void parse_param(dealii::ParameterHandler &prm);
+    };
+
+    class TestCase{
+    public:
+        std::string test;
+
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
     };
@@ -90,6 +98,7 @@ namespace thesis
 	LinearSolver linearsolver;
 	Time time;	
 	PhaseFieldMethod pf;
+    TestCase test_case;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);

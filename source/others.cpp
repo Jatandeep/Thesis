@@ -3,14 +3,15 @@
 
 using namespace dealii;
 using namespace thesis;
+using namespace parameters;
 
 template <int dim>
-double BoundaryTension<dim>::value (const Point<dim>  &p,
-                                    const unsigned int component) const
+double BoundaryTension<dim>::value (const Point<dim>  &,
+                                    const unsigned int ) const
 {}
 
 template <int dim>
-void BoundaryTension<dim>::vector_value (const Point<dim> &p,
+void BoundaryTension<dim>::vector_value (const Point<dim> &,
                                            Vector<double>   &vectorValue) const
 {
   if(itr_ >0){
@@ -27,20 +28,20 @@ void BoundaryTension<dim>::vector_value (const Point<dim> &p,
 } 
 
 template <int dim>
-double BoundaryShear<dim>::value (const Point<dim>  &p,
-                                    const unsigned int component) const
+double BoundaryShear<dim>::value (const Point<dim>  &,
+                                    const unsigned int) const
 {}
 
 template <int dim>
-void BoundaryShear<dim>::vector_value (const Point<dim> &p,
+void BoundaryShear<dim>::vector_value (const Point<dim> &,
                                            Vector<double>   &vectorValue) const
 {
   if(itr_ >0)
 	  vectorValue = 0.0;
   else
   {
-	vectorValue[0] = (-1)*load_ratio_ *u_total_;
-	vectorValue[1] =0.0;
+	vectorValue[0] = (1)*load_ratio_ *u_total_;
+	vectorValue[1] = 0.0;
   }
   
 } 
@@ -215,11 +216,11 @@ return ( pow((1-d),2.0) );
 }
 
 template <int dim>
-void Phasefield<dim>::compute_load(const double lambda
-                 ,const double mu
+void Phasefield<dim>::compute_load(const AllParameters &param
                  ,dealii::BlockVector<double> &solution)
 {
-
+  double lambda = param.materialmodel.lambda;
+  double mu = param.materialmodel.mu;
   FEFaceValues<dim> fe_values_face(fe_m, face_quadrature_formula_m,
                                    update_values | update_quadrature_points |
                                    update_normal_vectors | update_gradients |
@@ -255,16 +256,19 @@ void Phasefield<dim>::compute_load(const double lambda
 
                         }
                   }
-	}
+	        }
+    }
+
+  if(param.test_case.test == "tension"){
+    double load_y = load_value[1];
+    statistics.add_value("Load y",load_y);
+  }
+  else if(param.test_case.test == "shear"){
+    load_value *= 1.0;
+    double load_x = load_value[0];
+    statistics.add_value("Load x",load_x);
   }
 
-double load_y = load_value[1];
-statistics.add_value("Load y",load_y);
-/*
-load_value *= -1.0;
-double load_x = load_value[0];
-statistics.add_value("Load x",load_x);
-*/
 }
 
 
@@ -535,7 +539,7 @@ template class thesis::InitialCrack<2>;
 template class thesis::InitialCrack<3>;
 template class thesis::Reference_solution<2>;
 template class thesis::Reference_solution<3>;
-template void thesis::Phasefield<2>::compute_load(const double,const double,BlockVector<double> &);
-template void thesis::Phasefield<3>::compute_load(const double,const double,BlockVector<double> &);
-template void comparison(const double lambda,const double mu,SymmetricTensor<2,2> &dummy);
-template void comparison(const double lambda,const double mu,SymmetricTensor<2,3> &dummy);
+template void thesis::Phasefield<2>::compute_load(const AllParameters &,BlockVector<double> &);
+template void thesis::Phasefield<3>::compute_load(const AllParameters &,BlockVector<double> &);
+template void comparison(const double ,const double ,SymmetricTensor<2,2> &);
+template void comparison(const double ,const double ,SymmetricTensor<2,3> &);

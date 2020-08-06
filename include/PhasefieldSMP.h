@@ -66,6 +66,7 @@
 #include <fstream>
 #include <iostream>
 
+
 namespace thesis
 {
     template <int dim>
@@ -107,7 +108,7 @@ namespace thesis
                                                        dealii::BlockVector<double> & newton_update);
 
       /*!Set hanging node and apply Dirichlet bc.*/
-      void make_constraints(unsigned int &itr,const double load_ratio,const double u_total);
+      void make_constraints(unsigned int &itr,const double load_ratio,const parameters::AllParameters &param);
 
       /*!Assemble the linear system for the elasticity problem*/
       void assemble_system_d (const parameters::AllParameters &param,
@@ -197,6 +198,8 @@ namespace thesis
       void get_newton_update_error_u(const dealii::BlockVector<double> &newton_update
 		      		                    ,Error & error_update);
       
+      void get_error_residual(Error & error_residual);
+      
       static const unsigned int n_blocks_m = 2;
       static const unsigned int n_components_m = dim+1;
       static const unsigned int u_dof_start_m = 0;
@@ -247,7 +250,7 @@ namespace thesis
     			,const dealii::SymmetricTensor<2,dim> &eps)const;
 
 
-      void compute_load(const double lambda,const double mu,dealii::BlockVector<double> &solution);    
+      void compute_load(const parameters::AllParameters &param,dealii::BlockVector<double> &solution);    
       void project_back_phase_field();
 
       std::pair<double,double> get_energy_p(const parameters::AllParameters &param,

@@ -162,6 +162,7 @@ void PhaseFieldMethod::declare_param(ParameterHandler &prm){
         prm.declare_entry("Length scale parameter", "1", Patterns::Double(0));
 	prm.declare_entry("Small positive parameter", "1", Patterns::Double(0));
 	prm.declare_entry("Total displacement", "1", Patterns::Double(0));
+    prm.declare_entry("Staggered Tolerance", "1", Patterns::Double(0));
     }
     prm.leave_subsection();
 }
@@ -173,6 +174,22 @@ void PhaseFieldMethod::parse_param(ParameterHandler &prm){
         l = prm.get_double("Length scale parameter");
         k = prm.get_double("Small positive parameter");
 	u_total = prm.get_double("Total displacement");
+    st_tol = prm.get_double("Staggered Tolerance");
+    }
+    prm.leave_subsection();
+}
+
+void TestCase::declare_param(ParameterHandler &prm){
+    prm.enter_subsection("TestCase");
+    {
+        prm.declare_entry("Test case","tension",Patterns::Selection("tension|shear|penny_shaape_crack"));
+    }
+    prm.leave_subsection();
+}
+void TestCase::parse_param(ParameterHandler &prm){
+    prm.enter_subsection("TestCase");
+    {
+        test = prm.get("Test case");
     }
     prm.leave_subsection();
 }
@@ -193,6 +210,7 @@ void AllParameters::declare_param(ParameterHandler &prm){
     LinearSolver::declare_param(prm);
     Time::declare_param(prm);
     PhaseFieldMethod::declare_param(prm);
+    TestCase::declare_param(prm);
 }
 
 void AllParameters::parse_param(ParameterHandler &prm){
@@ -203,5 +221,6 @@ void AllParameters::parse_param(ParameterHandler &prm){
     linearsolver.parse_param(prm);
     time.parse_param(prm);
     pf.parse_param(prm);
+    test_case.parse_param(prm);
 }
 
