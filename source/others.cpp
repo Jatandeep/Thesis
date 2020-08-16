@@ -16,7 +16,7 @@ void BoundaryTension<dim>::vector_value (const Point<dim> &,
 {
   if(itr_ >0){
   vectorValue = 0.0;
-  
+//  vectorValue[1] = 0.0;
   }
   else
   {
@@ -46,40 +46,17 @@ void BoundaryShear<dim>::vector_value (const Point<dim> &,
   
 } 
 
-
-template <int dim>
-double BoundaryForce<dim>::value (const Point<dim> &,
-                               const unsigned int) const
-{
-   return 0.;
-}
-
-template <int dim>
-void BoundaryForce<dim>::vector_value (const Point<dim> &p,
-                                      Vector<double> &values) const
-{
-      for (unsigned int c = 0; c < this->n_components; ++c)
-        values(c) = BoundaryForce<dim>::value(p, c);
-}
-
-
-
 template <int dim>
 double InitialCrack<dim>::value (const Point<dim>  &p,
                                     const unsigned int component) const
 {
 // 0 = no crack
-// 1 = crack  
-//  double tol = 0.5*7.5e-3;		//no effect
-  
+// 1 = crack 
+
   if (component == dim)
     {
-	//    if((p(0)>=0.5) && (p(0)<=1) && (p(1)>=0.5-_min_cell_diameter) && (p(1)<= 0.5 + _min_cell_diameter))
-	//	    return 1;
-	//    else
-		    return 0;
+     return 1;
     }
-
   return 0;
 }
 
@@ -221,17 +198,16 @@ void Phasefield<dim>::compute_load(const AllParameters &param
 {
   double lambda = param.materialmodel.lambda;
   double mu = param.materialmodel.mu;
+
   FEFaceValues<dim> fe_values_face(fe_m, face_quadrature_formula_m,
                                    update_values | update_quadrature_points |
                                    update_normal_vectors | update_gradients |
-				   update_JxW_values);
-
+                        				   update_JxW_values);
 
   const unsigned int   n_face_q_points    = face_quadrature_formula_m.size();
 
   Tensor<1,dim> load_value;
-
-
+  
   for (const auto &cell : dof_handler_m.active_cell_iterators())
     {
 
@@ -241,17 +217,20 @@ void Phasefield<dim>::compute_load(const AllParameters &param
                   {
                         fe_values_face.reinit(cell, face);
         		
-			std::vector<SymmetricTensor<2,dim>> epsilon_vals(n_face_q_points);
-        		fe_values_face[u_extractor].get_function_symmetric_gradients(solution,epsilon_vals);
+			                  std::vector<SymmetricTensor<2,dim>> epsilon_vals(n_face_q_points);
+        		            fe_values_face[u_extractor].get_function_symmetric_gradients(solution,epsilon_vals);
 
+                        std::vector<double> d_vals(n_face_q_points);
+                        fe_values_face[d_extractor].get_function_values(solution,d_vals);
+                                                                  
                         for (unsigned int q_point = 0; q_point < n_face_q_points;++q_point)
                         {
               
                                 Tensor<2,dim> stress_display;
-                                double tr_eps;
-                                tr_eps = trace(epsilon_vals[q_point]);
-                                stress_display = lambda*tr_eps*unit_symmetric_tensor<dim>()
-                                                + 2*mu*epsilon_vals[q_point];
+                                
+                                stress_display = (get_deg_func(d_vals[q_point]) + param.pf.k)
+                                                *get_stress_plus(lambda,mu,epsilon_vals[q_point])
+                                                + get_stress_minus(lambda,mu,epsilon_vals[q_point]);
                                 load_value += stress_display*fe_values_face.normal_vector(q_point)*fe_values_face.JxW(q_point);
 
                         }
@@ -279,8 +258,6 @@ void ElasticBodyForce<dim>::vector_value (const Point<dim> &points,
     Point<dim> point_1, point_2;
     point_1(0) = 0.5;
     point_2(0) = -0.5;
-
-
 
     if (((points-point_1).norm_square() < 0.2*0.2) ||
             ((points-point_2).norm_square() < 0.2*0.2))
@@ -523,8 +500,6 @@ std::cout<<std::endl;
 }
 template class thesis::ElasticBodyForce<2>;
 template class thesis::ElasticBodyForce<3>;
-template class thesis::BoundaryForce<2>;
-template class thesis::BoundaryForce<3>;
 template class thesis::BoundaryTension<2>;
 template class thesis::BoundaryTension<3>;
 template class thesis::BoundaryShear<2>;

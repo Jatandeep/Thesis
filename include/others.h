@@ -14,20 +14,6 @@ namespace thesis
 {
 
     template <int dim>
-    class BoundaryForce:public dealii::Function<dim>{
-    public:
-        BoundaryForce():dealii::Function<dim>(dim+1)
-	{}
-	
-	virtual double value (const dealii::Point<dim> &p,
-                    const unsigned int component = 0) const;
-
-        virtual void vector_value (const dealii::Point<dim> &p,
-                             dealii::Vector<double>  &value)const;
-
-    };
-
-    template <int dim>
     class BoundaryTension:public dealii::Function<dim>{
     public:
         BoundaryTension(unsigned int itr,const double load_ratio,const double u_total):dealii::Function<dim>(dim+1)
@@ -41,7 +27,7 @@ namespace thesis
 	virtual double value (const dealii::Point<dim> &p,
                     const unsigned int component = 0) const;
 
-        virtual void vector_value (const dealii::Point<dim> &p,
+    virtual void vector_value (const dealii::Point<dim> &p,
                              dealii::Vector<double>  &value)const;
     private:
 	double load_ratio_,u_total_;
@@ -61,7 +47,7 @@ namespace thesis
 	virtual double value (const dealii::Point<dim> &p,
                     const unsigned int component = 0) const;
 
-        virtual void vector_value (const dealii::Point<dim> &p,
+    virtual void vector_value (const dealii::Point<dim> &p,
                              dealii::Vector<double>  &value)const;
     private:
 	double load_ratio_,u_total_;
@@ -80,13 +66,13 @@ namespace thesis
 	virtual double value (const dealii::Point<dim> &p,
                     const unsigned int component = 0) const;
 
-        virtual void vector_value (const dealii::Point<dim> &p,
+    virtual void vector_value (const dealii::Point<dim> &p,
                              dealii::Vector<double>  &value)const;
     private:
 	double _min_cell_diameter;
     };
 
-
+   
     template <int dim>
     class ElasticBodyForce:public dealii::Function<dim>{
     public:

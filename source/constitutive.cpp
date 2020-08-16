@@ -17,14 +17,7 @@ SymmetricTensor<4, dim> get_const_BigC(const double lambda
           C[i][j][k][l] = ((((i == k) && (j == l)) ? mu:0)
                             + (((i == l) && (j == k)) ? mu:0)
                              +((i==j) && (k==l)? lambda:0));
-/*Printing the tensor
-  static bool once_1=false;
-  if(!once_1){
-  std::cout<<"Const Big_C:"<<std::endl;
-  print_tensor(C);
-  once_1 =true;
-  }
-*/ 
+
   return C;
 }
 
@@ -58,16 +51,7 @@ SymmetricTensor<2,dim> get_stress_plus(const double lambda
 
 
 	stress_plus = lambda*tr_eps_plus*unit_symmetric_tensor<dim>() + 2*mu*eps_plus;
-/*
-//Printing///////////////////  
-  static bool once_1=false;
-  if(!once_1){
-  std::cout<<"Stress_plus:"<<std::endl;
-  print_tensor(stress_plus);
-  once_1 =true;
-  }
-//////////////////////////
-*/
+
 return stress_plus; 
 }
 
@@ -101,16 +85,7 @@ SymmetricTensor<2,dim> get_stress_minus(const double lambda
 
 
 	stress_minus = lambda*tr_eps_minus*unit_symmetric_tensor<dim>() + 2*mu*eps_minus;
-/*
-//Printing///////////////////  
-  static bool once_1=false;
-  if(!once_1){
-  std::cout<<"Stress_minus:"<<std::endl;
-  print_tensor(stress_minus);
-  once_1 =true;
-  }
-//////////////////////////
-*/
+
 return stress_minus; 
 }
 

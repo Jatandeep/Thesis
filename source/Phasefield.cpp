@@ -412,10 +412,10 @@ void Phasefield<dim>::assemble_system_u (const AllParameters &param
                 {
                   const SymmetricTensor<2, dim> sym_grad_shape_j_u = fe_values[u_extractor].symmetric_gradient(j, q);
                   
-		              if((dof_block_identifier_m[i] == u_dof_m) && (dof_block_identifier_m[j] == d_dof_m))
-			      {
-         		            cell_matrix(i,j) += 0;
-                  	      }
+                          if((dof_block_identifier_m[i] == u_dof_m) && (dof_block_identifier_m[j] == d_dof_m))
+                          {
+                                cell_matrix(i,j) += 0;
+                          }
                   	      else if((dof_block_identifier_m[i] == u_dof_m) && (dof_block_identifier_m[j] == u_dof_m))
                   	      {
                       		SymmetricTensor<2,dim> tmp1,tmp2;
@@ -429,7 +429,7 @@ void Phasefield<dim>::assemble_system_u (const AllParameters &param
                 }
 
                 if(dof_block_identifier_m[i] == u_dof_m)
-		{
+		            {
                     cell_rhs(i) -= (-scalar_product(grad_shape_i_u,sigma_plus) *(1 - d_vals[q])*(1-d_vals[q])
                                     - param.pf.k*scalar_product(grad_shape_i_u,sigma_plus)
                                     - scalar_product(grad_shape_i_u,sigma_minus)

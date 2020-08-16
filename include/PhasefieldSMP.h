@@ -13,6 +13,8 @@
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/table_handler.h>
+#include <deal.II/base/multithread_info.h>
+#include <deal.II/base/utilities.h>
 
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>

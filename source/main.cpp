@@ -10,10 +10,11 @@
 
 int main(int argc, char *argv[]){
 
+    dealii::MultithreadInfo::set_thread_limit	(20);
     try
       {
        using namespace dealii;
-	
+       
        const std::string filename = argv[1];
 
        thesis::parameters::AllParameters param(filename);
