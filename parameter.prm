@@ -17,7 +17,7 @@ subsection Material Model
     set Poisson ratio = 0.3
     set Lambda = 121.15e+3 #1  
     set Mu = 80.77e+3 #1 
-    set Viscosity = 0 #1e-3 #0   
+    set Viscosity = 1e-3 #0   
 end
 
 ##################  FE System  #####################
@@ -30,7 +30,7 @@ end
 ############  Non Linear System  ##################
 
 subsection Newton Raphson
-    set Max newton iterations = 100 
+    set Max newton iterations = 3 
     set Residual tolerance u = 1e-7  
     set Residual tolerance d = 1e-7  
     set Newton update tolerance u = 1e-6  
@@ -49,13 +49,13 @@ end
 subsection Time
     set Starting time = 0.0
     set End time =  6.5e-3 #15e-3 
-    set Delta time  =  1e-5    
+    set Delta time  =  1e-5 #1e-5    
     set Delta time final = 1e-6  
     set Time change interval = 5e-3 
     set Time tolerance = 1e-6
-    set Output frequency = 10 #5 
+    set Output frequency = 20 #5 
     set Alpha = 1e-1
-    set Beta = 1e-3
+    set Beta = 1e-4 #1e-3
 end
 
 ################## Phase Field ###############

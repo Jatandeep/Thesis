@@ -213,7 +213,7 @@ void Phasefield<dim>::compute_load(const AllParameters &param
 
         for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
         {
-                  if (cell->face(face)->at_boundary() && cell->face(face)->boundary_id() == 3)
+                  if (cell->face(face)->at_boundary() && cell->face(face)->boundary_id() == 4)
                   {
                         fe_values_face.reinit(cell, face);
         		
@@ -270,234 +270,139 @@ void ElasticBodyForce<dim>::vector_value (const Point<dim> &points,
        values[1] = 0.0;
 
 }
-
-template<int dim>
-void comparison(const double lambda,const double mu,SymmetricTensor<2,dim> &dummy)
+template <int dim>
+void Phasefield<dim>::history_quadrature_to_global()
 {
-  SymmetricTensor<2,dim> eps0,eps1,eps2,eps3,eps4,eps5;
-   
-  for(unsigned int i=0;i<dim;++i)
-	  for(unsigned int j=0;j<dim;++j)
-	  {
-		eps0[i][j]=0;
-	  }	
+  FullMatrix<double> qpoint_to_dof_matrix (history_fe_m.dofs_per_cell,
+                                         quadrature_formula_m.size());
+  
+  FETools::compute_projection_from_quadrature_points_matrix (history_fe_m,quadrature_formula_m
+		  					    ,quadrature_formula_m,qpoint_to_dof_matrix);
+  
+  typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_m.begin_active(),
+                                               endc = dof_handler_m.end(),
+                                               dg_cell = history_dof_handler_m.begin_active();
+  for (; cell!=endc; ++cell, ++dg_cell)
+  {
+    PointHistory *local_quadrature_points_history
+      = reinterpret_cast<PointHistory *>(cell->user_pointer());
+
+    Assert (local_quadrature_points_history >= &quadrature_point_history.front(),
+            ExcInternalError());
+    Assert (local_quadrature_points_history < &quadrature_point_history.back(),
+            ExcInternalError());
+
+    {
+    	for (unsigned int q=0; q<quadrature_formula_m.size(); ++q)
+          local_history_values_at_qpoints(q) = local_quadrature_points_history[q].history;
+
+    	qpoint_to_dof_matrix.vmult (local_history_fe_values,
+                                    local_history_values_at_qpoints);
+    	dg_cell->set_dof_values (local_history_fe_values,
+			                         history_field);
+    }
+
+  }
+
+}	
 	
-  for(unsigned int i=0;i<dim;++i)
+template <int dim>
+void Phasefield<dim>::history_global_to_quadrature()
+{
+  FullMatrix<double> dof_to_qpoint_matrix (quadrature_formula_m.size()
+                                          ,history_fe_m.dofs_per_cell);
 
-	  for(unsigned int j=0;j<dim;++j)
-	  {
-		  if(i==0 && j==0)
-			  eps1[i][j]=-0.1;
-		  else if(i==(dim-1) && j==(dim-1))
-			  eps1[i][j]=0.2;
-		  else
-			  eps1[i][j]=0;
-	  }
+  FETools::compute_interpolation_to_quadrature_points_matrix(history_fe_m,quadrature_formula_m
+		  					     ,dof_to_qpoint_matrix);
 
- for(unsigned int i=0;i<dim;++i)
-	  for(unsigned int j=0;j<dim;++j)
-	  {
-		  if(i != j)
-			  eps2[i][j]=-0.1;
-		  else
-			  eps2[i][j]=0;
-	  }
+  typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_m.begin_active(),
+                                                 endc = dof_handler_m.end(),
+                                                 dg_cell = history_dof_handler_m.begin_active();
+  for (; cell != endc; ++cell, ++dg_cell)
+  {
+    PointHistory *local_quadrature_points_history
+   	= reinterpret_cast<PointHistory *>(cell->user_pointer());
 
- 
-  for(unsigned int i=0;i<dim;++i)
-	  for(unsigned int j=0;j<dim;++j)
-	  {
-		  if(i==0 && j==0)
-			  eps3[i][j]=0.2;
-		  else if(i==(dim-1) && j==(dim-1))
-			  eps3[i][j]=0.1;
-		  else
-			  eps3[i][j]=0.05;
-	  }
-
- for(unsigned int i=0;i<dim;++i)
-	  for(unsigned int j=0;j<dim;++j)
-	  {
-		  if(i != j)
-			  eps4[i][j]=0.1;
-		  else
-			  eps4[i][j]=0;
-	  }
-
-
- for(unsigned int i=0;i<dim;++i)
-                for(unsigned int j=0;j<dim;++j){
-                        if(i==j)
-                        eps5[i][j]=-0.1;
-                        else
-                        eps5[i][j]=0;
-                }
-//Printing
-
-std::cout<<std::endl;
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps0);
-std::cout<<"BigC_plus:"<<std::endl;
-print_tensor( get_BigC_plus(lambda,mu,eps0) );
-std::cout<<"Norm:"<<get_BigC_plus(lambda,mu,eps0).norm()<<std::endl;
-std::cout<<std::endl;
-
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps1);
-std::cout<<"BigC_plus:"<<std::endl;
-print_tensor( get_BigC_plus(lambda,mu,eps1) );
-std::cout<<"Norm:"<<get_BigC_plus(lambda,mu,eps1).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<std::endl;
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps2);
-std::cout<<"BigC_plus:"<<std::endl;
-print_tensor( get_BigC_plus(lambda,mu,eps2) );
-std::cout<<"Norm:"<<get_BigC_plus(lambda,mu,eps2).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<std::endl;
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps3);
-std::cout<<"BigC_plus:"<<std::endl;
-print_tensor( get_BigC_plus(lambda,mu,eps3) );
-std::cout<<"Norm:"<<get_BigC_plus(lambda,mu,eps3).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<std::endl;
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps4);
-std::cout<<"BigC_plus:"<<std::endl;
-print_tensor( get_BigC_plus(lambda,mu,eps4) );
-std::cout<<"Norm:"<<get_BigC_plus(lambda,mu,eps4).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps5);
-std::cout<<"BigC_plus:"<<std::endl;
-print_tensor( get_BigC_plus(lambda,mu,eps5) );
-std::cout<<"Norm:"<<get_BigC_plus(lambda,mu,eps5).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<"------------------------------------------------"<<std::endl;
-std::cout<<std::endl;
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps0);
-std::cout<<"BigC_minus:"<<std::endl;
-print_tensor( get_BigC_minus(lambda,mu,eps0) );
-std::cout<<"Norm:"<<get_BigC_minus(lambda,mu,eps0).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps1);
-std::cout<<"BigC_minus:"<<std::endl;
-print_tensor( get_BigC_minus(lambda,mu,eps1) );
-std::cout<<"Norm:"<<get_BigC_minus(lambda,mu,eps1).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<std::endl;
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps2);
-std::cout<<"BigC_minus:"<<std::endl;
-print_tensor( get_BigC_minus(lambda,mu,eps2) );
-std::cout<<"Norm:"<<get_BigC_minus(lambda,mu,eps2).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<std::endl;
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps3);
-std::cout<<"BigC_minus:"<<std::endl;
-print_tensor( get_BigC_minus(lambda,mu,eps3) );
-std::cout<<"Norm:"<<get_BigC_minus(lambda,mu,eps3).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<std::endl;
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps4);
-std::cout<<"BigC_minus:"<<std::endl;
-print_tensor( get_BigC_minus(lambda,mu,eps4) );
-std::cout<<"Norm:"<<get_BigC_minus(lambda,mu,eps4).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps5);
-std::cout<<"BigC_minus:"<<std::endl;
-print_tensor( get_BigC_minus(lambda,mu,eps5) );
-std::cout<<"Norm:"<<get_BigC_minus(lambda,mu,eps5).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-
-std::cout<<"------------------------------------------------"<<std::endl;
-std::cout<<"Const_BigC"<<std::endl;
-print_tensor(get_const_BigC(lambda,mu,dummy));
-std::cout<<"Norm:"<<get_const_BigC(lambda,mu,dummy).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<std::endl;
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps0);
-std::cout<<"BigC_total_pm:"<<std::endl;
-print_tensor( get_BigC(lambda,mu,eps0) );
-std::cout<<"Norm:"<<get_BigC(lambda,mu,eps0).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps1);
-std::cout<<"BigC_total_pm:"<<std::endl;
-print_tensor( get_BigC(lambda,mu,eps1) );
-std::cout<<"Norm:"<<get_BigC(lambda,mu,eps1).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<std::endl;
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps2);
-std::cout<<"BigC_total_pm:"<<std::endl;
-print_tensor( get_BigC(lambda,mu,eps2) );
-std::cout<<"Norm:"<<get_BigC(lambda,mu,eps2).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<std::endl;
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps3);
-std::cout<<"BigC_total_pm:"<<std::endl;
-print_tensor( get_BigC(lambda,mu,eps3) );
-std::cout<<"Norm:"<<get_BigC(lambda,mu,eps3).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<std::endl;
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps4);
-std::cout<<"BigC_total_pm:"<<std::endl;
-print_tensor( get_BigC(lambda,mu,eps4) );
-std::cout<<"Norm:"<<get_BigC(lambda,mu,eps4).norm()<<std::endl;
-std::cout<<std::endl;
-
-
-std::cout<<"Epsilon:"<<std::endl;
-print_tensor(eps5);
-std::cout<<"BigC_total_pm:"<<std::endl;
-print_tensor( get_BigC(lambda,mu,eps5) );
-std::cout<<"Norm:"<<get_BigC(lambda,mu,eps5).norm()<<std::endl;
-std::cout<<std::endl;
+    Assert (local_quadrature_points_history >= &quadrature_point_history.front(),
+          ExcInternalError());
+    Assert (local_quadrature_points_history < &quadrature_point_history.back(),
+          ExcInternalError());
+     
+    {
+	    dg_cell->get_dof_values (history_field,
+                            local_history_fe_values);
+	    dof_to_qpoint_matrix.vmult (local_history_values_at_qpoints,
+                               local_history_fe_values);
+      
+   	  for (unsigned int q=0; q<quadrature_formula_m.size(); ++q)
+        	local_quadrature_points_history[q].history = local_history_values_at_qpoints(q);
+    }
+  }
 
 }
+
+
+double get_stress_intensity_const(const std::string test)
+{
+  using numbers::PI;
+
+if(test == "tension")
+   {
+     double f_a_b = 1.12 - 0.23*(0.5) + 10.56*pow(0.5,2.0) - 21.74*pow(0.5,3.0) + 30.42*pow(0.5,4.0) ;
+           
+     std::cout<<"F(a/b):"<<f_a_b<<std::endl;
+     return ( std::sqrt(PI*0.5)*f_a_b );
+            
+   }
+else if(test == "shear")
+  {
+    return 0;
+  }
+}
+
+
+std::pair<double,double> get_youngsM_poissonR(const double lambda,const double mu)
+{
+  double YoungsM,PoissonR;
+ 
+  PoissonR = ((3*lambda - 2*mu)/(6*lambda + 2*mu) );
+  YoungsM = 2*mu*(1+PoissonR);
+
+  return std::make_pair(YoungsM,PoissonR);
+}
+/*
+template<int dim>
+double get_critical_load(Tensor<2,dim> stress)
+{
+  FEFaceValues<dim> fe_values_face(fe_m, face_quadrature_formula_m,
+                                   update_values | update_quadrature_points |
+                                   update_normal_vectors | update_gradients |
+                        				   update_JxW_values);
+
+  const unsigned int   n_face_q_points    = face_quadrature_formula_m.size();
+
+  Tensor<1,dim> load_value;
+  
+  for (const auto &cell : dof_handler_m.active_cell_iterators())
+    {
+        for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
+        {
+                  if (cell->face(face)->at_boundary() && cell->face(face)->boundary_id() == 4)
+                  {
+                        fe_values_face.reinit(cell, face);
+        					                                                                                  
+                        for (unsigned int q_point = 0; q_point < n_face_q_points;++q_point)
+                        {
+                          load_value += stress*fe_values_face.normal_vector(q_point)*fe_values_face.JxW(q_point);
+                        }
+                  }
+	        }
+    }
+  return load_value;
+}
+*/
+
+
 template class thesis::ElasticBodyForce<2>;
 template class thesis::ElasticBodyForce<3>;
 template class thesis::BoundaryTension<2>;
@@ -516,5 +421,7 @@ template class thesis::Reference_solution<2>;
 template class thesis::Reference_solution<3>;
 template void thesis::Phasefield<2>::compute_load(const AllParameters &,BlockVector<double> &);
 template void thesis::Phasefield<3>::compute_load(const AllParameters &,BlockVector<double> &);
-template void comparison(const double ,const double ,SymmetricTensor<2,2> &);
-template void comparison(const double ,const double ,SymmetricTensor<2,3> &);
+template void thesis::Phasefield<2>::history_quadrature_to_global();
+template void thesis::Phasefield<3>::history_quadrature_to_global();
+template void thesis::Phasefield<2>::history_global_to_quadrature();
+template void thesis::Phasefield<3>::history_global_to_quadrature();

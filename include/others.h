@@ -1,13 +1,5 @@
 #pragma once
 #include <iostream>
-#include <deal.II/lac/vector.h>
-#include <deal.II/base/point.h>
-#include <deal.II/base/symmetric_tensor.h>
-#include <deal.II/fe/fe_values.h>
-#include <deal.II/base/function.h>
-#include <deal.II/base/tensor.h>
-#include <deal.II/lac/sparse_direct.h>
-#include <deal.II/lac/sparse_ilu.h>
 #include "../include/utilities.h"
 #include "../include/constitutive.h"
 namespace thesis
@@ -93,6 +85,9 @@ namespace thesis
                        const unsigned int component = 0) const override;
     };
 
+    template <int dim>
+    void comparison(const double lambda,const double mu,dealii::SymmetricTensor<2,dim> &dummy);
+
 }
 
 
@@ -107,6 +102,9 @@ double get_energy_density_minus(const double lambda
 
 double get_deg_func(const double d);
 
-template <int dim>
-void comparison(const double lambda,const double mu,dealii::SymmetricTensor<2,dim> &dummy);
+double get_stress_intensity_const(const std::string test);
 
+std::pair<double,double> get_youngsM_poissonR(const double lambda,const double mu);
+
+template<int dim>
+double get_critical_load(dealii::Tensor<2,dim> stress);

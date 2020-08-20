@@ -15,6 +15,7 @@
 #include <deal.II/base/table_handler.h>
 #include <deal.II/base/multithread_info.h>
 #include <deal.II/base/utilities.h>
+#include <deal.II/base/data_out_base.h>
 
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>
@@ -51,7 +52,6 @@
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/error_estimator.h>
-#include <deal.II/numerics/solution_transfer.h>
 #include <deal.II/numerics/solution_transfer.h>
 
 #include <deal.II/fe/fe_system.h>
@@ -237,14 +237,16 @@ namespace thesis
       void setup_quadrature_point_history(); 
       std::vector<PointHistory> quadrature_point_history;
 
-      std::vector< std::vector< dealii::/*Block*/Vector<double> > >
-             history_field {std::vector< std::vector< dealii::/*Block*/Vector<double> > >
-				(/*dim*/1, std::vector< dealii::/*Block*/Vector<double> >(/*dim*/1)) },
-             local_history_values_at_qpoints {std::vector< std::vector< dealii::/*Block*/Vector<double> > >
-				(/*dim*/1, std::vector< dealii::/*Block*/Vector<double> >(/*dim*/1)) },
-             local_history_fe_values {std::vector< std::vector< dealii::/*Block*/Vector<double> > >
-				(/*dim*/1, std::vector< dealii::/*Block*/Vector<double> >(/*dim*/1)) };
+      // std::vector< std::vector< dealii::/*Block*/Vector<double> > >
+      //        history_field {std::vector< std::vector< dealii::/*Block*/Vector<double> > >
+			// 	(/*dim*/1, std::vector< dealii::/*Block*/Vector<double> >(/*dim*/1)) },
+      //        local_history_values_at_qpoints {std::vector< std::vector< dealii::/*Block*/Vector<double> > >
+			// 	(/*dim*/1, std::vector< dealii::/*Block*/Vector<double> >(/*dim*/1)) },
+      //        local_history_fe_values {std::vector< std::vector< dealii::/*Block*/Vector<double> > >
+			// 	(/*dim*/1, std::vector< dealii::/*Block*/Vector<double> >(/*dim*/1)) };
      
+      dealii::Vector<double> history_field,local_history_values_at_qpoints,local_history_fe_values;
+
       void history_quadrature_to_global();
       void history_global_to_quadrature();
       double get_history(const double lambda
@@ -253,7 +255,6 @@ namespace thesis
 
 
       void compute_load(const parameters::AllParameters &param,dealii::BlockVector<double> &solution);    
-      void project_back_phase_field();
 
       std::pair<double,double> get_energy_p(const parameters::AllParameters &param,
                             dealii::BlockVector<double> & update);
@@ -261,6 +262,7 @@ namespace thesis
                             dealii::BlockVector<double> & update);
       
       void compute_lefm_errors(const parameters::AllParameters &param);
+      double get_critical_stress(const parameters::AllParameters &param);
 
       double		                current_time_m;
       mutable dealii::TimerOutput	timer;
