@@ -71,6 +71,15 @@
 
 namespace thesis
 {
+    
+    class PointHistory
+    {
+      public:
+      PointHistory(){}
+      ~PointHistory() =default;
+      double mutable history;
+    };
+
     template <int dim>
     class Phasefield
     {
@@ -110,7 +119,10 @@ namespace thesis
                                                        dealii::BlockVector<double> & newton_update);
 
       /*!Set hanging node and apply Dirichlet bc.*/
-      void make_constraints(unsigned int &itr,const double load_ratio,const parameters::AllParameters &param);
+      void make_constraints_u(unsigned int &itr,const double load_ratio,const parameters::AllParameters &param);
+
+      /*!Set hanging node and apply Dirichlet bc.*/
+      void make_constraints_d(unsigned int &itr,const parameters::AllParameters &param);
 
       /*!Assemble the linear system for the elasticity problem*/
       void assemble_system_d (const parameters::AllParameters &param,
@@ -224,35 +236,32 @@ namespace thesis
       void set_boundary_id();
 
       /*History class, variables and functions*/
-
-      const dealii::FE_DGQ<dim>  history_fe_m;
-      dealii::DoFHandler<dim>    history_dof_handler_m;
-      dealii::ConstraintMatrix   history_constraints_m;
+      /*
+      const dealii::FE_DGQ<dim>  history_fe_adp_m;
+      dealii::DoFHandler<dim>    history_dof_handler_adp_m;
+      dealii::ConstraintMatrix   history_constraints_adp_m;
       
-      struct PointHistory
+      struct PointHistory_adp
       {
-	      double history;
+	      double history_adp;
       };
+      
+      void setup_quadrature_point_history_adp(); 
+      std::vector<PointHistory_adp> quadrature_point_history_adp;
+           
+      dealii::Vector<double> history_field_adp,local_history_values_at_qpoints_adp,local_history_fe_values_adp;
 
-      void setup_quadrature_point_history(); 
-      std::vector<PointHistory> quadrature_point_history;
+      void history_quadrature_to_global_adp();
+      void history_global_to_quadrature_adp();
+      */
 
-      // std::vector< std::vector< dealii::/*Block*/Vector<double> > >
-      //        history_field {std::vector< std::vector< dealii::/*Block*/Vector<double> > >
-			// 	(/*dim*/1, std::vector< dealii::/*Block*/Vector<double> >(/*dim*/1)) },
-      //        local_history_values_at_qpoints {std::vector< std::vector< dealii::/*Block*/Vector<double> > >
-			// 	(/*dim*/1, std::vector< dealii::/*Block*/Vector<double> >(/*dim*/1)) },
-      //        local_history_fe_values {std::vector< std::vector< dealii::/*Block*/Vector<double> > >
-			// 	(/*dim*/1, std::vector< dealii::/*Block*/Vector<double> >(/*dim*/1)) };
-     
-      dealii::Vector<double> history_field,local_history_values_at_qpoints,local_history_fe_values;
+      dealii::CellDataStorage<typename dealii::Triangulation<dim>::cell_iterator
+                              ,PointHistory> quadrature_point_history;
+      void setup_qph();
 
-      void history_quadrature_to_global();
-      void history_global_to_quadrature();
       double get_history(const double lambda
-                	,const double mu
-    			,const dealii::SymmetricTensor<2,dim> &eps)const;
-
+                	      ,const double mu
+    			              ,const dealii::SymmetricTensor<2,dim> &eps)const;
 
       void compute_load(const parameters::AllParameters &param,dealii::BlockVector<double> &solution);    
 

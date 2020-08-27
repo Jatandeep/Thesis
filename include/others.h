@@ -50,9 +50,10 @@ namespace thesis
     template <int dim>
     class InitialCrack:public dealii::Function<dim>{
     public:
-        InitialCrack(const double min_cell_diameter):dealii::Function<dim>(dim+1)
+        InitialCrack(unsigned int itr/*,const double min_cell_diameter*/):dealii::Function<dim>(dim+1)
 	{
-	_min_cell_diameter = min_cell_diameter;
+	//_min_cell_diameter = min_cell_diameter;
+    itr_ = itr;
 	}
 	
 	virtual double value (const dealii::Point<dim> &p,
@@ -61,7 +62,8 @@ namespace thesis
     virtual void vector_value (const dealii::Point<dim> &p,
                              dealii::Vector<double>  &value)const;
     private:
-	double _min_cell_diameter;
+	//double _min_cell_diameter;
+    unsigned int itr_;
     };
 
    

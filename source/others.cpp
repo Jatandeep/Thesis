@@ -53,11 +53,16 @@ double InitialCrack<dim>::value (const Point<dim>  &p,
 // 0 = no crack
 // 1 = crack 
 
-  if (component == dim)
-    {
-     return 1;
-    }
-  return 0;
+if (component == dim)
+   {
+     if(itr_ >0)          //required
+	    return 0.0;
+
+    return 1;
+   }
+   
+   
+  
 }
 
 template <int dim>
@@ -234,10 +239,21 @@ void Phasefield<dim>::compute_load(const AllParameters &param
                                 load_value += stress_display*fe_values_face.normal_vector(q_point)*fe_values_face.JxW(q_point);
 
                         }
+                   
                   }
+                  /*
+                  if (cell->face(face)->boundary_id() == 0)
+                  {
+                    Point<dim> point_1;
+                    point_1 = cell->face(face)->barycenter();
+                    std::cout<<"Point:barycenter:  "<<point_1[0]<<"  "<<point_1[1]<<std::endl;
+
+                  }*/
 	        }
     }
-
+  if(current_time_m >5.41e-3)
+               std::cout<<"Critical load: "<<load_value<<std::endl;
+  
   if(param.test_case.test == "tension"){
     double load_y = load_value[1];
     statistics.add_value("Load y",load_y);
@@ -249,7 +265,6 @@ void Phasefield<dim>::compute_load(const AllParameters &param
   }
 
 }
-
 
 template <int dim>
 void ElasticBodyForce<dim>::vector_value (const Point<dim> &points,
@@ -270,78 +285,88 @@ void ElasticBodyForce<dim>::vector_value (const Point<dim> &points,
        values[1] = 0.0;
 
 }
+/*
 template <int dim>
-void Phasefield<dim>::history_quadrature_to_global()
+void Phasefield<dim>::history_quadrature_to_global_adp()
 {
-  FullMatrix<double> qpoint_to_dof_matrix (history_fe_m.dofs_per_cell,
+  FullMatrix<double> qpoint_to_dof_matrix (history_fe_adp_m.dofs_per_cell,
                                          quadrature_formula_m.size());
   
-  FETools::compute_projection_from_quadrature_points_matrix (history_fe_m,quadrature_formula_m
+  FETools::compute_projection_from_quadrature_points_matrix (history_fe_adp_m,quadrature_formula_m
 		  					    ,quadrature_formula_m,qpoint_to_dof_matrix);
   
   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_m.begin_active(),
                                                endc = dof_handler_m.end(),
-                                               dg_cell = history_dof_handler_m.begin_active();
+                                               dg_cell = history_dof_handler_adp_m.begin_active();
+std::cout<<"history quad2global Break 1"<<std::endl;
   for (; cell!=endc; ++cell, ++dg_cell)
   {
-    PointHistory *local_quadrature_points_history
-      = reinterpret_cast<PointHistory *>(cell->user_pointer());
+    PointHistory_adp *local_quadrature_points_history
+      = reinterpret_cast<PointHistory_adp *>(cell->user_pointer());
+std::cout<<"history quad2global Break 2"<<std::endl;
+
 
     Assert (local_quadrature_points_history >= &quadrature_point_history.front(),
             ExcInternalError());
     Assert (local_quadrature_points_history < &quadrature_point_history.back(),
             ExcInternalError());
-
+double x,y;
     {
-    	for (unsigned int q=0; q<quadrature_formula_m.size(); ++q)
-          local_history_values_at_qpoints(q) = local_quadrature_points_history[q].history;
+    	for (unsigned int q=0; q<quadrature_formula_m.size(); ++q){
+          x =local_history_values_at_qpoints_adp(q); 
+           std::cout<<"x:"<<x<<std::endl;
+std::cout<<"history quad2global Break 2.5"<<std::endl;          
+          y =  local_quadrature_points_history[q].history_adp;
+          std::cout<<"y:"<<y<<std::endl;
 
-    	qpoint_to_dof_matrix.vmult (local_history_fe_values,
-                                    local_history_values_at_qpoints);
-    	dg_cell->set_dof_values (local_history_fe_values,
-			                         history_field);
+      }
+    	qpoint_to_dof_matrix.vmult (local_history_fe_values_adp,
+                                    local_history_values_at_qpoints_adp);
+    	dg_cell->set_dof_values (local_history_fe_values_adp,
+			                         history_field_adp);
     }
 
   }
+std::cout<<"history quad2global Break 3"<<std::endl;
 
 }	
 	
 template <int dim>
-void Phasefield<dim>::history_global_to_quadrature()
+void Phasefield<dim>::history_global_to_quadrature_adp()
 {
   FullMatrix<double> dof_to_qpoint_matrix (quadrature_formula_m.size()
-                                          ,history_fe_m.dofs_per_cell);
+                                          ,history_fe_adp_m.dofs_per_cell);
 
-  FETools::compute_interpolation_to_quadrature_points_matrix(history_fe_m,quadrature_formula_m
+  FETools::compute_interpolation_to_quadrature_points_matrix(history_fe_adp_m,quadrature_formula_m
 		  					     ,dof_to_qpoint_matrix);
 
   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_m.begin_active(),
                                                  endc = dof_handler_m.end(),
-                                                 dg_cell = history_dof_handler_m.begin_active();
+                                                 dg_cell = history_dof_handler_adp_m.begin_active();
   for (; cell != endc; ++cell, ++dg_cell)
   {
-    PointHistory *local_quadrature_points_history
-   	= reinterpret_cast<PointHistory *>(cell->user_pointer());
+    PointHistory_adp *local_quadrature_points_history
+   	= reinterpret_cast<PointHistory_adp *>(cell->user_pointer());
 
     Assert (local_quadrature_points_history >= &quadrature_point_history.front(),
           ExcInternalError());
     Assert (local_quadrature_points_history < &quadrature_point_history.back(),
           ExcInternalError());
-     
+   
     {
-	    dg_cell->get_dof_values (history_field,
-                            local_history_fe_values);
-	    dof_to_qpoint_matrix.vmult (local_history_values_at_qpoints,
-                               local_history_fe_values);
+	    dg_cell->get_dof_values (history_field_adp,
+                            local_history_fe_values_adp);
+	    dof_to_qpoint_matrix.vmult (local_history_values_at_qpoints_adp,
+                               local_history_fe_values_adp);
       
    	  for (unsigned int q=0; q<quadrature_formula_m.size(); ++q)
-        	local_quadrature_points_history[q].history = local_history_values_at_qpoints(q);
+        	local_quadrature_points_history[q].history_adp = local_history_values_at_qpoints_adp(q);
     }
   }
-
+std::cout<<"history global2quad Break 1"<<std::endl;
 }
 
-
+*/
 double get_stress_intensity_const(const std::string test)
 {
   using numbers::PI;
@@ -421,7 +446,7 @@ template class thesis::Reference_solution<2>;
 template class thesis::Reference_solution<3>;
 template void thesis::Phasefield<2>::compute_load(const AllParameters &,BlockVector<double> &);
 template void thesis::Phasefield<3>::compute_load(const AllParameters &,BlockVector<double> &);
-template void thesis::Phasefield<2>::history_quadrature_to_global();
-template void thesis::Phasefield<3>::history_quadrature_to_global();
-template void thesis::Phasefield<2>::history_global_to_quadrature();
-template void thesis::Phasefield<3>::history_global_to_quadrature();
+// template void thesis::Phasefield<2>::history_quadrature_to_global_adp();
+// template void thesis::Phasefield<3>::history_quadrature_to_global_adp();
+// template void thesis::Phasefield<2>::history_global_to_quadrature_adp();
+// template void thesis::Phasefield<3>::history_global_to_quadrature_adp();

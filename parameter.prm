@@ -30,7 +30,7 @@ end
 ############  Non Linear System  ##################
 
 subsection Newton Raphson
-    set Max newton iterations = 3 
+    set Max newton iterations = 50 
     set Residual tolerance u = 1e-7  
     set Residual tolerance d = 1e-7  
     set Newton update tolerance u = 1e-6  
@@ -53,7 +53,7 @@ subsection Time
     set Delta time final = 1e-6  
     set Time change interval = 5e-3 
     set Time tolerance = 1e-6
-    set Output frequency = 20 #5 
+    set Output frequency = 1 #5 
     set Alpha = 1e-1
     set Beta = 1e-4 #1e-3
 end
@@ -62,7 +62,7 @@ end
 
 subsection PhaseField
     set Critical energy release rate = 2.7
-    set Length scale parameter = 0.015 #0.015  
+    set Length scale parameter =  0.015 #0.015 # 0.0075
     set Small positive parameter = 1e-10 
     set Total displacement =  6.5e-3 #15e-3
     set Staggered Tolerance = 1e-6
