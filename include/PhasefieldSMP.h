@@ -16,6 +16,7 @@
 #include <deal.II/base/multithread_info.h>
 #include <deal.II/base/utilities.h>
 #include <deal.II/base/data_out_base.h>
+#include <deal.II/base/index_set.h>
 
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>
@@ -32,7 +33,7 @@
 #include <deal.II/lac/solver_selector.h>
 #include <deal.II/lac/block_sparse_matrix.h>
 #include <deal.II/lac/block_vector.h>
-#include <deal.II/dofs/block_info.h>
+
 
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_generator.h>
@@ -47,6 +48,7 @@
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_tools.h>
 #include <deal.II/dofs/dof_renumbering.h>
+#include <deal.II/dofs/block_info.h>
 
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
@@ -61,6 +63,9 @@
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_tools.h>
 #include <deal.II/fe/mapping_q_eulerian.h>
+#include <deal.II/fe/mapping_q.h>
+#include <deal.II/fe/mapping.h>
+#include <deal.II/fe/component_mask.h>
 
 #include "parameter.h"
 #include "others.h"
@@ -272,6 +277,11 @@ namespace thesis
       
       void compute_lefm_errors(const parameters::AllParameters &param);
       double get_critical_stress(const parameters::AllParameters &param);
+
+      void get_constrained_initial_d(unsigned int itr
+                                    ,const parameters::AllParameters &param);
+      void extract_initialcrack_d_index(const double min_cell_dia,const parameters::AllParameters &param);
+      std::vector<double> global_index_m;
 
       double		                current_time_m;
       mutable dealii::TimerOutput	timer;

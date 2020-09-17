@@ -66,7 +66,24 @@ namespace thesis
     unsigned int itr_;
     };
 
-   
+  
+    template <int dim>
+    class InitialValuesCrack:public dealii::Function<dim>{
+    public:
+        InitialValuesCrack(const double min_cell_diameter):dealii::Function<dim>(dim+1)
+	{
+	 _min_cell_dia = min_cell_diameter;
+	}
+	
+	virtual double value (const dealii::Point<dim> &p,
+                    const unsigned int component = 0) const;
+
+    	virtual void vector_value (const dealii::Point<dim> &p,
+                             dealii::Vector<double>  &value)const;
+    private:
+	double _min_cell_dia;
+    };
+  
     template <int dim>
     class ElasticBodyForce:public dealii::Function<dim>{
     public:
@@ -76,7 +93,7 @@ namespace thesis
                              dealii::Vector<double>  &value)const;
 
     };
-
+/*
     template <int dim>
     class Reference_solution : public dealii::Function<dim>
     {
@@ -85,6 +102,54 @@ namespace thesis
       {}
       virtual double value(const dealii::Point<dim> & p,
                        const unsigned int component = 0) const override;
+    };
+*/
+    template <int dim>
+    class Reference_solution:public dealii::Function<dim>{
+    public:
+        Reference_solution(unsigned int itr,const double load_ratio
+                          ,const double u_total,const double lambda
+                          ,const double mu):dealii::Function<dim>(dim+1)
+	{
+	itr_ = itr;
+	load_ratio_ = load_ratio;
+	u_total_ = u_total;
+	lambda_ = lambda;
+    mu_ = mu;
+	}
+	
+	virtual double value (const dealii::Point<dim> &p,
+                    const unsigned int component = 0) const;
+
+    virtual void vector_value (const dealii::Point<dim> &p,
+                             dealii::Vector<double>  &value)const;
+    private:
+	double load_ratio_,u_total_,lambda_,mu_;
+	unsigned int itr_;
+    };
+
+      template <int dim>
+    class Reference_solution_neg:public dealii::Function<dim>{
+    public:
+        Reference_solution_neg(unsigned int itr,const double load_ratio
+                          ,const double u_total,const double lambda
+                          ,const double mu):dealii::Function<dim>(dim+1)
+	{
+	itr_ = itr;
+	load_ratio_ = load_ratio;
+	u_total_ = u_total;
+	lambda_ = lambda;
+    mu_ = mu;
+	}
+	
+	virtual double value (const dealii::Point<dim> &p,
+                    const unsigned int component = 0) const;
+
+    virtual void vector_value (const dealii::Point<dim> &p,
+                             dealii::Vector<double>  &value)const;
+    private:
+	double load_ratio_,u_total_,lambda_,mu_;
+	unsigned int itr_;
     };
 
     template <int dim>

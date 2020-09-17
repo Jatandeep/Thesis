@@ -3,8 +3,8 @@
 
 subsection Geometry Model
     set Mesh File = ../thesis/meshes/Tension_left_1.inp #../thesis/meshes/Shear_left_2.inp  #../thesis/meshes/Elastic.inp  
-    set Global refinement =  0 #3 #9 #0 #4    
-    set Local refinement = 0 #6 #4  
+    set Global refinement = 0 #3 #9 #0 #4    
+    set Local refinement =  0 #6 #4  
     set Act_ref = 0.3
     set Act_cors = 0.03
     set Grid scale = 1e-3 #1
@@ -53,7 +53,7 @@ subsection Time
     set Delta time final = 1e-6  
     set Time change interval = 5e-3 
     set Time tolerance = 1e-6
-    set Output frequency = 1 #5 
+    set Output frequency = 20 
     set Alpha = 1e-1
     set Beta = 1e-4 #1e-3
 end
@@ -62,7 +62,7 @@ end
 
 subsection PhaseField
     set Critical energy release rate = 2.7
-    set Length scale parameter =  0.015 #0.015 # 0.0075
+    set Length scale parameter = 0.0075 # 0.015  
     set Small positive parameter = 1e-10 
     set Total displacement =  6.5e-3 #15e-3
     set Staggered Tolerance = 1e-6
@@ -73,5 +73,10 @@ subsection TestCase
     set Test case = tension #shear
 end
 
+########### Modeling Strategy################
+
+subsection ModelingStrategy
+    set Initial crack strategy = mesh #phasefield #mesh #  # hybrid
+end
 
 

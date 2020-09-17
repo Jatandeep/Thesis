@@ -194,6 +194,20 @@ void TestCase::parse_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
+void ModelingStrategy::declare_param(ParameterHandler &prm){
+    prm.enter_subsection("ModelingStrategy");
+    {
+        prm.declare_entry("Initial crack strategy","mesh",Patterns::Selection("mesh|phasefield|hybrid"));
+    }
+    prm.leave_subsection();
+}
+void ModelingStrategy::parse_param(ParameterHandler &prm){
+    prm.enter_subsection("ModelingStrategy");
+    {
+        strategy = prm.get("Initial crack strategy");
+    }
+    prm.leave_subsection();
+}
 
 AllParameters::AllParameters(const std::string &filename){
     ParameterHandler prm;
@@ -211,6 +225,7 @@ void AllParameters::declare_param(ParameterHandler &prm){
     Time::declare_param(prm);
     PhaseFieldMethod::declare_param(prm);
     TestCase::declare_param(prm);
+    ModelingStrategy::declare_param(prm);
 }
 
 void AllParameters::parse_param(ParameterHandler &prm){
@@ -222,5 +237,6 @@ void AllParameters::parse_param(ParameterHandler &prm){
     time.parse_param(prm);
     pf.parse_param(prm);
     test_case.parse_param(prm);
+    mod_strategy.parse_param(prm);
 }
 

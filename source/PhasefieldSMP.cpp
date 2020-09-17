@@ -18,15 +18,12 @@ Phasefield<dim>::Phasefield(const AllParameters &param)
   , u_extractor(u_dof_start_m)
   , d_extractor(d_dof_start_m)
   , dofs_per_block_m(n_blocks_m)
-//  , history_fe_adp_m(1)						//history_adaptivity	
   , timer(std::cout,TimerOutput::summary,TimerOutput::wall_times)
 				
 {
     import_mesh(param);
     dof_handler_m.initialize(triangulation_m, fe_m);
-//    history_dof_handler_adp_m.initialize(triangulation_m,history_fe_adp_m); //history_adaptivity
     setup_system();			
-//    setup_quadrature_point_history_adp();				//history_adaptivity
     setup_qph();
     determine_comp_extractor();
 }
@@ -37,7 +34,6 @@ template <int dim>
 Phasefield<dim>::~Phasefield ()
 {
   dof_handler_m.clear ();
-//  history_dof_handler_adp_m.clear();			//history_adaptivity
   statistics.set_auto_fill_mode(true);
 }
 
@@ -63,6 +59,8 @@ void Phasefield<dim>::setup_system ()
   constraints_m.clear ();
   DoFTools::make_hanging_node_constraints (dof_handler_m,
                                            constraints_m);
+  //get_constrained_initial_d();
+    
   constraints_m.close ();
 
   tangent_matrix_m.clear();
@@ -159,45 +157,7 @@ void Phasefield<dim>::set_boundary_id()
           }
 
 }
-/*
-template <int dim>
-void Phasefield<dim>::setup_quadrature_point_history_adp()
-{
-    
-    history_dof_handler_adp_m.distribute_dofs(history_fe_adp_m);	//history
-    
-    history_constraints_adp_m.clear ();
-    DoFTools::make_hanging_node_constraints (history_dof_handler_adp_m,
-                                           history_constraints_adp_m);
-    history_constraints_adp_m.close ();
-    
-    {								
-        history_field_adp.reinit(history_dof_handler_adp_m.n_dofs());
-        local_history_values_at_qpoints_adp.reinit(quadrature_formula_m.size());
-        local_history_fe_values_adp.reinit(history_fe_adp_m.dofs_per_cell);
-    }
 
-//     triangulation_m.clear_user_data();
-//     {
-//       std::vector<PointHistory> tmp;
-//       quadrature_point_history.swap(tmp);
-//     }
-//     quadrature_point_history.resize(triangulation_m.n_active_cells() * quadrature_formula_m.size());
-
-//     unsigned int history_index = 0;
-//     for (auto &cell : triangulation_m.active_cell_iterators()){
-//     typename Triangulation<dim>::active_cell_iterator cell =
-//       triangulation_m.begin_active(), endc = triangulation_m.end();
-
-//     for (;cell != endc; ++cell)
-//     {
-//       cell->set_user_pointer(&quadrature_point_history[history_index]);
-//       history_index += quadrature_formula_m.size();
-//     }
-//     Assert(history_index == quadrature_point_history.size(),ExcInternalError());
-
-}
-*/
 template<int dim>
 void Phasefield<dim>::setup_qph()
 {
@@ -724,7 +684,6 @@ unsigned int Phasefield<dim>::solve_nonlinear_newton(const AllParameters &param
     std::vector<BlockVector<double>> current_sol_si(7,BlockVector<double>(dofs_per_block_m));
     
     current_sol_si[0]= solution_m;
-
     unsigned int new_iter_u = 0;
     
     //Staggered Iterations
@@ -771,9 +730,16 @@ unsigned int Phasefield<dim>::solve_nonlinear_newton(const AllParameters &param
           tangent_matrix_m = 0.0;
           system_rhs_m = 0.0;
 
+          //Mesh induced initial crack + Phase field along the initial crack
+          if(param.mod_strategy.strategy=="hybrid"){
           make_constraints_d(new_iter_d,param);
-                   
-    
+          }
+
+          //Phase field induced initial crack
+          if(param.mod_strategy.strategy=="phasefield"){        
+          get_constrained_initial_d(new_iter_d,param);
+          }
+
           current_sol_si[k-1] += newton_update_d; //Gives updated solution till now 
           assemble_system_d(param,current_sol_si[k-1],delta_t);	//Evaluation at solution calculated until now
 
@@ -910,11 +876,7 @@ std::pair<unsigned int,double> Phasefield<dim>::solve_sys_d(const AllParameters 
   preconditioner.initialize(tangent_matrix_m.block(d_dof_m,d_dof_m), param.linearsolver.relax_prm);
   cg.solve (tangent_matrix_m.block(d_dof_m,d_dof_m), newton_update.block(d_dof_m), system_rhs_m.block(d_dof_m),preconditioner);
 
-/*
-  SparseDirectUMFPACK k_dd;
-  k_dd.initialize(tangent_matrix_m.block(d_dof_m,d_dof_m)); 
-  k_dd.vmult(newton_update.block(d_dof_m),system_rhs_m.block(d_dof_m));
-*/
+
   lin_ite = solver_control.last_step();
   lin_res = solver_control.last_value();
 
@@ -936,19 +898,6 @@ std::pair<unsigned int,double> Phasefield<dim>::solve_sys_u(const AllParameters 
 
   unsigned int lin_ite = 0;
   double lin_res = 0;
-/*
-
-  SolverControl           solver_control1 (tangent_matrix_m.block(u_dof_m,u_dof_m).m(),
-                                          param.linearsolver.cg_tol*system_rhs_m.block(u_dof_m).l2_norm());
-  GrowingVectorMemory<Vector<double> > GVM1;
-  SolverCG<Vector<double>>    cg1 (solver_control1,GVM1);
-  PreconditionSSOR<> preconditioner1;
-  preconditioner1.initialize(tangent_matrix_m.block(u_dof_m,u_dof_m), param.linearsolver.relax_prm);
-  cg1.solve (tangent_matrix_m.block(u_dof_m,u_dof_m), newton_update.block(u_dof_m),system_rhs_m.block(u_dof_m),preconditioner1);
-
-  lin_ite = solver_control1.last_step();
-  lin_res = solver_control1.last_value();
-*/
 
   constraints_m.distribute (newton_update);
 
@@ -956,11 +905,6 @@ std::pair<unsigned int,double> Phasefield<dim>::solve_sys_u(const AllParameters 
  
   return std::make_pair(lin_ite,lin_res);
 }
-
-
-   
- 
-
 
 
 template <int dim>
@@ -981,6 +925,42 @@ void Phasefield<dim>::make_constraints_u(unsigned int &itr,const double load_rat
    //Tension test
    if(param.test_case.test == "tension")
    {
+     
+      { 
+      std::vector<bool> component_mask1(dim+1, false);
+
+      component_mask1[0] = true;//false;//true
+      component_mask1[1] = true;
+      component_mask1[2] = false;
+
+      VectorTools::interpolate_boundary_values(dof_handler_m, 3,
+                                                  ZeroFunction<dim>(n_components_m), constraints_m, component_mask1);
+      }
+      /*
+      {
+      std::vector<bool> component_mask2(dim+1, false);
+
+      component_mask2[0] = true;//false
+      component_mask2[1] = true;
+      component_mask2[2] = false;
+
+      VectorTools::interpolate_boundary_values(dof_handler_m, 4,
+                                  BoundaryTension<dim>(itr,load_ratio,param.pf.u_total), constraints_m, component_mask2);
+      }
+      */  
+     {
+      std::vector<bool> component_mask2(dim+1, false);
+
+      component_mask2[0] = true;
+      component_mask2[1] = true;
+      component_mask2[2] = false;
+
+      VectorTools::interpolate_boundary_values(dof_handler_m, 4,
+                                  Reference_solution<dim>(itr,load_ratio,param.pf.u_total
+                                                          ,param.materialmodel.lambda
+                                                          ,param.materialmodel.mu), constraints_m, component_mask2);
+      }
+      /*   
       { 
       std::vector<bool> component_mask1(dim+1, false);
 
@@ -989,29 +969,12 @@ void Phasefield<dim>::make_constraints_u(unsigned int &itr,const double load_rat
       component_mask1[2] = false;
 
       VectorTools::interpolate_boundary_values(dof_handler_m, 3,
-                                                  ZeroFunction<dim>(n_components_m), constraints_m, component_mask1);
+                                                  Reference_solution_neg<dim>(itr,load_ratio,param.pf.u_total
+                                                          ,param.materialmodel.lambda
+                                                          ,param.materialmodel.mu), constraints_m, component_mask1);
       }
-      {
-      std::vector<bool> component_mask2(dim+1, false);
-
-      component_mask2[0] = true;
-      component_mask2[1] = true;
-      component_mask2[2] = false;
-
-      VectorTools::interpolate_boundary_values(dof_handler_m, 4,
-                                  BoundaryTension<dim>(itr,load_ratio,param.pf.u_total), constraints_m, component_mask2);
-      }
-           //d=1 on slit DBC 
-      {
-      std::vector<bool> component_mask3(dim+1, false);
-
-      component_mask3[0] = false;
-      component_mask3[1] = false;
-      component_mask3[2] = true;
-      VectorTools::interpolate_boundary_values(dof_handler_m, 0,
-                                                      InitialCrack<dim>(itr), constraints_m, component_mask3);
-      }
-   
+      */
+              
    }
 
 //Shear Test
@@ -1062,7 +1025,7 @@ void Phasefield<dim>::make_constraints_d(unsigned int &itr,const AllParameters &
    if(param.test_case.test == "tension")
    {
       //d=1 on slit DBC 
-      {
+      if(current_time_m==param.time.delta_t){
       std::vector<bool> component_mask(dim+1, false);
 
       component_mask[0] = false;
@@ -1071,6 +1034,17 @@ void Phasefield<dim>::make_constraints_d(unsigned int &itr,const AllParameters &
       VectorTools::interpolate_boundary_values(dof_handler_m, 0,
                                                       InitialCrack<dim>(itr), constraints_m, component_mask);
       }
+      else
+      {
+      std::vector<bool> component_mask(dim+1, false);
+
+      component_mask[0] = false;
+      component_mask[1] = false;
+      component_mask[2] = true;
+      VectorTools::interpolate_boundary_values(dof_handler_m, 0,
+                                                  ZeroFunction<dim>(n_components_m), constraints_m, component_mask);
+      }
+      
        
    }
    
@@ -1234,7 +1208,7 @@ void Phasefield<dim>::get_newton_update_error_u(const BlockVector<double> &newto
     error_update.norm = err_update.l2_norm();
     error_update.u = err_update.block(u_dof_m).l2_norm();
 }
-
+/*
 template <int dim>
 void Phasefield<dim>::compute_lefm_errors(const AllParameters &param)
 {
@@ -1256,92 +1230,6 @@ void Phasefield<dim>::compute_lefm_errors(const AllParameters &param)
                                         VectorTools::L2_norm);
 
     std::cout << std::endl<< "   Displacement L2 Error: " << Displacement_L2_error << std::endl;
-}
-/*
-template <int dim>
-void Phasefield<dim>::refine_grid (const AllParameters &param)
-{
-  
-  Vector<float> estimated_error_per_cell (triangulation_m.n_active_cells());
-  KellyErrorEstimator<dim>::estimate (dof_handler_m,
-                                      QGauss<dim-1>(param.fesys.quad_order),
-                                      typename FunctionMap<dim>::type(),
-                                      solution_m.block(d_dof_m),
-                                      estimated_error_per_cell);
-  GridRefinement::refine_and_coarsen_fixed_number (triangulation_m,
-                                                   estimated_error_per_cell,
-                                                   param.geometrymodel.act_ref, param.geometrymodel.act_cors);
- 
-// refine if phase field > constant
-  typename DoFHandler<dim>::active_cell_iterator cell =
-        dof_handler_m.begin_active(), endc = dof_handler_m.end();
-  std::vector<unsigned int> local_dof_indices(fe_m.dofs_per_cell);
-
-  for (; cell != endc; ++cell)
-      {
-         for (unsigned int vertex = 0;
-                 vertex < GeometryInfo<dim>::vertices_per_cell; ++vertex)
-              {
-                Tensor<1, dim> cell_vertex = (cell->vertex(vertex));
-                if (cell_vertex[0] <= 1 && cell_vertex[0] >= 0.4
-                    && cell_vertex[1] <= 0.55 && cell_vertex[1] >= 0.45)
-                  {
-                    cell->set_refine_flag();
-                    break;
-                  }
-              }
-              
-          cell->get_dof_indices(local_dof_indices);
-          for (unsigned int i=0; i<fe_m.dofs_per_cell; ++i)
-            {
-              const unsigned int comp_i = fe_m.system_to_component_index(i).first;
-              if (comp_i != dim)
-                continue; // only look at phase field
-              if (old_solution_m(local_dof_indices[i])
-                  >0.5 )
-              {
-                  cell->set_refine_flag();
-                  break;
-              }
-            }
-        
-      }  
-
-  // limit level
-  {
-    typename DoFHandler<dim>::active_cell_iterator cell =
-        dof_handler_m.begin_active(), endc = dof_handler_m.end();
-    for (; cell != endc; ++cell)
-       if (cell->level() == static_cast<int>(9))
-          cell->clear_refine_flag();
-  
-  }  
-
-
-  SolutionTransfer<dim,BlockVector<double>> solution_trans(dof_handler_m);
-  SolutionTransfer<dim,Vector<double>> solution_trans_history(history_dof_handler_adp_m);
-  
-  BlockVector<double> tmp;
-  Vector<double> tmp_h;
-  tmp = old_solution_m;
-  tmp_h = history_field_adp;
-
-  triangulation_m.prepare_coarsening_and_refinement();
-  
-  solution_trans.prepare_for_coarsening_and_refinement(tmp);
-  solution_trans_history.prepare_for_coarsening_and_refinement(tmp_h);
-
-  triangulation_m.execute_coarsening_and_refinement ();
-
-  setup_system();
-  setup_quadrature_point_history_adp();
-
-  solution_trans.interpolate(tmp,old_solution_m);
-  constraints_m.distribute(old_solution_m);
- 
-  solution_trans_history.interpolate(tmp_h,history_field_adp);
-  history_constraints_adp_m.distribute(history_field_adp);		//?diff history constraints??
-
 }
 */
 
@@ -1392,7 +1280,7 @@ void Phasefield<dim>::import_mesh(const AllParameters &param){
     GridTools::scale(param.geometrymodel.grid_scale,triangulation_m);
     triangulation_m.refine_global (param.geometrymodel.gl_ref);
 
-    const bool write_grid = false;
+    const bool write_grid = true;
     GridOut::OutputFormat meshOutputFormat = GridOut::vtk;
     if (write_grid)
     {
@@ -1408,7 +1296,6 @@ void Phasefield<dim>::import_mesh(const AllParameters &param){
         std::cout << "The mesh has been written to " << outMeshFileName
                   << std::endl;
     }
-
 
     set_boundary_id();
 }
@@ -1480,8 +1367,8 @@ void Phasefield<dim>::run(const AllParameters &param){
             for (unsigned int vertex = 0;vertex < GeometryInfo<dim>::vertices_per_cell; ++vertex)
               {
                 Tensor<1, dim> cell_vertex = (cell->vertex(vertex));
-                if (cell_vertex[0] <= 1.0 && cell_vertex[0] >= 0.48
-                    && cell_vertex[1] <= 0.55 && cell_vertex[1] >= 0.45)
+                if (cell_vertex[0] <= 1.0 && cell_vertex[0] >= 0 /* 0.48*/
+                    && cell_vertex[1] <= 0.52 && cell_vertex[1] >= 0.48)
  		{
                     cell->set_refine_flag();
                     break;
@@ -1496,10 +1383,17 @@ void Phasefield<dim>::run(const AllParameters &param){
 
     triangulation_m.execute_coarsening_and_refinement();//execute_refinement();
     setup_system();
-    //setup_quadrature_point_history_adp();
+    setup_qph();
     solution_delta.reinit(dofs_per_block_m);
     }
-   
+
+    //Phase-field Induced crack
+    if(param.mod_strategy.strategy=="phasefield")
+    {
+      double min_cell_diameter = GridTools::minimal_cell_diameter(triangulation_m);
+      extract_initialcrack_d_index(min_cell_diameter,param);
+    }
+
     output_results(param,current_timestep);
     statistics.add_value("Time",current_time_m);
     statistics.set_precision("Time",6);
@@ -1530,6 +1424,7 @@ void Phasefield<dim>::run(const AllParameters &param){
 	std::cout<<"Parameter Newton: new_upd tol_u: "<<param.newtonraphson.nu_tol_u<<std::endl;
 	std::cout<<"Parameter Newton: new_upd tol_d: "<<param.newtonraphson.nu_tol_d<<std::endl;
 	std::cout<<std::endl;
+
 ///////////////////////
     double critical = get_critical_stress(param); 
 
@@ -1543,17 +1438,8 @@ void Phasefield<dim>::run(const AllParameters &param){
       std::cout<<std::setprecision(5)<<"Current_time:"<<current_time_m<<std::endl;
       std::cout<<"Current time step: "<<current_timestep<<std::endl;
 
-      //For Adaptive Refinement:
-    //  if(current_time_m >param.time.delta_t)
-    //   {
-    //     history_quadrature_to_global_adp();  
-    //     refine_grid(param);
-    //     history_global_to_quadrature_adp();
-    //     solution_delta.reinit(dofs_per_block_m);
-    //   }
-
-         
       solution_delta = 0.0;
+      
       new_iter = solve_nonlinear_newton(param,solution_delta,delta_t);
 
       if(new_iter == param.newtonraphson.max_new_ite)
@@ -1587,8 +1473,8 @@ void Phasefield<dim>::run(const AllParameters &param){
       */
       else
       {
-        solution_m += solution_delta;	
 
+        solution_m += solution_delta;	
         old_solution_m = solution_m;
 
         statistics.add_value("Time",current_time_m);
@@ -1615,7 +1501,7 @@ void Phasefield<dim>::run(const AllParameters &param){
             once =true;
           }
         }
-        
+    
         current_time_m += delta_t;
         ++current_timestep;
       }

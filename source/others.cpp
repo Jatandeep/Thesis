@@ -16,7 +16,7 @@ void BoundaryTension<dim>::vector_value (const Point<dim> &,
 {
   if(itr_ >0){
   vectorValue = 0.0;
-//  vectorValue[1] = 0.0;
+//   vectorValue[1] = 0.0;
   }
   else
   {
@@ -57,12 +57,9 @@ if (component == dim)
    {
      if(itr_ >0)          //required
 	    return 0.0;
-
+    
     return 1;
-   }
-   
-   
-  
+   }    
 }
 
 template <int dim>
@@ -73,6 +70,185 @@ void InitialCrack<dim>::vector_value (const Point<dim> &p,
     values (c) = InitialCrack<dim>::value (p, c);
 }
 
+template <int dim>
+double InitialValuesCrack<dim>::value (const Point<dim>  &p,
+                                    const unsigned int component) const
+{
+// 0 = no crack
+// 1 = crack 
+	//std::cout<<"min cell dia:"<<_min_cell_dia<<std::endl;
+if (component == dim)
+   {
+     if ( (p(0) >= 0) && (p(0) <= 0.5 /*+ _min_cell_dia*/) && (p(1) >= 0.5-.01/*_min_cell_dia*/) && (p(1) <= 0.5+.01/*_min_cell_dia*/) )
+        return 1.0;
+      else
+        return 0.0;
+   }
+return 0;
+  
+}
+
+template <int dim>
+void InitialValuesCrack<dim>::vector_value (const Point<dim> &p,
+                                            Vector<double>   &values) const
+{
+  for (unsigned int c=0; c<this->n_components; ++c)
+    values (c) = InitialValuesCrack<dim>::value (p, c);
+}
+
+
+template<int dim>
+void Phasefield<dim>::extract_initialcrack_d_index(const double min_cell_dia,const AllParameters &param)                                                              
+{
+
+  constraints_m.clear();
+  DoFTools::make_hanging_node_constraints (dof_handler_m,
+                                            constraints_m);
+                                            
+  std::vector<Point<dim>> support_points(dof_handler_m.n_dofs());
+ 
+  MappingQ<dim> mapping(param.fesys.fe_degree,true);
+ 
+  DoFTools::map_dofs_to_support_points<dim>(mapping
+                                           ,dof_handler_m
+                                           ,support_points);
+  
+  std::vector<unsigned int> local_dof_indices(fe_m.dofs_per_cell);
+  for (const auto &cell : dof_handler_m.active_cell_iterators())
+  {
+    cell->get_dof_indices(local_dof_indices);
+    for (unsigned int i=0; i<fe_m.dofs_per_cell; ++i)
+    {
+      const unsigned int comp_i = fe_m.system_to_component_index(i).first;
+                            
+      if (comp_i != dim)
+      continue; // only look at phase field
+      else
+      {
+        const unsigned int idx = local_dof_indices[i];
+        
+        if((support_points[idx][0] <= 0.5) 
+        && (support_points[idx][0] >= 0.0) 
+        && (support_points[idx][1] <= 0.5 + (min_cell_dia/10)) 
+        && (support_points[idx][1] >= 0.5-(min_cell_dia/10)) )
+        {
+          global_index_m.push_back(idx);
+        }
+      }
+    }
+  }
+
+/*
+  for (const auto &cell : dof_handler_m.active_cell_iterators())
+  {
+    for (unsigned int vertex = 0;vertex < GeometryInfo<dim>::vertices_per_cell; ++vertex)
+    {
+                Tensor<1, dim> cell_vertex = (cell->vertex(vertex));
+                if (cell_vertex[0] <= 0.5 && cell_vertex[0] >= 0.0 
+                    && cell_vertex[1] <= 0.5 + (min_cell_dia/10) && cell_vertex[1] >= 0.5-(min_cell_dia/10))
+                {
+                const unsigned int idx = cell->vertex_dof_index(vertex,2);
+                global_index_m.push_back(idx);
+                }
+    }
+  }
+ */
+}
+
+template<int dim>
+void Phasefield<dim>::get_constrained_initial_d(unsigned int itr_,const AllParameters &param)
+{
+  std::vector<unsigned int> local_dof_indices(fe_m.dofs_per_cell);
+
+  constraints_m.clear();
+
+  DoFTools::make_hanging_node_constraints (dof_handler_m,
+                                            constraints_m);
+
+
+  for(auto idx:global_index_m)
+  {
+   constraints_m.add_line(idx);
+   if(current_time_m==param.time.delta_t)
+    {
+     if(itr_ >0)          
+      {
+       constraints_m.set_inhomogeneity(idx,0);
+      }
+     else
+      {
+       constraints_m.set_inhomogeneity(idx,1);
+      }
+    }
+    else
+    {
+     constraints_m.set_inhomogeneity(idx,0);
+    }
+  }   
+}
+
+template <int dim>
+double Reference_solution<dim>::value (const Point<dim>  &,
+                                    const unsigned int ) const
+{}
+
+template <int dim>
+void Reference_solution<dim>::vector_value (const Point<dim> &p,
+                                           Vector<double>   &vectorValue) const
+{
+  using numbers::PI;
+ 
+  const double x = p(0);
+  const double y = p(1);
+
+  const double k = 3-4*get_youngsM_poissonR(lambda_,mu_).second;
+  const double K_I = load_ratio_*u_total_*sqrt(PI*0.5); 
+
+  const double r = std::sqrt(x*x +y*y);
+  const double theta = atan(y/x);
+  
+  if(itr_ >0){
+  vectorValue = 0.0;
+  }
+  else
+  {
+	vectorValue[0] = (K_I/(4*mu_))*std::sqrt(r/(2*PI))*(-(2*k - 1)*sin(theta/2) - sin(3*theta/2));
+	vectorValue[1] = (K_I/(4*mu_))*std::sqrt(r/(2*PI))*( (2*k + 1)*cos(theta/2) + cos(3*theta/2));
+  }
+  
+}
+
+template <int dim>
+double Reference_solution_neg<dim>::value (const Point<dim>  &,
+                                    const unsigned int ) const
+{}
+
+template <int dim>
+void Reference_solution_neg<dim>::vector_value (const Point<dim> &p,
+                                           Vector<double>   &vectorValue) const
+{
+  using numbers::PI;
+ 
+  const double x = p(0);
+  const double y = p(1);
+
+  const double k = 3-4*get_youngsM_poissonR(lambda_,mu_).second;
+  const double K_I = load_ratio_*u_total_*sqrt(PI*0.5); 
+
+  const double r = std::sqrt(x*x +y*y);
+  const double theta = atan(y/x);
+  
+  if(itr_ >0){
+  vectorValue = 0.0;
+  }
+  else
+  {
+	vectorValue[0] = (K_I/(4*mu_))*std::sqrt(r/(2*PI))*(-(2*k - 1)*sin(theta/2) - sin(3*theta/2));
+	vectorValue[1] = -(K_I/(4*mu_))*std::sqrt(r/(2*PI))*( (2*k + 1)*cos(theta/2) + cos(3*theta/2));
+  }
+  
+}
+/*
 template <int dim>
 double Reference_solution<dim>::value(const Point<dim> &   p,
                           const unsigned int component) const
@@ -89,7 +265,7 @@ double Reference_solution<dim>::value(const Point<dim> &   p,
     const double k = 2.20;
 
     //make get_theta function to ensure it is between 0 and 2 PI (like 215 degrees) and not between 0 and PI/2(or -PI/2 to PI/2)
-    //Also change inp file point 5 & 6 to 1,delta,0 & 1,-delta,0.
+    
  
     const double r = std::sqrt(x*x +y*y);
     const double theta = atan(y/x);
@@ -101,7 +277,7 @@ double Reference_solution<dim>::value(const Point<dim> &   p,
    
     return 0;
 }
-
+*/
 template <int dim>
 double get_epsplus_sq(const SymmetricTensor<2,dim> &eps)
 {
@@ -129,7 +305,6 @@ double get_epsminus_sq(SymmetricTensor<2,dim> &eps)
 	eps_eigenval = eigenvalues(eps);
 
 	std::array<double,std::integral_constant<int,dim>::value> eps_eigenval_minus;
-
 	for(unsigned int i=0;i<dim;++i){
 		eps_eigenval_minus[i]=(eps_eigenval[i]>0) ? 0:eps_eigenval[i];
 	}
@@ -251,9 +426,7 @@ void Phasefield<dim>::compute_load(const AllParameters &param
                   }*/
 	        }
     }
-  if(current_time_m >5.41e-3)
-               std::cout<<"Critical load: "<<load_value<<std::endl;
-  
+    
   if(param.test_case.test == "tension"){
     double load_y = load_value[1];
     statistics.add_value("Load y",load_y);
@@ -285,88 +458,7 @@ void ElasticBodyForce<dim>::vector_value (const Point<dim> &points,
        values[1] = 0.0;
 
 }
-/*
-template <int dim>
-void Phasefield<dim>::history_quadrature_to_global_adp()
-{
-  FullMatrix<double> qpoint_to_dof_matrix (history_fe_adp_m.dofs_per_cell,
-                                         quadrature_formula_m.size());
-  
-  FETools::compute_projection_from_quadrature_points_matrix (history_fe_adp_m,quadrature_formula_m
-		  					    ,quadrature_formula_m,qpoint_to_dof_matrix);
-  
-  typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_m.begin_active(),
-                                               endc = dof_handler_m.end(),
-                                               dg_cell = history_dof_handler_adp_m.begin_active();
-std::cout<<"history quad2global Break 1"<<std::endl;
-  for (; cell!=endc; ++cell, ++dg_cell)
-  {
-    PointHistory_adp *local_quadrature_points_history
-      = reinterpret_cast<PointHistory_adp *>(cell->user_pointer());
-std::cout<<"history quad2global Break 2"<<std::endl;
 
-
-    Assert (local_quadrature_points_history >= &quadrature_point_history.front(),
-            ExcInternalError());
-    Assert (local_quadrature_points_history < &quadrature_point_history.back(),
-            ExcInternalError());
-double x,y;
-    {
-    	for (unsigned int q=0; q<quadrature_formula_m.size(); ++q){
-          x =local_history_values_at_qpoints_adp(q); 
-           std::cout<<"x:"<<x<<std::endl;
-std::cout<<"history quad2global Break 2.5"<<std::endl;          
-          y =  local_quadrature_points_history[q].history_adp;
-          std::cout<<"y:"<<y<<std::endl;
-
-      }
-    	qpoint_to_dof_matrix.vmult (local_history_fe_values_adp,
-                                    local_history_values_at_qpoints_adp);
-    	dg_cell->set_dof_values (local_history_fe_values_adp,
-			                         history_field_adp);
-    }
-
-  }
-std::cout<<"history quad2global Break 3"<<std::endl;
-
-}	
-	
-template <int dim>
-void Phasefield<dim>::history_global_to_quadrature_adp()
-{
-  FullMatrix<double> dof_to_qpoint_matrix (quadrature_formula_m.size()
-                                          ,history_fe_adp_m.dofs_per_cell);
-
-  FETools::compute_interpolation_to_quadrature_points_matrix(history_fe_adp_m,quadrature_formula_m
-		  					     ,dof_to_qpoint_matrix);
-
-  typename DoFHandler<dim>::active_cell_iterator cell = dof_handler_m.begin_active(),
-                                                 endc = dof_handler_m.end(),
-                                                 dg_cell = history_dof_handler_adp_m.begin_active();
-  for (; cell != endc; ++cell, ++dg_cell)
-  {
-    PointHistory_adp *local_quadrature_points_history
-   	= reinterpret_cast<PointHistory_adp *>(cell->user_pointer());
-
-    Assert (local_quadrature_points_history >= &quadrature_point_history.front(),
-          ExcInternalError());
-    Assert (local_quadrature_points_history < &quadrature_point_history.back(),
-          ExcInternalError());
-   
-    {
-	    dg_cell->get_dof_values (history_field_adp,
-                            local_history_fe_values_adp);
-	    dof_to_qpoint_matrix.vmult (local_history_values_at_qpoints_adp,
-                               local_history_fe_values_adp);
-      
-   	  for (unsigned int q=0; q<quadrature_formula_m.size(); ++q)
-        	local_quadrature_points_history[q].history_adp = local_history_values_at_qpoints_adp(q);
-    }
-  }
-std::cout<<"history global2quad Break 1"<<std::endl;
-}
-
-*/
 double get_stress_intensity_const(const std::string test)
 {
   using numbers::PI;
@@ -442,11 +534,16 @@ template double get_energy_density_minus(const double,const double,SymmetricTens
 template double get_energy_density_minus(const double,const double,SymmetricTensor<2,3>&);
 template class thesis::InitialCrack<2>;
 template class thesis::InitialCrack<3>;
+template class thesis::InitialValuesCrack<2>;
+template class thesis::InitialValuesCrack<3>;
 template class thesis::Reference_solution<2>;
 template class thesis::Reference_solution<3>;
+template class thesis::Reference_solution_neg<2>;
+template class thesis::Reference_solution_neg<3>;
 template void thesis::Phasefield<2>::compute_load(const AllParameters &,BlockVector<double> &);
 template void thesis::Phasefield<3>::compute_load(const AllParameters &,BlockVector<double> &);
-// template void thesis::Phasefield<2>::history_quadrature_to_global_adp();
-// template void thesis::Phasefield<3>::history_quadrature_to_global_adp();
-// template void thesis::Phasefield<2>::history_global_to_quadrature_adp();
-// template void thesis::Phasefield<3>::history_global_to_quadrature_adp();
+template void thesis::Phasefield<2>::get_constrained_initial_d(unsigned int,const AllParameters &);
+template void thesis::Phasefield<3>::get_constrained_initial_d(unsigned int,const AllParameters &);
+template void thesis::Phasefield<2>::extract_initialcrack_d_index(const double,const AllParameters &);                                                              
+template void thesis::Phasefield<3>::extract_initialcrack_d_index(const double,const AllParameters &);
+                                                              

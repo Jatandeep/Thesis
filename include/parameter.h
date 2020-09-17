@@ -86,6 +86,14 @@ namespace thesis
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
     };
+
+    class ModelingStrategy{
+    public:
+        std::string strategy;
+
+        static void declare_param(dealii::ParameterHandler& prm);
+        void parse_param(dealii::ParameterHandler &prm);
+    };
 	
     class AllParameters{
     public:
@@ -99,6 +107,7 @@ namespace thesis
 	Time time;	
 	PhaseFieldMethod pf;
     TestCase test_case;
+    ModelingStrategy mod_strategy;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
