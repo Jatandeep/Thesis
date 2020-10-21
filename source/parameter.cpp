@@ -14,8 +14,6 @@ void GeometryModel::declare_param(ParameterHandler &prm){
         prm.declare_entry("Mesh File", "grid.inp", Patterns::Anything());
         prm.declare_entry("Global refinement", "0", Patterns::Integer());
         prm.declare_entry("Local refinement", "0", Patterns::Integer());
-        prm.declare_entry("Act_ref", "0.3", Patterns::Double(0));
-        prm.declare_entry("Act_cors", "0.03", Patterns::Double(0));
         prm.declare_entry("Grid scale", "1", Patterns::Double(0));
     }
     prm.leave_subsection();
@@ -24,11 +22,9 @@ void GeometryModel::declare_param(ParameterHandler &prm){
 void GeometryModel::parse_param(ParameterHandler &prm){
     prm.enter_subsection("Geometry Model");
     {
-        meshfile = prm.get("Mesh File");
+    meshfile = prm.get("Mesh File");
 	gl_ref = prm.get_integer("Global refinement");
-       	lc_ref = prm.get_integer("Local refinement");
-	act_ref = prm.get_double("Act_ref");
-        act_cors = prm.get_double("Act_cors");
+    lc_ref = prm.get_integer("Local refinement");
    	grid_scale = prm.get_double("Grid scale");
     }
     prm.leave_subsection();
@@ -37,8 +33,6 @@ void GeometryModel::parse_param(ParameterHandler &prm){
 void MaterialModel::declare_param(ParameterHandler &prm){
     prm.enter_subsection("Material Model");
     {
-        prm.declare_entry("Elastic modulus", "1", Patterns::Anything());
-        prm.declare_entry("Poisson ratio", "0.3", Patterns::Anything());
         prm.declare_entry("Lambda", "1", Patterns::Double(0));
         prm.declare_entry("Mu", "1", Patterns::Double(0));
         prm.declare_entry("Viscosity", "1", Patterns::Double(0));
@@ -50,8 +44,6 @@ void MaterialModel::declare_param(ParameterHandler &prm){
 void MaterialModel::parse_param(ParameterHandler &prm){
     prm.enter_subsection("Material Model");
     {
-        elastic_mod = prm.get_double("Elastic modulus");
-        poisson_ratio = prm.get_double("Poisson ratio");
         lambda = prm.get_double("Lambda");
         mu = prm.get_double("Mu");
         viscosity = prm.get_double("Viscosity");
@@ -86,7 +78,6 @@ void NewtonRaphson::declare_param(ParameterHandler &prm){
         prm.declare_entry("Residual tolerance u", "1", Patterns::Double(0));
         prm.declare_entry("Residual tolerance d", "1", Patterns::Double(0));
         prm.declare_entry("Newton update tolerance u", "1", Patterns::Double(0));
-        prm.declare_entry("Newton update tolerance d", "1", Patterns::Double(0));
     }
     prm.leave_subsection();
 }
@@ -98,7 +89,6 @@ void NewtonRaphson::parse_param(ParameterHandler &prm){
         res_tol_u = prm.get_double("Residual tolerance u");
         res_tol_d = prm.get_double("Residual tolerance d");
         nu_tol_u = prm.get_double("Newton update tolerance u");
-        nu_tol_d = prm.get_double("Newton update tolerance d");
     }
     prm.leave_subsection();
 }

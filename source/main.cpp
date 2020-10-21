@@ -4,9 +4,7 @@
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/tensor.h>
 #include "../include/parameter.h"
-//#include "../include/Phasefield.h"
 #include "../include/PhasefieldSMP.h"
-//#include "../include/ElasticProblem.h"
 
 int main(int argc, char *argv[]){
 
@@ -14,14 +12,18 @@ int main(int argc, char *argv[]){
     try
       {
        using namespace dealii;
+
+       if(argc==1)
+       {
+         std::cout<<"Please provide parameter file"<<std::endl;
+         exit(0);
+       }
        
        const std::string filename = argv[1];
 
        thesis::parameters::AllParameters param(filename);
        thesis::Phasefield<2> phasefield_2d(param);
        phasefield_2d.run(param);
-//	thesis::ElasticProblem<2> elastic_2d(param);
-//	elastic_2d.run(param);
       }
     catch (std::exception &exc)
       {

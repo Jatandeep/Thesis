@@ -233,7 +233,6 @@ namespace thesis
                         ,const dealii::SymmetricTensor<2,dim> &eps)const;
 
       void compute_load(const double lambda,const double mu,dealii::BlockVector<double> &solution);    
-      void project_back_phase_field();
 
       double get_energy(const parameters::AllParameters &param,
                             dealii::BlockVector<double> & update);

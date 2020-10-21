@@ -249,23 +249,14 @@ namespace thesis
 
       void compute_load(const parameters::AllParameters &param,dealii::BlockVector<double> &solution); 
       double compute_end_load(const parameters::AllParameters &param,dealii::BlockVector<double> &solution); 
-      void compute_KI(const parameters::AllParameters &param,unsigned int cycle);   
 
-      std::pair<double,double> get_energy_p(const parameters::AllParameters &param,
-                            dealii::BlockVector<double> & update);
       void get_energy_v(const parameters::AllParameters &param,
                             dealii::BlockVector<double> & update);
       
-      void compute_lefm_errors(const parameters::AllParameters &param);
-      double get_critical_stress(const parameters::AllParameters &param);
-
       void get_constrained_initial_d(unsigned int itr
                                     ,const parameters::AllParameters &param);
       void extract_initialcrack_d_index(const double min_cell_dia,const parameters::AllParameters &param);
       std::vector<double> global_index_m;
-      double get_initial_d(double index,const parameters::AllParameters &param);
-      double get_initial_d_2(double index,const parameters::AllParameters &param);
-      std::vector<double> global_index_2_m,global_index_3_m;
 
       double		                current_time_m;
       mutable dealii::TimerOutput	timer;

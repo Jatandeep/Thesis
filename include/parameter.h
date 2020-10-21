@@ -10,18 +10,16 @@ namespace thesis
 
     class GeometryModel{
     public:
-        std::string meshfile;
-	double act_ref, act_cors,grid_scale;
+    std::string meshfile;
+	double grid_scale,b,a,h,x;
 	unsigned int gl_ref,lc_ref;
 
-        static void declare_param(dealii::ParameterHandler& prm);
-        void parse_param(dealii::ParameterHandler &prm);
+    static void declare_param(dealii::ParameterHandler& prm);
+    void parse_param(dealii::ParameterHandler &prm);
     };
 
     class MaterialModel{
     public:
-        double elastic_mod;
-        double poisson_ratio;
         double lambda,mu;
 	double viscosity;
 
@@ -44,7 +42,7 @@ namespace thesis
     class NewtonRaphson{
     public:
         unsigned int max_new_ite;
-        double res_tol_u,res_tol_d,nu_tol_u,nu_tol_d;
+        double res_tol_u,res_tol_d,nu_tol_u;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
