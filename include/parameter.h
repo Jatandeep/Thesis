@@ -87,9 +87,18 @@ namespace thesis
         void parse_param(dealii::ParameterHandler &prm);
     };
 
+    class BoundaryConditions{
+    public:
+        std::string uxb,uxt;
+
+        static void declare_param(dealii::ParameterHandler& prm);
+        void parse_param(dealii::ParameterHandler &prm);
+    };
+
     class ModelingStrategy{
     public:
-        std::string strategy;
+        std::string strategy,comp_strategy;
+        double fac_ft,steps_ft;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
@@ -102,12 +111,13 @@ namespace thesis
         FESys fesys;
         GeometryModel geometrymodel;
         MaterialModel materialmodel;
-	NewtonRaphson newtonraphson;
-	LinearSolver linearsolver;
-	Time time;	
-	PhaseFieldMethod pf;
-    TestCase test_case;
-    ModelingStrategy mod_strategy;
+        NewtonRaphson newtonraphson;
+        LinearSolver linearsolver;
+        Time time;	
+        PhaseFieldMethod pf;
+        TestCase test_case;
+        BoundaryConditions bc;
+        ModelingStrategy mod_strategy;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);

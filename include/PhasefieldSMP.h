@@ -120,8 +120,7 @@ namespace thesis
       std::pair<unsigned int,double> solve_sys_d (const parameters::AllParameters &param,
                                                        dealii::BlockVector<double> & newton_update);
       /*!Solve the linear system as assembled via assemble_system()*/
-      std::pair<unsigned int,double> solve_sys_u (const parameters::AllParameters &param,
-                                                       dealii::BlockVector<double> & newton_update);
+      std::pair<unsigned int,double> solve_sys_u (dealii::BlockVector<double> & newton_update);
 
       /*!Set hanging node and apply Dirichlet bc.*/
       void make_constraints_u(unsigned int &itr,const double load_ratio,const parameters::AllParameters &param);
@@ -238,27 +237,7 @@ namespace thesis
       std::vector<unsigned int> n_comp_per_block{std::vector<unsigned int>(dim,1)};
 
       void determine_comp_extractor();
-      void set_boundary_id();
-
-      /*History class, variables and functions*/
-      /*
-      const dealii::FE_DGQ<dim>  history_fe_adp_m;
-      dealii::DoFHandler<dim>    history_dof_handler_adp_m;
-      dealii::ConstraintMatrix   history_constraints_adp_m;
-      
-      struct PointHistory_adp
-      {
-	      double history_adp;
-      };
-      
-      void setup_quadrature_point_history_adp(); 
-      std::vector<PointHistory_adp> quadrature_point_history_adp;
-           
-      dealii::Vector<double> history_field_adp,local_history_values_at_qpoints_adp,local_history_fe_values_adp;
-
-      void history_quadrature_to_global_adp();
-      void history_global_to_quadrature_adp();
-      */
+      void set_boundary_id(const parameters::AllParameters &param);
 
       dealii::CellDataStorage<typename dealii::Triangulation<dim>::cell_iterator
                               ,PointHistory> quadrature_point_history;
@@ -268,7 +247,9 @@ namespace thesis
                 	      ,const double mu
     			              ,const dealii::SymmetricTensor<2,dim> &eps)const;
 
-      void compute_load(const parameters::AllParameters &param,dealii::BlockVector<double> &solution);    
+      void compute_load(const parameters::AllParameters &param,dealii::BlockVector<double> &solution); 
+      double compute_end_load(const parameters::AllParameters &param,dealii::BlockVector<double> &solution); 
+      void compute_KI(const parameters::AllParameters &param,unsigned int cycle);   
 
       std::pair<double,double> get_energy_p(const parameters::AllParameters &param,
                             dealii::BlockVector<double> & update);
@@ -282,6 +263,9 @@ namespace thesis
                                     ,const parameters::AllParameters &param);
       void extract_initialcrack_d_index(const double min_cell_dia,const parameters::AllParameters &param);
       std::vector<double> global_index_m;
+      double get_initial_d(double index,const parameters::AllParameters &param);
+      double get_initial_d_2(double index,const parameters::AllParameters &param);
+      std::vector<double> global_index_2_m,global_index_3_m;
 
       double		                current_time_m;
       mutable dealii::TimerOutput	timer;

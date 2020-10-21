@@ -194,10 +194,30 @@ void TestCase::parse_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
+void BoundaryConditions::declare_param(ParameterHandler &prm){
+    prm.enter_subsection("BoundaryConditions");
+    {
+        prm.declare_entry("Tension x axis bottom","fixed",Patterns::Selection("fixed|free"));
+        prm.declare_entry("Tension x axis top","free",Patterns::Selection("fixed|free"));
+    }
+    prm.leave_subsection();
+}
+void BoundaryConditions::parse_param(ParameterHandler &prm){
+    prm.enter_subsection("BoundaryConditions");
+    {
+        uxb = prm.get("Tension x axis bottom");
+        uxt = prm.get("Tension x axis top");
+    }
+    prm.leave_subsection();
+}
+
 void ModelingStrategy::declare_param(ParameterHandler &prm){
     prm.enter_subsection("ModelingStrategy");
     {
         prm.declare_entry("Initial crack strategy","mesh",Patterns::Selection("mesh|phasefield|hybrid"));
+        prm.declare_entry("Computing strategy","normal",Patterns::Selection("normal|lefm"));
+        prm.declare_entry("Target factor fracture toughness", "2", Patterns::Double(0));
+        prm.declare_entry("Target steps fracture toughness", "1000", Patterns::Double(0));
     }
     prm.leave_subsection();
 }
@@ -205,6 +225,10 @@ void ModelingStrategy::parse_param(ParameterHandler &prm){
     prm.enter_subsection("ModelingStrategy");
     {
         strategy = prm.get("Initial crack strategy");
+        comp_strategy = prm.get("Computing strategy");
+        fac_ft = prm.get_double("Target factor fracture toughness");
+        steps_ft = prm.get_double("Target steps fracture toughness");
+
     }
     prm.leave_subsection();
 }
@@ -225,6 +249,7 @@ void AllParameters::declare_param(ParameterHandler &prm){
     Time::declare_param(prm);
     PhaseFieldMethod::declare_param(prm);
     TestCase::declare_param(prm);
+    BoundaryConditions::declare_param(prm);
     ModelingStrategy::declare_param(prm);
 }
 
@@ -237,6 +262,7 @@ void AllParameters::parse_param(ParameterHandler &prm){
     time.parse_param(prm);
     pf.parse_param(prm);
     test_case.parse_param(prm);
+    bc.parse_param(prm);
     mod_strategy.parse_param(prm);
 }
 

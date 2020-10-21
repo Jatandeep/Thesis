@@ -118,7 +118,7 @@ void Phasefield<dim>::determine_comp_extractor()
 }
 
 template <int dim>
-void Phasefield<dim>::set_boundary_id()
+void Phasefield<dim>::set_boundary_id(const AllParameters &param)
 {
   double tol_machine = 1e-10;
   typename Triangulation<dim>::active_cell_iterator cell =
@@ -129,8 +129,10 @@ void Phasefield<dim>::set_boundary_id()
           {
             const Point<dim> face_center = cell->face(f)->center();
             if (cell->face(f)->at_boundary())
-              {
+            {
 		          //////////////////////For (0,1)x(0,1)
+              if(param.mod_strategy.comp_strategy=="normal")
+              {
 		            //left boundary
                 if ((face_center[0] < 0.0+tol_machine) && (face_center[0] > 0.0-tol_machine)
                    )
@@ -147,13 +149,27 @@ void Phasefield<dim>::set_boundary_id()
                 else if ((face_center[1] < 1.0+tol_machine) && (face_center[1] > 1.0-tol_machine)
                         )
                   cell->face(f)->set_boundary_id(4);
-                  // crack
-                  /*
-                else if ((face_center[1] < 0.5+0.001) && (face_center[1] > (0.5-0.001) && face_center[0]<0.5)
-                        )
-                  cell->face(f)->set_boundary_id(5);
-                  */
               }
+              if(param.mod_strategy.comp_strategy=="lefm")
+              {
+                //left boundary
+                if ((face_center[0] < -0.5+tol_machine) && (face_center[0] > -0.5-tol_machine)
+                   )
+                  cell->face(f)->set_boundary_id(1);
+		            //right boundary
+                else if ((face_center[0] < 0.5+tol_machine) && (face_center[0] > 0.5-tol_machine)
+                        )
+                  cell->face(f)->set_boundary_id(2);
+		            // bottom boundary
+                else if ((face_center[1] < -0.5+tol_machine) && (face_center[1] > -0.5-tol_machine)
+                        )
+                  cell->face(f)->set_boundary_id(3);
+              	// top boundary
+                else if ((face_center[1] < 0.5+tol_machine) && (face_center[1] > 0.5-tol_machine)
+                        )
+                  cell->face(f)->set_boundary_id(4);
+              }   
+            }
           }
 
 }
@@ -428,7 +444,9 @@ void Phasefield<dim>::assemble_system_d_one_cell (const parameters::AllParameter
       //   //std::cout<<"local_quadrature_point_data[q].history "<<local_quadrature_point_data[q].history<<std::endl;
       //   std::cout<<"lqph[q]->history:"<<lqph[q]->history<<std::endl;
       //   std::cout<<"History: "<<History<<std::endl;        
-      //   }      
+      //      std::cout<<"delta t inside d assembly: "<<scratch.delta_t<<std::endl;
+      //std::cout<<"viscosity: "<<param.materialmodel.viscosity<<std::endl;
+      //         }      
 
     lqph[q]->history = History; 
 
@@ -822,7 +840,7 @@ unsigned int Phasefield<dim>::solve_nonlinear_newton(const AllParameters &param
           error_residual_norm.normalize(error_residual_0);
 
           const std::pair<unsigned int,double>
-                  lin_solver_output_u = solve_sys_u(param,newton_update_u);
+                  lin_solver_output_u = solve_sys_u(newton_update_u);
 
           get_newton_update_error_u(newton_update_u,error_update);
           if(new_iter_u==0)
@@ -888,7 +906,7 @@ std::pair<unsigned int,double> Phasefield<dim>::solve_sys_d(const AllParameters 
   
 
 template <int dim>
-std::pair<unsigned int,double> Phasefield<dim>::solve_sys_u(const AllParameters &param,BlockVector<double> &newton_update)
+std::pair<unsigned int,double> Phasefield<dim>::solve_sys_u(BlockVector<double> &newton_update)
 {
   timer.enter_subsection("Linear solver-u");
   
@@ -925,55 +943,71 @@ void Phasefield<dim>::make_constraints_u(unsigned int &itr,const double load_rat
    //Tension test
    if(param.test_case.test == "tension")
    {
-     
+     if(param.mod_strategy.comp_strategy=="normal")
+     {
       { 
       std::vector<bool> component_mask1(dim+1, false);
 
-      component_mask1[0] = true;//false;//true
+      if(param.bc.uxb == "fixed")
+        component_mask1[0] = true;
+      else if(param.bc.uxb == "free")
+        component_mask1[0] = false;
+      
       component_mask1[1] = true;
       component_mask1[2] = false;
 
       VectorTools::interpolate_boundary_values(dof_handler_m, 3,
                                                   ZeroFunction<dim>(n_components_m), constraints_m, component_mask1);
-      }
-      /*
+      }      
       {
       std::vector<bool> component_mask2(dim+1, false);
 
-      component_mask2[0] = true;//false
+      if(param.bc.uxt == "fixed")
+        component_mask2[0] = true;
+      else if(param.bc.uxt == "free")
+        component_mask2[0] = false;
+      
       component_mask2[1] = true;
       component_mask2[2] = false;
 
       VectorTools::interpolate_boundary_values(dof_handler_m, 4,
                                   BoundaryTension<dim>(itr,load_ratio,param.pf.u_total), constraints_m, component_mask2);
       }
-      */  
-     {
-      std::vector<bool> component_mask2(dim+1, false);
+     }
+      
+     if(param.mod_strategy.comp_strategy=="lefm")
+      {         
+        
+        std::vector<bool> component_mask(dim+1, false);
 
-      component_mask2[0] = true;
-      component_mask2[1] = true;
-      component_mask2[2] = false;
+        component_mask[0] = true;
+        component_mask[1] = true;
+        component_mask[2] = false;
 
-      VectorTools::interpolate_boundary_values(dof_handler_m, 4,
-                                  Reference_solution<dim>(itr,load_ratio,param.pf.u_total
-                                                          ,param.materialmodel.lambda
-                                                          ,param.materialmodel.mu), constraints_m, component_mask2);
+        VectorTools::interpolate_boundary_values(dof_handler_m, 1,
+                                    Reference_solution<dim>(itr,param.mod_strategy.steps_ft
+                                                            ,param.pf.g_c
+                                                            ,param.materialmodel.lambda
+                                                            ,param.materialmodel.mu), constraints_m, component_mask);
+        VectorTools::interpolate_boundary_values(dof_handler_m, 2,
+                                    Reference_solution<dim>(itr,param.mod_strategy.steps_ft
+                                                            ,param.pf.g_c
+                                                            ,param.materialmodel.lambda
+                                                            ,param.materialmodel.mu), constraints_m, component_mask);
+        VectorTools::interpolate_boundary_values(dof_handler_m, 3,
+                                    Reference_solution<dim>(itr,param.mod_strategy.steps_ft
+                                                            ,param.pf.g_c
+                                                            ,param.materialmodel.lambda
+                                                            ,param.materialmodel.mu), constraints_m, component_mask);
+        VectorTools::interpolate_boundary_values(dof_handler_m, 4,
+                                    Reference_solution<dim>(itr,param.mod_strategy.steps_ft
+                                                            ,param.pf.g_c
+                                                            ,param.materialmodel.lambda
+                                                            ,param.materialmodel.mu), constraints_m, component_mask);                                                                                                                                                            
+                                                            
+        
       }
-      /*   
-      { 
-      std::vector<bool> component_mask1(dim+1, false);
-
-      component_mask1[0] = true;
-      component_mask1[1] = true;
-      component_mask1[2] = false;
-
-      VectorTools::interpolate_boundary_values(dof_handler_m, 3,
-                                                  Reference_solution_neg<dim>(itr,load_ratio,param.pf.u_total
-                                                          ,param.materialmodel.lambda
-                                                          ,param.materialmodel.mu), constraints_m, component_mask1);
-      }
-      */
+      
               
    }
 
@@ -1208,61 +1242,6 @@ void Phasefield<dim>::get_newton_update_error_u(const BlockVector<double> &newto
     error_update.norm = err_update.l2_norm();
     error_update.u = err_update.block(u_dof_m).l2_norm();
 }
-/*
-template <int dim>
-void Phasefield<dim>::compute_lefm_errors(const AllParameters &param)
-{
-    const ComponentSelectFunction<dim> displacement_mask(std::make_pair(0, dim),dim + 1);
-    
-    Vector<float> difference_per_cell(triangulation_m.n_active_cells());
-    
-    VectorTools::integrate_difference(dof_handler_m,
-                                      solution_m,
-                                      Reference_solution<dim>(),
-                                      difference_per_cell,
-                                      QGauss<dim>(param.fesys.quad_order),
-                                      VectorTools::L2_norm,
-                                      & displacement_mask);
-    
-    const double Displacement_L2_error =
-      VectorTools::compute_global_error(triangulation_m,
-                                        difference_per_cell,
-                                        VectorTools::L2_norm);
-
-    std::cout << std::endl<< "   Displacement L2 Error: " << Displacement_L2_error << std::endl;
-}
-*/
-
-template <int dim>
-double Phasefield<dim>::get_critical_stress(const AllParameters &param)
-{
-  if(dim==2)
-  {
-    double stress_intensity_const;
-    stress_intensity_const = get_stress_intensity_const(param.test_case.test);
-    
-    std::pair<double,double> material_const;
-    material_const = get_youngsM_poissonR(param.materialmodel.lambda,param.materialmodel.mu);
-
-    double stress_critical,load_critical;
-
-    stress_critical = std::sqrt(material_const.first*param.pf.g_c/(1-std::pow(material_const.second,2)))*
-                      (1/stress_intensity_const);
-
-    //load_critical = get_critical_load(stress_critical);
-
-    std::cout<<"YoungsM:"<<material_const.first<<std::endl;
-    std::cout<<"PoissonR:"<<material_const.second<<std::endl;
-    std::cout<<"Stress inten const:"<<stress_intensity_const<<std::endl;
-    std::cout<<"critical stress:"<<stress_critical<<std::endl;
-    std::cout<<"critical Load:??"<<std::endl;
-    std::cout<<"critical time:"<<stress_critical*(0.00001/1.3793)<<std::endl;
-
-    return stress_critical;
-  }
-  else 
-  return 0;
-}
 
 template <int dim>
 void Phasefield<dim>::import_mesh(const AllParameters &param){
@@ -1297,7 +1276,7 @@ void Phasefield<dim>::import_mesh(const AllParameters &param){
                   << std::endl;
     }
 
-    set_boundary_id();
+    set_boundary_id(param);
 }
 
 template <int dim>
@@ -1323,7 +1302,9 @@ void Phasefield<dim>::output_results (const AllParameters &param,unsigned int cy
     for (unsigned int i = 0; i < soln.size(); ++i)
       soln(i) = solution_m(i);
     
-    MappingQEulerian<dim> q_mapping(param.fesys.fe_degree, dof_handler_m, soln);
+//    MappingQEulerian<dim> q_mapping(param.fesys.fe_degree, dof_handler_m, soln);
+      MappingQ <dim> q_mapping(param.fesys.fe_degree);
+
     data_out.build_patches(q_mapping, param.fesys.fe_degree);
     std::string filename ("solution-"
                           + std::to_string(dim)
@@ -1351,7 +1332,14 @@ void Phasefield<dim>::run(const AllParameters &param){
     BlockVector<double>       solution_delta(dofs_per_block_m);
 
     long double present_time_tol;
-    double delta_t = param.time.delta_t;
+    double delta_t;
+
+  //  if(param.mod_strategy.comp_strategy=="normal")
+    delta_t = param.time.delta_t;
+    
+  //  else if(param.mod_strategy.comp_strategy=="lefm")
+  //  delta_t = (1/(param.mod_strategy.steps_ft*param.mod_strategy.fac_ft));
+
     present_time_tol = time_tol_fac * delta_t;
     current_time_m = param.time.start_time;
     unsigned int current_timestep = 0;
@@ -1367,21 +1355,28 @@ void Phasefield<dim>::run(const AllParameters &param){
             for (unsigned int vertex = 0;vertex < GeometryInfo<dim>::vertices_per_cell; ++vertex)
               {
                 Tensor<1, dim> cell_vertex = (cell->vertex(vertex));
-                if (cell_vertex[0] <= 1.0 && cell_vertex[0] >= 0 /* 0.48*/
-                    && cell_vertex[1] <= 0.52 && cell_vertex[1] >= 0.48)
- 		{
-                    cell->set_refine_flag();
-                    break;
+                if(param.mod_strategy.comp_strategy=="normal")
+                {
+                  if (cell_vertex[0] <= 1.0 && cell_vertex[0] >= 0 /* 0.48*/
+                      && cell_vertex[1] <= 0.505 && cell_vertex[1] >= 0.495)
+                  {
+                      cell->set_refine_flag();
+                      break;
+                  }
                 }
-	      }
+                else if(param.mod_strategy.comp_strategy=="lefm")
+                {
+                  if (cell_vertex[0] <= 0.5 && cell_vertex[0] >= -0.1 
+                      && cell_vertex[1] <= 0.015 && cell_vertex[1] >= -0.015)
+                  {
+                      cell->set_refine_flag();
+                      break;
+                  }
+                }
+	            }
           }
 
-     for (; cell != endc; ++cell)
-        if (cell->level() == static_cast<int>(param.geometrymodel.gl_ref+4))
-          cell->clear_refine_flag();
-
-
-    triangulation_m.execute_coarsening_and_refinement();//execute_refinement();
+    triangulation_m.execute_coarsening_and_refinement();
     setup_system();
     setup_qph();
     solution_delta.reinit(dofs_per_block_m);
@@ -1399,7 +1394,16 @@ void Phasefield<dim>::run(const AllParameters &param){
     statistics.set_precision("Time",6);
     compute_load(param,solution_m);
     get_energy_v(param,solution_m);
+
+    if(param.mod_strategy.comp_strategy=="lefm")
+    compute_KI(param,current_timestep);
+
+  //  if(param.mod_strategy.comp_strategy=="normal")
     current_time_m += param.time.delta_t;
+    
+  //  else if(param.mod_strategy.comp_strategy=="lefm")
+  //  current_time_m += delta_t;
+
     current_timestep++;
 
 /////////Printing////////
@@ -1414,7 +1418,7 @@ void Phasefield<dim>::run(const AllParameters &param){
 	std::cout<<"Parameter g_c: "<<param.pf.g_c<<std::endl;
 	std::cout<<"Parameter l: "<<param.pf.l<<std::endl;
 	std::cout<<"Parameter k: "<<param.pf.k<<std::endl;
-	std::cout<<"Parameter delta_t: "<<param.time.delta_t<<std::endl;
+	std::cout<<"Parameter delta_t: "<</*param.time.*/delta_t<<std::endl;
 	std::cout<<"Parameter end_time: "<<param.time.end_time<<std::endl;
 	std::cout<<"Parameter u_total: "<<param.pf.u_total<<std::endl;
 	std::cout<<"Parameter time change interval: "<<param.time.time_change_interval<<std::endl;
@@ -1426,7 +1430,7 @@ void Phasefield<dim>::run(const AllParameters &param){
 	std::cout<<std::endl;
 
 ///////////////////////
-    double critical = get_critical_stress(param); 
+     
 
     unsigned int new_iter=0;
     double prev_delta_t = 0; 
@@ -1439,7 +1443,6 @@ void Phasefield<dim>::run(const AllParameters &param){
       std::cout<<"Current time step: "<<current_timestep<<std::endl;
 
       solution_delta = 0.0;
-      
       new_iter = solve_nonlinear_newton(param,solution_delta,delta_t);
 
       if(new_iter == param.newtonraphson.max_new_ite)
@@ -1461,16 +1464,6 @@ void Phasefield<dim>::run(const AllParameters &param){
           current_time_m -= prev_delta_t;
           current_time_m += delta_t;
       }
-      /*
-      else if(new_iter==param.newtonraphson.max_new_ite-1 && delta_t<1e-6)
-      {
-        prev_delta_t = delta_t;
-        delta_t /= param.time.alpha;
-        std::cout<<"Solver converged in higher time step! Adjusting time steps to "<<delta_t<<std::endl;
-        current_time_m -= prev_delta_t;
-        current_time_m += delta_t;
-      }
-      */
       else
       {
 
@@ -1481,9 +1474,66 @@ void Phasefield<dim>::run(const AllParameters &param){
         statistics.set_precision("Time",6);
         compute_load(param,solution_m);
         get_energy_v(param,solution_m);
+        if(param.mod_strategy.comp_strategy=="lefm")
+        compute_KI(param,current_timestep);
 
-        if((current_timestep%param.time.op_freq) == 0 || current_time_m > 0.0058)//Tension
+        if((current_timestep%param.time.op_freq) == 0 ||
+            current_time_m==param.time.delta_t ||/*
+            std::fabs(current_time_m - 0.0046)<1e-8 ||
+            std::fabs(current_time_m - 0.00465)<1e-8 ||
+            std::fabs(current_time_m - 0.0047)<1e-8 ||
+            std::fabs(current_time_m - 0.00475)<1e-8 ||
+            std::fabs(current_time_m - 0.0048)<1e-8 ||
+            std::fabs(current_time_m - 0.00485)<1e-8 ||
+            std::fabs(current_time_m - 0.0049)<1e-8 ||
+            std::fabs(current_time_m - 0.00495)<1e-8 ||
+            std::fabs(current_time_m - 0.0050)<1e-8 ||
+            std::fabs(current_time_m - 0.00505)<1e-8 ||
+            std::fabs(current_time_m - 0.0051)<1e-8 ||
+            std::fabs(current_time_m - 0.00515)<1e-8 ||
+            std::fabs(current_time_m - 0.0052)<1e-8 ||
+            std::fabs(current_time_m - 0.00525)<1e-8 ||
+            std::fabs(current_time_m - 0.0053)<1e-8 ||
+            std::fabs(current_time_m - 0.00535)<1e-8 ||
+            std::fabs(current_time_m - 0.0054)<1e-8 ||
+            std::fabs(current_time_m - 0.00545)<1e-8 ||
+            std::fabs(current_time_m - 0.0055)<1e-8 ||
+            std::fabs(current_time_m - 0.00555)<1e-8 ||
+            std::fabs(current_time_m - 0.0056)<1e-8 ||
+            std::fabs(current_time_m - 0.00565)<1e-8 ||
+            std::fabs(current_time_m - 0.0057)<1e-8 ||
+            std::fabs(current_time_m - 0.00575)<1e-8 ||
+            std::fabs(current_time_m - 0.0058)<1e-8 ||
+            std::fabs(current_time_m - 0.00585)<1e-8 ||
+            std::fabs(current_time_m - 0.0059)<1e-8 ||
+            std::fabs(current_time_m - 0.00595)<1e-8 ||
+            std::fabs(current_time_m - 0.0060)<1e-8 ||
+            std::fabs(current_time_m - 0.00605)<1e-8 ||
+            std::fabs(current_time_m - 0.0061)<1e-8 ||
+            std::fabs(current_time_m - 0.0062)<1e-8 ||
+            std::fabs(current_time_m - 0.0063)<1e-8 ||
+            std::fabs(current_time_m - 0.0080)<1e-8 ||
+            std::fabs(current_time_m - 0.0085)<1e-8 ||
+            std::fabs(current_time_m - 0.0090)<1e-8 ||
+            std::fabs(current_time_m - 0.0095)<1e-8 ||
+            std::fabs(current_time_m - 0.0100)<1e-8 ||
+            std::fabs(current_time_m - 0.0105)<1e-8 ||
+            std::fabs(current_time_m - 0.0110)<1e-8 ||
+            std::fabs(current_time_m - 0.0115)<1e-8 ||
+            std::fabs(current_time_m - 0.0120)<1e-8 ||
+            std::fabs(current_time_m - 0.0125)<1e-8 ||
+            std::fabs(current_time_m - 0.0130)<1e-8 ||
+            std::fabs(current_time_m - 0.0134)<1e-8 ||
+            std::fabs(current_time_m - 0.0135)<1e-8 ||
+            std::fabs(current_time_m - 0.0140)<1e-8 ||
+            std::fabs(current_time_m - 0.0145)<1e-8 ||
+            std::fabs(current_time_m - 0.0148)<1e-8 ||
+            std::fabs(current_time_m - 0.0150)<1e-8 ||
+            std::fabs(current_time_m - 0.0155)<1e-8*/
+            compute_end_load(param,solution_m) < 1.0
+             )//Tension
         {
+          std::cout<<"time:"<<current_time_m<<std::endl;
               output_results(param,current_timestep);
         }
      
@@ -1491,17 +1541,26 @@ void Phasefield<dim>::run(const AllParameters &param){
         statistics.write_text (stat_file,
                                     TableHandler::simple_table_with_separate_column_description);
         stat_file.close();
-        
-        if(current_time_m >= param.time.time_change_interval)
+        if(param.test_case.test == "tension" && param.mod_strategy.comp_strategy=="normal" )
         {
-          static bool once=false;
-          if(!once)
+          if(current_time_m >= param.time.time_change_interval)
           {
-            delta_t = param.time.delta_t_f;
-            once =true;
+            static bool once=false;
+            if(!once)
+            {
+              delta_t = param.time.delta_t_f;
+              once =true;
+            }
           }
         }
-    
+        if(param.mod_strategy.comp_strategy=="lefm")
+        {
+          if(current_timestep>param.mod_strategy.fac_ft*param.mod_strategy.steps_ft)
+          {
+            std::cout<<"Reached end of the timesteps"<<std::endl;
+            break;
+          }
+        }
         current_time_m += delta_t;
         ++current_timestep;
       }

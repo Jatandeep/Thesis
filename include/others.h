@@ -95,7 +95,7 @@ namespace thesis
     };
 /*
     template <int dim>
-    class Reference_solution : public dealii::Function<dim>
+    class get_inital_d : public dealii::Function<dim>
     {
     public:
       Reference_solution(): dealii::Function<dim>(dim+1)
@@ -107,13 +107,13 @@ namespace thesis
     template <int dim>
     class Reference_solution:public dealii::Function<dim>{
     public:
-        Reference_solution(unsigned int itr,const double load_ratio
-                          ,const double u_total,const double lambda
+        Reference_solution(unsigned int itr,const double steps,const double g_c
+                          ,const double lambda
                           ,const double mu):dealii::Function<dim>(dim+1)
 	{
 	itr_ = itr;
-	load_ratio_ = load_ratio;
-	u_total_ = u_total;
+	steps_ = steps;
+    g_c_ = g_c;
 	lambda_ = lambda;
     mu_ = mu;
 	}
@@ -124,33 +124,11 @@ namespace thesis
     virtual void vector_value (const dealii::Point<dim> &p,
                              dealii::Vector<double>  &value)const;
     private:
-	double load_ratio_,u_total_,lambda_,mu_;
+	double steps_,lambda_,mu_,g_c_;
 	unsigned int itr_;
     };
 
-      template <int dim>
-    class Reference_solution_neg:public dealii::Function<dim>{
-    public:
-        Reference_solution_neg(unsigned int itr,const double load_ratio
-                          ,const double u_total,const double lambda
-                          ,const double mu):dealii::Function<dim>(dim+1)
-	{
-	itr_ = itr;
-	load_ratio_ = load_ratio;
-	u_total_ = u_total;
-	lambda_ = lambda;
-    mu_ = mu;
-	}
-	
-	virtual double value (const dealii::Point<dim> &p,
-                    const unsigned int component = 0) const;
-
-    virtual void vector_value (const dealii::Point<dim> &p,
-                             dealii::Vector<double>  &value)const;
-    private:
-	double load_ratio_,u_total_,lambda_,mu_;
-	unsigned int itr_;
-    };
+    
 
     template <int dim>
     void comparison(const double lambda,const double mu,dealii::SymmetricTensor<2,dim> &dummy);
