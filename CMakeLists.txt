@@ -16,9 +16,7 @@ set(CMAKE_CXX_COMPILER "mpicxx")
 SET(SOURCES
     source/main.cpp
     source/utilities.cpp
-    #source/ElasticProblem.cpp
-    source/Phasefield.cpp
-    #source/PhasefieldSMP.cpp
+    source/PhasefieldSMP.cpp
     source/parameter.cpp
     source/others.cpp
     source/constitutive.cpp
@@ -27,13 +25,11 @@ SET(SOURCES
 
 SET(HEADERS
     include/utilities.h
-    #include/ElasticProblem.h
     include/others.h
     include/parameter.h
     include/constants.h    
     include/constitutive.h
-    include/Phasefield.h
-    #include/PhasefieldSMP.h
+    include/PhasefieldSMP.h
 )
 
 

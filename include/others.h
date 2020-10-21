@@ -95,5 +95,3 @@ double get_deg_func(const double d);
 
 std::pair<double,double> get_youngsM_poissonR(const double lambda,const double mu);
 
-template<int dim>
-double get_critical_load(dealii::Tensor<2,dim> stress);

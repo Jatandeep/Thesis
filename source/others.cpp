@@ -90,12 +90,12 @@ void Phasefield<dim>::extract_initialcrack_d_index(const double min_cell_dia,con
         const unsigned int idx = local_dof_indices[i];
         
         //works for case II
-        if(param.mod_strategy.comp_strategy=="normal")
+        if(param.mod_strategy.comp_strategy=="StandardNum")
         {
-          if((support_points[idx][0] <= 0.5) 
+          if((support_points[idx][0] <= param.geometrymodel.a/*0.5*/) 
           && (support_points[idx][0] >= 0.0) 
-          && (support_points[idx][1] <= 0.5 + min_cell_dia) 
-          && (support_points[idx][1] >= 0.5 - min_cell_dia) )
+          && (support_points[idx][1] <= (param.geometrymodel.b/2)/*0.5*/ + min_cell_dia) 
+          && (support_points[idx][1] >= (param.geometrymodel.b/2)/*0.5*/ - min_cell_dia) )
           {
             global_index_m.push_back(idx);
           }
@@ -104,7 +104,7 @@ void Phasefield<dim>::extract_initialcrack_d_index(const double min_cell_dia,con
         if(param.mod_strategy.comp_strategy=="lefm")
         {
           if((support_points[idx][0] <= 0.0) 
-          && (support_points[idx][0] >= -0.5) 
+          && (support_points[idx][0] >= -(param.geometrymodel.b/2)/*-0.5*/) 
           && (support_points[idx][1] <= min_cell_dia) 
           && (support_points[idx][1] >= -min_cell_dia) )
           {
@@ -308,7 +308,7 @@ void Phasefield<dim>::compute_load(const AllParameters &param
     {
         for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
         {
-                  if(param.mod_strategy.comp_strategy=="normal")
+                  if(param.mod_strategy.comp_strategy=="StandardNum")
                   {
                     if (cell->face(face)->at_boundary() && cell->face(face)->boundary_id() == 4)
                     {
@@ -431,7 +431,7 @@ void Phasefield<dim>::compute_load(const AllParameters &param
                   }
 	        }
     }
-  if(param.mod_strategy.comp_strategy=="normal")
+  if(param.mod_strategy.comp_strategy=="StandardNum")
   {  
     if(param.test_case.test == "tension"){
       double load_y = load_value[1];
@@ -482,7 +482,7 @@ double Phasefield<dim>::compute_end_load(const AllParameters &param
     {
         for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
         {
-                  if(param.mod_strategy.comp_strategy=="normal")
+                  if(param.mod_strategy.comp_strategy=="StandardNum")
                   {
                     if (cell->face(face)->at_boundary() && cell->face(face)->boundary_id() == 4)
                     {

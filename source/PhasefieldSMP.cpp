@@ -127,15 +127,16 @@ void Phasefield<dim>::set_boundary_id(const AllParameters &param)
             const Point<dim> face_center = cell->face(f)->center();
             if (cell->face(f)->at_boundary())
             {
-		          //////////////////////For (0,1)x(0,1)
-              if(param.mod_strategy.comp_strategy=="normal")
+		          //////////////////////For (0,b)x(0,b)
+              if(param.mod_strategy.comp_strategy=="StandardNum")
               {
 		            //left boundary
                 if ((face_center[0] < 0.0+tol_machine) && (face_center[0] > 0.0-tol_machine)
                    )
                   cell->face(f)->set_boundary_id(1);
 		            //right boundary
-                else if ((face_center[0] < 1.0+tol_machine) && (face_center[0] > 1.0-tol_machine)
+                else if ((face_center[0] < param.geometrymodel.b+tol_machine) 
+                          && (face_center[0] > param.geometrymodel.b -tol_machine)
                         )
                   cell->face(f)->set_boundary_id(2);
 		            // bottom boundary
@@ -143,26 +144,32 @@ void Phasefield<dim>::set_boundary_id(const AllParameters &param)
                         )
                   cell->face(f)->set_boundary_id(3);
               	// top boundary
-                else if ((face_center[1] < 1.0+tol_machine) && (face_center[1] > 1.0-tol_machine)
+                else if ((face_center[1] < param.geometrymodel.b+tol_machine) 
+                          && (face_center[1] > param.geometrymodel.b-tol_machine)
                         )
                   cell->face(f)->set_boundary_id(4);
               }
+              //////////////////////For (-b/2,b/2)x(-b/2,b/2)
               if(param.mod_strategy.comp_strategy=="lefm")
               {
                 //left boundary
-                if ((face_center[0] < -0.5+tol_machine) && (face_center[0] > -0.5-tol_machine)
+                if ((face_center[0] < (-param.geometrymodel.b/2)/*-0.5*/+tol_machine) 
+                    && (face_center[0] > (-param.geometrymodel.b/2)/*-0.5*/-tol_machine)
                    )
                   cell->face(f)->set_boundary_id(1);
 		            //right boundary
-                else if ((face_center[0] < 0.5+tol_machine) && (face_center[0] > 0.5-tol_machine)
+                else if ((face_center[0] < (param.geometrymodel.b/2)/*0.5*/+tol_machine) 
+                        && (face_center[0] > (param.geometrymodel.b/2)/*0.5*/-tol_machine)
                         )
                   cell->face(f)->set_boundary_id(2);
 		            // bottom boundary
-                else if ((face_center[1] < -0.5+tol_machine) && (face_center[1] > -0.5-tol_machine)
+                else if ((face_center[1] < (-param.geometrymodel.b/2)/*-0.5*/+tol_machine) 
+                        && (face_center[1] > (-param.geometrymodel.b/2)/*-0.5*/-tol_machine)
                         )
                   cell->face(f)->set_boundary_id(3);
               	// top boundary
-                else if ((face_center[1] < 0.5+tol_machine) && (face_center[1] > 0.5-tol_machine)
+                else if ((face_center[1] < (param.geometrymodel.b/2)/*0.5*/+tol_machine) 
+                        && (face_center[1] > (param.geometrymodel.b/2)/*0.5*/-tol_machine)
                         )
                   cell->face(f)->set_boundary_id(4);
               }   
@@ -409,7 +416,7 @@ void Phasefield<dim>::assemble_system_d_one_cell (const parameters::AllParameter
                   data.cell_matrix(i, j) +=( (param.pf.g_c/param.pf.l)*scratch.shape_d[i]*scratch.shape_d[j] 
                                           + (param.pf.g_c*param.pf.l)* scalar_product(scratch.grad_shape_d[i],scratch.grad_shape_d[j])
                                           + 2*scratch.shape_d[i]*scratch.shape_d[j]*History
-                                          + (param.materialmodel.viscosity/scratch.delta_t)*scratch.shape_d[i]*scratch.shape_d[j])
+                                          + (param.pf.viscosity/scratch.delta_t)*scratch.shape_d[i]*scratch.shape_d[j])
                                           *scratch.fe_values.JxW(q);
               }
               else if((dof_block_identifier_m[i] == d_dof_m) && (dof_block_identifier_m[j] == u_dof_m))
@@ -424,8 +431,8 @@ void Phasefield<dim>::assemble_system_d_one_cell (const parameters::AllParameter
                  data.cell_rhs(i) -= ( (param.pf.g_c/param.pf.l)*scratch.shape_d[i] *scratch.d_vals[q]
                                       + (param.pf.g_c*param.pf.l)*scalar_product(scratch.grad_shape_d[i],scratch.grad_d[q])
                                       - 2*scratch.shape_d[i]*(1 - scratch.d_vals[q]) *History
-                                      + (param.materialmodel.viscosity/scratch.delta_t)*scratch.shape_d[i] * scratch.d_vals[q]
-                                      - (param.materialmodel.viscosity/scratch.delta_t)*scratch.shape_d[i] * scratch.old_d_vals[q] 
+                                      + (param.pf.viscosity/scratch.delta_t)*scratch.shape_d[i] * scratch.d_vals[q]
+                                      - (param.pf.viscosity/scratch.delta_t)*scratch.shape_d[i] * scratch.old_d_vals[q] 
                                         )*scratch.fe_values.JxW(q);
 
             }
@@ -669,13 +676,13 @@ unsigned int Phasefield<dim>::solve_nonlinear_newton(const AllParameters &param
           tangent_matrix_m = 0.0;
           system_rhs_m = 0.0;
 
-          //Mesh induced initial crack + Phase field along the initial crack
-          if(param.mod_strategy.strategy=="hybrid"){
+          //Mesh induced initial crack with prescribed phase field
+          if(param.mod_strategy.strategy=="M_Id"){
           make_constraints_d(new_iter_d,param);
           }
 
           //Phase field induced initial crack
-          if(param.mod_strategy.strategy=="phasefield"){        
+          if(param.mod_strategy.strategy=="P_I"){        
           get_constrained_initial_d(new_iter_d,param);
           }
 
@@ -854,7 +861,7 @@ void Phasefield<dim>::make_constraints_u(unsigned int &itr,const double load_rat
    //Tension test
    if(param.test_case.test == "tension")
    {
-     if(param.mod_strategy.comp_strategy=="normal")
+     if(param.mod_strategy.comp_strategy=="StandardNum")
      {
       { 
       std::vector<bool> component_mask1(dim+1, false);
@@ -1243,10 +1250,12 @@ void Phasefield<dim>::run(const AllParameters &param){
             for (unsigned int vertex = 0;vertex < GeometryInfo<dim>::vertices_per_cell; ++vertex)
               {
                 Tensor<1, dim> cell_vertex = (cell->vertex(vertex));
-                if(param.mod_strategy.comp_strategy=="normal")
+                if(param.mod_strategy.comp_strategy=="StandardNum")
                 {
-                  if (cell_vertex[0] <= 1.0 && cell_vertex[0] >= 0 /* 0.48*/
-                      && cell_vertex[1] <= 0.505 && cell_vertex[1] >= 0.495)
+                  if (cell_vertex[0] <= param.geometrymodel.b /*1.0*/ 
+                      && cell_vertex[0] >= ((100-param.geometrymodel.x)/100)*(param.geometrymodel.a)/* 0.48*/
+                      && cell_vertex[1] <= (param.geometrymodel.b/2) + (param.geometrymodel.h*param.geometrymodel.b/100) /*0.505*/ 
+                      && cell_vertex[1] >= (param.geometrymodel.b/2) - (param.geometrymodel.h*param.geometrymodel.b/100)/*0.495*/)
                   {
                       cell->set_refine_flag();
                       break;
@@ -1254,8 +1263,10 @@ void Phasefield<dim>::run(const AllParameters &param){
                 }
                 else if(param.mod_strategy.comp_strategy=="lefm")
                 {
-                  if (cell_vertex[0] <= 0.5 && cell_vertex[0] >= -0.1 
-                      && cell_vertex[1] <= 0.015 && cell_vertex[1] >= -0.015)
+                  if (cell_vertex[0] <= (param.geometrymodel.b/2)/*0.5*/ 
+                      && cell_vertex[0] >= -(param.geometrymodel.x*param.geometrymodel.a/100)/*-0.1*/ 
+                      && cell_vertex[1] <= + (param.geometrymodel.h*param.geometrymodel.b/100)/*0.015*/ 
+                      && cell_vertex[1] >= - (param.geometrymodel.h*param.geometrymodel.b/100)/*-0.015*/)
                   {
                       cell->set_refine_flag();
                       break;
@@ -1271,7 +1282,7 @@ void Phasefield<dim>::run(const AllParameters &param){
     }
 
     //Phase-field Induced crack
-    if(param.mod_strategy.strategy=="phasefield")
+    if(param.mod_strategy.strategy=="P_I")
     {
       double min_cell_diameter = GridTools::minimal_cell_diameter(triangulation_m);
       extract_initialcrack_d_index(min_cell_diameter,param);
@@ -1294,7 +1305,7 @@ void Phasefield<dim>::run(const AllParameters &param){
   std::cout<<"Parameter Grid scale: "<<param.geometrymodel.grid_scale<<std::endl;
   std::cout<<"Parameter lambda: "<<param.materialmodel.lambda<<std::endl;
 	std::cout<<"Parameter mu: "<<param.materialmodel.mu<<std::endl;
-	std::cout<<"Parameter vis: "<<param.materialmodel.viscosity<<std::endl;
+	std::cout<<"Parameter vis: "<<param.pf.viscosity<<std::endl;
 	std::cout<<"Parameter g_c: "<<param.pf.g_c<<std::endl;
 	std::cout<<"Parameter l: "<<param.pf.l<<std::endl;
 	std::cout<<"Parameter k: "<<param.pf.k<<std::endl;
@@ -1324,7 +1335,7 @@ void Phasefield<dim>::run(const AllParameters &param){
       solution_delta = 0.0;
       new_iter = solve_nonlinear_newton(param,solution_delta,delta_t);
 
-      if(new_iter == param.newtonraphson.max_new_ite)
+      if(new_iter == param.newtonraphson.max_new_ite && param.time.time_adap== "true")
       {
           prev_delta_t = delta_t;
           delta_t = param.time.alpha*delta_t;
@@ -1368,7 +1379,7 @@ void Phasefield<dim>::run(const AllParameters &param){
         statistics.write_text (stat_file,
                                     TableHandler::simple_table_with_separate_column_description);
         stat_file.close();
-        if(param.test_case.test == "tension" && param.mod_strategy.comp_strategy=="normal" )
+        if(param.test_case.test == "tension" && param.mod_strategy.comp_strategy=="StandardNum" )
         {
           if(current_time_m >= param.time.time_change_interval)
           {

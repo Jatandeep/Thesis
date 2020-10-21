@@ -1,14 +1,8 @@
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <deal.II/base/parameter_handler.h>
-#include <deal.II/base/tensor.h>
 #include "../include/parameter.h"
 #include "../include/PhasefieldSMP.h"
 
 int main(int argc, char *argv[]){
 
-    dealii::MultithreadInfo::set_thread_limit	(20);
     try
       {
        using namespace dealii;

@@ -11,7 +11,6 @@
 #include <deal.II/base/quadrature_point_data.h>
 #include <deal.II/base/work_stream.h>
 #include <deal.II/base/parameter_handler.h>
-#include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/table_handler.h>
 #include <deal.II/base/multithread_info.h>
 #include <deal.II/base/utilities.h>
@@ -72,7 +71,7 @@
 
 #include <fstream>
 #include <iostream>
-
+#include <string>
 
 namespace thesis
 {

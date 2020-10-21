@@ -20,8 +20,7 @@ namespace thesis
 
     class MaterialModel{
     public:
-        double lambda,mu;
-	double viscosity;
+    double lambda,mu;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
@@ -62,8 +61,9 @@ namespace thesis
     public:
         double start_time, end_time;
         double delta_t, time_tol,delta_t_f,time_change_interval;
-	unsigned int op_freq;
+	    unsigned int op_freq;
         double alpha,beta;
+        std::string time_adap;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
@@ -71,7 +71,7 @@ namespace thesis
 	
     class PhaseFieldMethod{
     public:
-        double g_c,l,k,u_total,st_tol;
+        double g_c,l,k,u_total,st_tol,viscosity;
        
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
