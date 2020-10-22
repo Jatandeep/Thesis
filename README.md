@@ -2,7 +2,7 @@
 
 This is a finite element code based in deal.II to simulate crack propagation in brittle materials using phase field model. 
 The above project has been developed for a master thesis in FAU Erlangen-Nuremebrg.
-Please refer to thesis-report in order to understand the project completely.
+Please refer to Algorithm-1 in thesis-report in order to understand the project completely.
 
 # Parameter file
 In order to replicate the results in thesis-report, various parameter files have been added to folder named "parameter_files". 
