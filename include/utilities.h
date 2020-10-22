@@ -1,8 +1,7 @@
 #pragma once
-//#include "../include/ElasticProblem.h"
-//#include "../include/Phasefield.h"
 #include "../include/PhasefieldSMP.h"
 
+/*Overloaded Functions for printing a tensor*/
 template<int dim>
 void print_tensor(const dealii::SymmetricTensor<4,dim>&C);
 
@@ -20,6 +19,6 @@ dealii::SymmetricTensor<2,dim> biaxial();
 
 template <int dim>
 dealii::SymmetricTensor<2,dim> uniaxial();
-
+/*To define the definition of sign funciton*/
 double get_sign(double x);
 

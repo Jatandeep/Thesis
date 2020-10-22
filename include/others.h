@@ -4,7 +4,7 @@
 #include "../include/constitutive.h"
 namespace thesis
 {
-
+    /*A dealii type function for Tension test for prescribing load on top boundary*/
     template <int dim>
     class BoundaryTension:public dealii::Function<dim>{
     public:
@@ -12,12 +12,9 @@ namespace thesis
 	{
 	itr_ = itr;
 	load_ratio_ = load_ratio;
-	u_total_ = u_total;
-	
+	u_total_ = u_total;	
 	}
 	
-	virtual double value (const dealii::Point<dim> &p,
-                    const unsigned int component = 0) const;
 
     virtual void vector_value (const dealii::Point<dim> &p,
                              dealii::Vector<double>  &value)const;
@@ -26,6 +23,7 @@ namespace thesis
 	unsigned int itr_;
     };
 
+    /*A dealii type function for shear test for prescribing load on top boundary*/
     template <int dim>
     class BoundaryShear:public dealii::Function<dim>{
     public:
@@ -36,9 +34,6 @@ namespace thesis
 	u_total_ = u_total;
 	}
 	
-	virtual double value (const dealii::Point<dim> &p,
-                    const unsigned int component = 0) const;
-
     virtual void vector_value (const dealii::Point<dim> &p,
                              dealii::Vector<double>  &value)const;
     private:
@@ -46,13 +41,12 @@ namespace thesis
 	unsigned int itr_;
     };
 
- 
+    /*For M_Id, this dealii type function assigns d=1 on crack boundary*/
     template <int dim>
     class InitialCrack:public dealii::Function<dim>{
     public:
-        InitialCrack(unsigned int itr/*,const double min_cell_diameter*/):dealii::Function<dim>(dim+1)
+        InitialCrack(unsigned int itr):dealii::Function<dim>(dim+1)
 	{
-	//_min_cell_diameter = min_cell_diameter;
     itr_ = itr;
 	}
 	
@@ -62,48 +56,10 @@ namespace thesis
     virtual void vector_value (const dealii::Point<dim> &p,
                              dealii::Vector<double>  &value)const;
     private:
-	//double _min_cell_diameter;
     unsigned int itr_;
     };
 
-  
-    template <int dim>
-    class InitialValuesCrack:public dealii::Function<dim>{
-    public:
-        InitialValuesCrack(const double min_cell_diameter):dealii::Function<dim>(dim+1)
-	{
-	 _min_cell_dia = min_cell_diameter;
-	}
-	
-	virtual double value (const dealii::Point<dim> &p,
-                    const unsigned int component = 0) const;
-
-    	virtual void vector_value (const dealii::Point<dim> &p,
-                             dealii::Vector<double>  &value)const;
-    private:
-	double _min_cell_dia;
-    };
-  
-    template <int dim>
-    class ElasticBodyForce:public dealii::Function<dim>{
-    public:
-        ElasticBodyForce():dealii::Function<dim>(1){}
-
-        virtual void vector_value (const dealii::Point<dim> &p,
-                             dealii::Vector<double>  &value)const;
-
-    };
-/*
-    template <int dim>
-    class get_inital_d : public dealii::Function<dim>
-    {
-    public:
-      Reference_solution(): dealii::Function<dim>(dim+1)
-      {}
-      virtual double value(const dealii::Point<dim> & p,
-                       const unsigned int component = 0) const override;
-    };
-*/
+    /*For LEFM, this dealii type function prescribe the loading conditions on boundaries*/
     template <int dim>
     class Reference_solution:public dealii::Function<dim>{
     public:
@@ -118,38 +74,28 @@ namespace thesis
     mu_ = mu;
 	}
 	
-	virtual double value (const dealii::Point<dim> &p,
-                    const unsigned int component = 0) const;
-
     virtual void vector_value (const dealii::Point<dim> &p,
                              dealii::Vector<double>  &value)const;
     private:
 	double steps_,lambda_,mu_,g_c_;
 	unsigned int itr_;
-    };
-
-    
-
-    template <int dim>
-    void comparison(const double lambda,const double mu,dealii::SymmetricTensor<2,dim> &dummy);
+    };    
 
 }
 
-
+/*Generate energy density plus values for calculating total Elastic energy(for statistics file)*/
 template <int dim>
 double get_energy_density_plus(const double lambda
 			      ,const double mu
 			      ,dealii::SymmetricTensor<2,dim> &eps);
+/*Generate energy density minus values for calculating total Elastic energy(for statistics file)*/
 template <int dim>
 double get_energy_density_minus(const double lambda
 			      ,const double mu
 			      ,dealii::SymmetricTensor<2,dim> &eps);
 
+/*Define the degradation function to be used in formulation*/
 double get_deg_func(const double d);
-
-double get_stress_intensity_const(const std::string test);
-
+/*Generate Youngs modulus and poisson ratio from lame parameters*/
 std::pair<double,double> get_youngsM_poissonR(const double lambda,const double mu);
 
-template<int dim>
-double get_critical_load(dealii::Tensor<2,dim> stress);
