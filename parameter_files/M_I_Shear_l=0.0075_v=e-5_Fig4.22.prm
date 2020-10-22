@@ -1,0 +1,90 @@
+
+##################  Geometry  ##################
+
+subsection Geometry Model
+    set Mesh File = ../thesis/meshes/Shear_left_2.inp  
+    set Global refinement = 0 
+    set Local refinement =  0   
+    set Grid scale = 1e-3 
+    set Plate dim = 1
+    set Crack length = 0.5
+    set Ref region height perc = 1.5
+    set Crack tip back ref perc = 20 
+end
+
+###################  Material  ##################
+
+subsection Material Model
+    set Lambda = 121.15e+3  
+    set Mu = 80.77e+3 
+end
+
+##################  FE System  #####################
+
+subsection FE System
+    set Finite element degree = 1
+    set Quad order = 2 
+end
+
+############  Non Linear System  ##################
+
+subsection Newton Raphson
+    set Max newton iterations = 50 
+    set Residual tolerance u = 1e-7  
+    set Residual tolerance d = 1e-7  
+    set Newton update tolerance u = 1e-6  
+end
+
+################  Linear Solver  ##################
+
+subsection Linear Solver
+    set CG Solver tolerance = 1e-7
+    set Relaxation parameter = 1.2
+end
+
+###################  Time   ##################
+
+subsection Time
+    set Starting time = 0.0
+    set End time = 20e-3 
+    set Delta time initial =  1e-5     
+    set Delta time final = 1e-6  
+    set Time change interval = 5e-3 
+    set Time tolerance = 1e-6
+    set Output frequency = 1 
+    set Time adaptivity = true
+    set Alpha = 1e-1
+    set Beta = 1e-4
+end
+
+################## Phase Field ###############
+
+subsection PhaseField
+    set Critical energy release rate = 2.7
+    set Length scale parameter = 0.0075  
+    set Small positive parameter = 1e-10 
+    set Total displacement =  20e-3 
+    set Viscosity = 1e-2
+end
+
+############## Test Case ###################
+subsection TestCase
+    set Test case = shear   
+end
+
+########### Boundary Conditions################
+subsection BoundaryConditions
+    set Tension x axis bottom = fixed
+    set Tension x axis top = free
+end
+
+########### Modeling Strategy################
+subsection ModelingStrategy
+    set Initial crack strategy = M_I   
+    set Computing strategy =  StandardNum    
+    set Target factor fracture toughness = 2
+    set Target steps fracture toughness = 1000
+end
+
+
+
