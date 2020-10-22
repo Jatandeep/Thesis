@@ -6,6 +6,7 @@ using namespace dealii;
 using namespace thesis;
 using namespace parameters;
 
+/*Function for declaring the geometry parameters of the test specimen*/
 void GeometryModel::declare_param(ParameterHandler &prm){
     prm.enter_subsection("Geometry Model");
     {
@@ -20,7 +21,7 @@ void GeometryModel::declare_param(ParameterHandler &prm){
     }
     prm.leave_subsection();
 }
-
+/*Function for parsing the geometry parameters of the test specimen*/
 void GeometryModel::parse_param(ParameterHandler &prm){
     prm.enter_subsection("Geometry Model");
     {
@@ -36,6 +37,7 @@ void GeometryModel::parse_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
+/*Function for declaring the material parameters of the test specimen*/
 void MaterialModel::declare_param(ParameterHandler &prm){
     prm.enter_subsection("Material Model");
     {
@@ -45,6 +47,7 @@ void MaterialModel::declare_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
+/*Function for parsing the material parameters of the test specimen*/
 void MaterialModel::parse_param(ParameterHandler &prm){
     prm.enter_subsection("Material Model");
     {
@@ -54,7 +57,7 @@ void MaterialModel::parse_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
-
+/*Function for declaring the discretization parameters of the test specimen*/
 void FESys::declare_param(ParameterHandler &prm){
     prm.enter_subsection("FE System");
     {
@@ -63,7 +66,7 @@ void FESys::declare_param(ParameterHandler &prm){
     }
     prm.leave_subsection();
 }
-
+/*Function for parsing the discretization parameters of the test specimen*/
 void FESys::parse_param(ParameterHandler &prm){
     prm.enter_subsection("FE System");
     {
@@ -73,7 +76,7 @@ void FESys::parse_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
-
+/*Function for declaring the newton raphson parameters*/
 void NewtonRaphson::declare_param(ParameterHandler &prm){
     prm.enter_subsection("Newton Raphson");
     {
@@ -85,6 +88,7 @@ void NewtonRaphson::declare_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
+/*Function for parsing the newton raphson parameters*/
 void NewtonRaphson::parse_param(ParameterHandler &prm){
     prm.enter_subsection("Newton Raphson");
     {
@@ -96,6 +100,7 @@ void NewtonRaphson::parse_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
+/*Function for declaring the linear solver parameters*/
 void LinearSolver::declare_param(ParameterHandler &prm){
     prm.enter_subsection("Linear Solver");
     {
@@ -104,7 +109,7 @@ void LinearSolver::declare_param(ParameterHandler &prm){
     }
     prm.leave_subsection();
 }
-
+/*Function for parsing the linear solver parameters*/
 void LinearSolver::parse_param(ParameterHandler &prm){
     prm.enter_subsection("Linear Solver");
     {
@@ -114,7 +119,7 @@ void LinearSolver::parse_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
-
+/*Function for declaring the time parameters*/
 void Time::declare_param(ParameterHandler &prm){
     prm.enter_subsection("Time");
     {
@@ -132,6 +137,7 @@ void Time::declare_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
+/*Function for parsing the time parameters*/
 void Time::parse_param(ParameterHandler &prm){
     prm.enter_subsection("Time");
     {
@@ -149,7 +155,7 @@ void Time::parse_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
-
+/*Function for declaring the phase field model parameters*/
 void PhaseFieldMethod::declare_param(ParameterHandler &prm){
     prm.enter_subsection("PhaseField");
     {
@@ -163,6 +169,7 @@ void PhaseFieldMethod::declare_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
+/*Function for parsing the phase field model parameters*/
 void PhaseFieldMethod::parse_param(ParameterHandler &prm){
     prm.enter_subsection("PhaseField");
     {
@@ -176,6 +183,7 @@ void PhaseFieldMethod::parse_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
+/*Function for declaring the benchmark example parameters*/
 void TestCase::declare_param(ParameterHandler &prm){
     prm.enter_subsection("TestCase");
     {
@@ -183,6 +191,7 @@ void TestCase::declare_param(ParameterHandler &prm){
     }
     prm.leave_subsection();
 }
+/*Function for parsing the benchmark example parameters*/
 void TestCase::parse_param(ParameterHandler &prm){
     prm.enter_subsection("TestCase");
     {
@@ -191,6 +200,7 @@ void TestCase::parse_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
+/*Function for declaring the boundary conditions for tension test parameters*/
 void BoundaryConditions::declare_param(ParameterHandler &prm){
     prm.enter_subsection("BoundaryConditions");
     {
@@ -199,6 +209,7 @@ void BoundaryConditions::declare_param(ParameterHandler &prm){
     }
     prm.leave_subsection();
 }
+/*Function for parsing the boundary conditions for tension test parameters*/
 void BoundaryConditions::parse_param(ParameterHandler &prm){
     prm.enter_subsection("BoundaryConditions");
     {
@@ -208,6 +219,7 @@ void BoundaryConditions::parse_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
+/*Function for declaring the modeling strategy parameters*/
 void ModelingStrategy::declare_param(ParameterHandler &prm){
     prm.enter_subsection("ModelingStrategy");
     {
@@ -218,6 +230,7 @@ void ModelingStrategy::declare_param(ParameterHandler &prm){
     }
     prm.leave_subsection();
 }
+/*Function for parsing the modeling strategy parameters*/
 void ModelingStrategy::parse_param(ParameterHandler &prm){
     prm.enter_subsection("ModelingStrategy");
     {
@@ -230,13 +243,14 @@ void ModelingStrategy::parse_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
+/*Function for declaring and parsing all parameters*/
 AllParameters::AllParameters(const std::string &filename){
     ParameterHandler prm;
     declare_param(prm);
     prm.parse_input(filename);
     parse_param(prm);
 }
-
+/*Function for declaring the parameters for all other classes*/
 void AllParameters::declare_param(ParameterHandler &prm){
     GeometryModel::declare_param(prm);
     MaterialModel::declare_param(prm);
@@ -249,7 +263,7 @@ void AllParameters::declare_param(ParameterHandler &prm){
     BoundaryConditions::declare_param(prm);
     ModelingStrategy::declare_param(prm);
 }
-
+/*Function for parsing the parameters for all other classes*/
 void AllParameters::parse_param(ParameterHandler &prm){
     geometrymodel.parse_param(prm);
     materialmodel.parse_param(prm);

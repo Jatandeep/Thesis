@@ -5,6 +5,7 @@ using namespace dealii;
 using namespace thesis;
 using namespace parameters;
 
+/*A dealii type function for Tension test for prescribing load on top boundary*/
 template <int dim>
 void BoundaryTension<dim>::vector_value (const Point<dim> &,
                                            Vector<double>   &vectorValue) const
@@ -19,7 +20,7 @@ void BoundaryTension<dim>::vector_value (const Point<dim> &,
   }  
 } 
 
-
+/*A dealii type function for shear test for prescribing load on top boundary*/
 template <int dim>
 void BoundaryShear<dim>::vector_value (const Point<dim> &,
                                            Vector<double>   &vectorValue) const
@@ -34,12 +35,12 @@ void BoundaryShear<dim>::vector_value (const Point<dim> &,
   
 } 
 
+/*For M_Id, this dealii type function assigns d=1 on crack boundary*/
 template <int dim>
 double InitialCrack<dim>::value (const Point<dim>  &,
                                     const unsigned int component) const
 {
-// 0 = no crack
-// 1 = crack 
+/* 0 = no crack; 1 = crack*/ 
 
 if (component == dim)
    {
@@ -59,6 +60,7 @@ void InitialCrack<dim>::vector_value (const Point<dim> &p,
     values (c) = InitialCrack<dim>::value (p, c);
 }
 
+/*For P_I, this function extracts global node ids from cells where crack is to be placed*/   
 template<int dim>
 void Phasefield<dim>::extract_initialcrack_d_index(const double min_cell_dia,const AllParameters &param)                                                              
 {
@@ -121,6 +123,7 @@ void Phasefield<dim>::extract_initialcrack_d_index(const double min_cell_dia,con
                       ,global_index_m.end());
 }
 
+/*For P_I method, this function prescribe d=1 values on selected nodes for initial time step and maintains them throughout simulation*/
 template<int dim>
 void Phasefield<dim>::get_constrained_initial_d(unsigned int itr_,const AllParameters &param)
 {
@@ -160,6 +163,7 @@ void Phasefield<dim>::get_constrained_initial_d(unsigned int itr_,const AllParam
      
 }
 
+/*For LEFM, this dealii type function prescribe the loading conditions on boundaries*/
 template <int dim>
 void Reference_solution<dim>::vector_value (const Point<dim> &p,
                                            Vector<double>   &vectorValue) const
@@ -191,7 +195,7 @@ void Reference_solution<dim>::vector_value (const Point<dim> &p,
   
 }
 
-
+/*To be used in get_history() and get_energy_density_plus()*/
 template <int dim>
 double get_epsplus_sq(const SymmetricTensor<2,dim> &eps)
 {
@@ -212,6 +216,7 @@ double get_epsplus_sq(const SymmetricTensor<2,dim> &eps)
 return result;
 }
 
+/*To be used in get_energy_density_minus()*/
 template <int dim>
 double get_epsminus_sq(SymmetricTensor<2,dim> &eps)
 {
@@ -231,7 +236,7 @@ double get_epsminus_sq(SymmetricTensor<2,dim> &eps)
 return result;
 }
 
-
+/*Data member function for calculating the history function for present time step*/
 template <int dim>
 double Phasefield<dim>::get_history(const double lambda
 	  	  ,const double mu
@@ -248,6 +253,7 @@ double Phasefield<dim>::get_history(const double lambda
 return history;
 }
 
+/*Generate energy density plus values for calculating total Elastic energy(for statistics file)*/
 template <int dim>
 double get_energy_density_plus(const double lambda
 			  	  	       ,const double mu
@@ -265,6 +271,7 @@ double get_energy_density_plus(const double lambda
 return energy_plus;
 }
 
+/*Generate energy density minus values for calculating total Elastic energy(for statistics file)*/
 template <int dim>
 double get_energy_density_minus(const double lambda
 			  	  	       ,const double mu
@@ -281,12 +288,13 @@ double get_energy_density_minus(const double lambda
 return energy_minus;
 }
 
+/*Define the degradation function to be used in formulation*/
 double get_deg_func(const double d)
 {
 return ( pow((1-d),2.0) );
 }
 
-
+/*Generating load on boundaries for being written to statistics file*/
 template <int dim>
 void Phasefield<dim>::compute_load(const AllParameters &param
                  ,dealii::BlockVector<double> &solution)
@@ -462,6 +470,7 @@ void Phasefield<dim>::compute_load(const AllParameters &param
   }
 }
 
+/*Additional functional to generate a visualization file when load becomes 0 for tension case*/
 template <int dim>
 double Phasefield<dim>::compute_end_load(const AllParameters &param
                  ,dealii::BlockVector<double> &solution)
@@ -518,8 +527,7 @@ double Phasefield<dim>::compute_end_load(const AllParameters &param
     return 1;
 }
 
-
-
+/*Generate Youngs modulus and poisson ratio from lame parameters*/
 std::pair<double,double> get_youngsM_poissonR(const double lambda,const double mu)
 {
   double YoungsM,PoissonR;

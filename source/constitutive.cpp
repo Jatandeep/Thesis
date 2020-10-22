@@ -2,7 +2,8 @@
 
 using namespace dealii;
 
-//Gives stress_plus at particular quadrature point
+/*To get tensile/positive component of stress to be used in assembly of u*/
+/*Gives stress_plus at particular quadrature point*/
 template<int dim>
 SymmetricTensor<2,dim> get_stress_plus(const double lambda
 				      ,const double mu
@@ -37,7 +38,8 @@ SymmetricTensor<2,dim> get_stress_plus(const double lambda
 return stress_plus; 
 }
 
-//Gives stress_minus at particular quadrature point
+/*To get compressive/negative component of stress to be used in assembly of u*/
+/*Gives stress_minus at particular quadrature point*/
 template<int dim>
 SymmetricTensor<2,dim> get_stress_minus(const double lambda
 				      ,const double mu
@@ -137,9 +139,9 @@ return result;
 double delsig_dellmbda_b(const double lambda
                         ,const double mu)
 {
-        double result = 0;
+    double result = 0;
 
-        result =  2*mu + lambda;
+    result =  2*mu + lambda;
 
 return result;
 }
@@ -225,6 +227,7 @@ double delsig_dellmbda_minus(const double lambda
 return result;
 }
 
+/*To get positive component of BigC to be used in assembly of u*/
 template <int dim>
 SymmetricTensor<4,dim> get_BigC_plus(const double lambda
                                             ,const double mu
@@ -302,7 +305,7 @@ SymmetricTensor<4,dim> get_BigC_plus(const double lambda
 return C_total_plus;
 }
 
-
+/*To get negative component of BigC to be used in assembly of u*/
 template <int dim>
 SymmetricTensor<4,dim> get_BigC_minus(const double lambda
                                              ,const double mu

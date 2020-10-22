@@ -8,6 +8,7 @@ using namespace dealii;
 using namespace thesis;
 using namespace parameters;
 
+/*Constructor*/
 template <int dim>
 Phasefield<dim>::Phasefield(const AllParameters &param)
   : fe_m(FESystem<dim>(FE_Q<dim>(param.fesys.fe_degree),dim),1,
@@ -28,7 +29,7 @@ Phasefield<dim>::Phasefield(const AllParameters &param)
 }
 
 
-
+/*Destructor*/
 template <int dim>
 Phasefield<dim>::~Phasefield ()
 {
@@ -36,7 +37,8 @@ Phasefield<dim>::~Phasefield ()
   statistics.set_auto_fill_mode(true);
 }
 
-
+/*!Distribute dof's based on a given Finite Element space and allocating memory for the
+sparse matrix and all used vectors.*/
 template <int dim>
 void Phasefield<dim>::setup_system ()
 {
@@ -88,32 +90,18 @@ void Phasefield<dim>::setup_system ()
   timer.leave_subsection();
 }
 
-
+/*Data member function for identifying the block for d and u respectively*/
 template <int dim>
 void Phasefield<dim>::determine_comp_extractor()
-{
-  u_element_indices_m.clear();
-  d_element_indices_m.clear();
-	
+{ 
   const unsigned int   dofs_per_cell = fe_m.dofs_per_cell;
 
-   for (unsigned int k = 0; k < dofs_per_cell; ++k)
-      {
-        const unsigned int k_group = fe_m.system_to_base_index(k).first.first;//Return for shape function index(k) the base element it belongs to.
-        if (k_group == u_dof_m)
-          u_element_indices_m.push_back(k);
-        else if (k_group == d_dof_m)
-          d_element_indices_m.push_back(k);
-        else
-          {
-            Assert(k_group <= d_dof_m, ExcInternalError());
-          }
-      }
-	dof_block_identifier_m.clear();
+  dof_block_identifier_m.clear();
 	for(unsigned int k=0;k<dofs_per_cell;++k)
 		dof_block_identifier_m.push_back(fe_m.system_to_base_index(k).first.first);
 }
 
+/*Giving each boundary of the geometry a particular id. If not assigned,default is 0*/
 template <int dim>
 void Phasefield<dim>::set_boundary_id(const AllParameters &param)
 {
@@ -178,6 +166,7 @@ void Phasefield<dim>::set_boundary_id(const AllParameters &param)
 
 }
 
+/*Setting up quadrature point history for facilitating history function implementation*/
 template<int dim>
 void Phasefield<dim>::setup_qph()
 {
@@ -199,6 +188,7 @@ void Phasefield<dim>::setup_qph()
 
 }
 
+/*Genrating elastic and fracture energy values for statistics file*/
 template <int dim>
 void Phasefield<dim>::get_energy_v(const AllParameters &param
                                                      ,BlockVector<double> & update)
@@ -242,6 +232,7 @@ void Phasefield<dim>::get_energy_v(const AllParameters &param
   statistics.add_value("Total Energy",Total_energy);
 }
 
+/*!Assemble the linear system for the d in SMP format*/
 template <int dim>
 struct Phasefield<dim>::PerTaskData_d
 {
@@ -263,6 +254,7 @@ struct Phasefield<dim>::PerTaskData_d
     }
 };
 
+/*!Assemble the linear system for the d in SMP format*/
 template <int dim>
 struct Phasefield<dim>::ScratchData_d
 {
@@ -326,6 +318,7 @@ struct Phasefield<dim>::ScratchData_d
     }
 };
 
+/*!Assemble the linear system for the d in SMP format*/
 template <int dim>
 void Phasefield<dim>::assemble_system_d (const AllParameters &param
                                         ,BlockVector<double> & update
@@ -360,6 +353,7 @@ void Phasefield<dim>::assemble_system_d (const AllParameters &param
   timer.leave_subsection();
 } 
 
+/*!Assemble the linear system for the d in SMP format*/
 template <int dim>
 void Phasefield<dim>::copy_local_to_global_d(const PerTaskData_d &data)
 {
@@ -367,6 +361,7 @@ void Phasefield<dim>::copy_local_to_global_d(const PerTaskData_d &data)
                                           ,tangent_matrix_m,system_rhs_m);	
 }
 
+/*!Assemble the linear system for the d in SMP format*/
 template <int dim>
 void Phasefield<dim>::assemble_system_d_one_cell (const parameters::AllParameters &param
                       		                        ,const typename DoFHandler<dim>::active_cell_iterator &cell
@@ -447,6 +442,7 @@ void Phasefield<dim>::assemble_system_d_one_cell (const parameters::AllParameter
 
 }
 
+/*!Assemble the linear system for the u in SMP format*/
 template <int dim>
 struct Phasefield<dim>::PerTaskData_u
 {
@@ -467,6 +463,7 @@ struct Phasefield<dim>::PerTaskData_u
     }
 };
 
+/*!Assemble the linear system for the u in SMP format*/
 template <int dim>
 struct Phasefield<dim>::ScratchData_u
 {
@@ -528,6 +525,7 @@ struct Phasefield<dim>::ScratchData_u
     }
 };
 
+/*!Assemble the linear system for the u in SMP format*/
 template <int dim>
 void Phasefield<dim>::assemble_system_u (const AllParameters &param,BlockVector<double> & update)
 {
@@ -560,15 +558,15 @@ void Phasefield<dim>::assemble_system_u (const AllParameters &param,BlockVector<
   timer.leave_subsection();
 } 
 
+/*!Assemble the linear system for the u in SMP format*/
 template <int dim>
 void Phasefield<dim>::copy_local_to_global_u(const PerTaskData_u &data)
 {
-//  const unsigned int   dofs_per_cell = fe_m.dofs_per_cell;
-
  constraints_m.distribute_local_to_global(data.cell_matrix,data.cell_rhs,data.local_dof_indices
                                           ,tangent_matrix_m,system_rhs_m);	
 }
 
+/*!Assemble the linear system for the u in SMP format*/
 template <int dim>
 void Phasefield<dim>::assemble_system_u_one_cell (const parameters::AllParameters &param
                       		                        ,const typename DoFHandler<dim>::active_cell_iterator &cell
@@ -642,6 +640,7 @@ void Phasefield<dim>::assemble_system_u_one_cell (const parameters::AllParameter
   cell->get_dof_indices(data.local_dof_indices);
 }
 
+/*!Newton-Raphson algorithm looping over all newton iterations for both d and u*/
 template <int dim>
 unsigned int Phasefield<dim>::solve_nonlinear_newton(const AllParameters &param
                                             ,BlockVector<double> &solution_delta
@@ -676,18 +675,20 @@ unsigned int Phasefield<dim>::solve_nonlinear_newton(const AllParameters &param
           tangent_matrix_m = 0.0;
           system_rhs_m = 0.0;
 
-          //Mesh induced initial crack with prescribed phase field
+          /*Mesh induced initial crack with prescribed phase field*/
           if(param.mod_strategy.strategy=="M_Id"){
           make_constraints_d(new_iter_d,param);
           }
 
-          //Phase field induced initial crack
+          /*Phase field induced initial crack*/
           if(param.mod_strategy.strategy=="P_I"){        
           get_constrained_initial_d(new_iter_d,param);
           }
 
-          current_sol += newton_update_d; //Gives updated solution till now 
-          assemble_system_d(param,current_sol,delta_t);	//Evaluation at solution calculated until now
+          /*Gives updated solution till now */ 
+          current_sol += newton_update_d; 
+          /*Evaluation at solution calculated until now*/
+          assemble_system_d(param,current_sol,delta_t);	
 
           get_error_residual_d(error_residual);
 
@@ -709,7 +710,7 @@ unsigned int Phasefield<dim>::solve_nonlinear_newton(const AllParameters &param
 
           solution_delta += newton_update_d;
 
-          //checking
+          /*checking for convergence*/
           if(new_iter_d > 0 && (error_residual_norm.d < param.newtonraphson.res_tol_d
                                 || error_residual.d < param.newtonraphson.res_tol_d))
           {      	
@@ -752,8 +753,10 @@ unsigned int Phasefield<dim>::solve_nonlinear_newton(const AllParameters &param
 
           make_constraints_u(new_iter_u,(delta_t/param.time.end_time),param);
           
-          current_sol += newton_update_u; //Gives updated solution till now
-          assemble_system_u(param,current_sol);	//Evaluation at solution calculated until now
+          /*Gives updated solution till now*/
+          current_sol += newton_update_u; 
+          /*Evaluation at solution calculated until now*/
+          assemble_system_u(param,current_sol);	
           
           get_error_residual_u(error_residual);
 
@@ -775,7 +778,7 @@ unsigned int Phasefield<dim>::solve_nonlinear_newton(const AllParameters &param
 
           solution_delta += newton_update_u;
           
-          //checking
+          /*checking for convergence*/
           if(new_iter_u > 0 && (error_residual_norm.u < param.newtonraphson.res_tol_u || error_residual.u < param.newtonraphson.res_tol_u)
                           && (error_update_norm.u < param.newtonraphson.nu_tol_u || error_update.u < param.newtonraphson.nu_tol_u) )
           {      	
@@ -796,6 +799,7 @@ unsigned int Phasefield<dim>::solve_nonlinear_newton(const AllParameters &param
 return new_iter_u;
 }
 
+/*!Solve the linear system as assembled for d*/
 template <int dim>
 std::pair<unsigned int,double> Phasefield<dim>::solve_sys_d(const AllParameters &param,BlockVector<double> &newton_update)
 {
@@ -822,7 +826,7 @@ std::pair<unsigned int,double> Phasefield<dim>::solve_sys_d(const AllParameters 
  return std::make_pair(lin_ite,lin_res);
 }
   
-
+/*!Solve the linear system as assembled for u*/
 template <int dim>
 std::pair<unsigned int,double> Phasefield<dim>::solve_sys_u(BlockVector<double> &newton_update)
 {
@@ -842,7 +846,7 @@ std::pair<unsigned int,double> Phasefield<dim>::solve_sys_u(BlockVector<double> 
   return std::make_pair(lin_ite,lin_res);
 }
 
-
+/*!Set hanging node constraints and apply Dirichlet bc for u.*/
 template <int dim>
 void Phasefield<dim>::make_constraints_u(unsigned int &itr,const double load_ratio,const AllParameters &param){
     std::cout<<" CST "<<std::flush;
@@ -962,6 +966,7 @@ void Phasefield<dim>::make_constraints_u(unsigned int &itr,const double load_rat
    constraints_m.close ();
 }
 
+/*Generate d along slit for M_Id*/
 template <int dim>
 void Phasefield<dim>::make_constraints_d(unsigned int &itr,const AllParameters &param){
 
@@ -1002,6 +1007,7 @@ void Phasefield<dim>::make_constraints_d(unsigned int &itr,const AllParameters &
     
 }
 
+/*Print header and footer for newton iterations*/
 template <int dim>
 void Phasefield<dim>::print_header_d(){
     const unsigned int l_width = 80;
@@ -1024,6 +1030,8 @@ void Phasefield<dim>::print_header_d(){
         std::cout << std::endl;
 
 }
+
+/*Print header and footer for newton iterations*/
 template <int dim>
 void Phasefield<dim>::print_header_u(){
     const unsigned int l_width = 95;
@@ -1046,6 +1054,8 @@ void Phasefield<dim>::print_header_u(){
         std::cout << std::endl;
 
 }
+
+/*Print header and footer for newton iterations*/
 template <int dim>
 void Phasefield<dim>::print_footer_d(){
     const unsigned int l_width = 80;
@@ -1061,6 +1071,7 @@ void Phasefield<dim>::print_footer_d(){
 
 }
 
+/*Print header and footer for newton iterations*/
 template <int dim>
 void Phasefield<dim>::print_footer_u(){
     const unsigned int l_width = 95;
@@ -1076,18 +1087,7 @@ void Phasefield<dim>::print_footer_u(){
 
 }
 
-template <int dim>
-void Phasefield<dim>::get_error_residual(Error& error_residual){
-
-    BlockVector<double> err_res(dofs_per_block_m);
-    for (unsigned int i=0;i<dof_handler_m.n_dofs();++i) {
-        if(!constraints_m.is_constrained(i)){
-            err_res(i)=system_rhs_m(i);
-           }
-        }
-    error_residual.norm = err_res.l2_norm();
-}
-
+/*Calculate error residual from system_rhs for d*/
 template <int dim>
 void Phasefield<dim>::get_error_residual_d(Error& error_residual){
 
@@ -1102,6 +1102,7 @@ void Phasefield<dim>::get_error_residual_d(Error& error_residual){
     error_residual.d = err_res.block(d_dof_m).l2_norm();
 }
 
+/*Calculate error residual from system_rhs for u*/
 template <int dim>
 void Phasefield<dim>::get_error_residual_u(Error& error_residual){
 
@@ -1116,6 +1117,7 @@ void Phasefield<dim>::get_error_residual_u(Error& error_residual){
     error_residual.u = err_res.block(u_dof_m).l2_norm();
 }
 
+/*Calculate newton error for d*/
 template <int dim>
 void Phasefield<dim>::get_newton_update_error_d(const BlockVector<double> &newton_update
 					                                      ,Error& error_update){
@@ -1130,6 +1132,7 @@ void Phasefield<dim>::get_newton_update_error_d(const BlockVector<double> &newto
     error_update.d = err_update.block(d_dof_m).l2_norm();
 }
 
+/*Calculate newton error for u*/
 template <int dim>
 void Phasefield<dim>::get_newton_update_error_u(const BlockVector<double> &newton_update
 					     ,Error& error_update){
@@ -1144,6 +1147,7 @@ void Phasefield<dim>::get_newton_update_error_u(const BlockVector<double> &newto
     error_update.u = err_update.block(u_dof_m).l2_norm();
 }
 
+/*!Read mesh from external ABAQUS file*/
 template <int dim>
 void Phasefield<dim>::import_mesh(const AllParameters &param){
 
@@ -1179,6 +1183,7 @@ void Phasefield<dim>::import_mesh(const AllParameters &param){
     set_boundary_id(param);
 }
 
+/*!Write output into files*/
 template <int dim>
 void Phasefield<dim>::output_results (const AllParameters &param,unsigned int cycle) const
 {
@@ -1221,7 +1226,7 @@ void Phasefield<dim>::output_results (const AllParameters &param,unsigned int cy
 }
 
   
-
+/*Data member function containing time loop*/
 template <int dim>
 void Phasefield<dim>::run(const AllParameters &param){
 
@@ -1239,7 +1244,7 @@ void Phasefield<dim>::run(const AllParameters &param){
     current_time_m = param.time.start_time;
     unsigned int current_timestep = 0;
 
-    //Local Pre-refinement for Tension test
+    /*Local Pre-refinement for Tension test*/
     for(unsigned int i=0;i<param.geometrymodel.lc_ref;++i)
     {
     typename DoFHandler<dim>::active_cell_iterator cell =
@@ -1281,7 +1286,7 @@ void Phasefield<dim>::run(const AllParameters &param){
     solution_delta.reinit(dofs_per_block_m);
     }
 
-    //Phase-field Induced crack
+    /*Phase-field Induced crack*/
     if(param.mod_strategy.strategy=="P_I")
     {
       double min_cell_diameter = GridTools::minimal_cell_diameter(triangulation_m);
@@ -1318,9 +1323,7 @@ void Phasefield<dim>::run(const AllParameters &param){
 	std::cout<<"Parameter Newton: res tol_d: "<<param.newtonraphson.res_tol_d<<std::endl;
 	std::cout<<"Parameter Newton: new_upd tol_u: "<<param.newtonraphson.nu_tol_u<<std::endl;
 	std::cout<<std::endl;
-
-///////////////////////
-     
+///////////////////////     
 
     unsigned int new_iter=0;
     double prev_delta_t = 0; 

@@ -2,7 +2,7 @@
 
 using namespace dealii;
 
-//Print 4th Order Symmetric Tensor
+/*Print 4th Order Symmetric Tensor*/
 template <int dim>
 void print_tensor(const SymmetricTensor<4,dim> &C){    
 std::cout << "i" << "\t" <<"j" << "\t"<< "k" << "\t"<< "l" <<std::endl;
@@ -14,7 +14,7 @@ for(unsigned int i=0;i<dim;++i)
         
 }
 
-//Print 4th Order Tensor
+/*Print 4th Order Tensor*/
 template <int dim>
 void print_tensor(const Tensor<4,dim> &C){
 std::cout << "i" << "\t" <<"j" << "\t"<< "k" << "\t"<< "l" <<std::endl;
@@ -26,7 +26,7 @@ for(unsigned int i=0;i<dim;++i)
         
 }
 
-//Print 2nd Order Symmetric Tensor
+/*Print 2nd Order Symmetric Tensor*/
 template <int dim>
 void print_tensor(const SymmetricTensor<2,dim> &C){
 for(unsigned int i=0;i<dim;++i){
@@ -36,7 +36,7 @@ for(unsigned int i=0;i<dim;++i){
 }
 }
 
-//Print 2nd Order Tensor
+/*Print 2nd Order Tensor*/
 template <int dim>
 void print_tensor(const Tensor<2,dim> &C){
 for(unsigned int i=0;i<dim;++i){
@@ -45,7 +45,7 @@ for(unsigned int i=0;i<dim;++i){
 	std::cout<<std::endl;       
 }
 }
-
+/*Returns a biaxial strain*/
 template <int dim>
 SymmetricTensor<2,dim> biaxial(){
         SymmetricTensor<2,dim> b;
@@ -60,7 +60,7 @@ SymmetricTensor<2,dim> biaxial(){
 return b;
 }
 
-//Returns a uniaxial strain
+/*Returns a uniaxial strain*/
 template <int dim>
 SymmetricTensor<2,dim> uniaxial(){
         SymmetricTensor<2,dim> u;
@@ -74,7 +74,7 @@ SymmetricTensor<2,dim> uniaxial(){
 return u;
 
 }
-
+/*To define the definition of sign funciton*/
 double get_sign(double x)
 {
         double sgn_x;
