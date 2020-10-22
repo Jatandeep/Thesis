@@ -141,23 +141,23 @@ void Phasefield<dim>::set_boundary_id(const AllParameters &param)
               if(param.mod_strategy.comp_strategy=="lefm")
               {
                 //left boundary
-                if ((face_center[0] < (-param.geometrymodel.b/2)/*-0.5*/+tol_machine) 
-                    && (face_center[0] > (-param.geometrymodel.b/2)/*-0.5*/-tol_machine)
+                if ((face_center[0] < (-param.geometrymodel.b/2)+tol_machine) 
+                    && (face_center[0] > (-param.geometrymodel.b/2)-tol_machine)
                    )
                   cell->face(f)->set_boundary_id(1);
 		            //right boundary
-                else if ((face_center[0] < (param.geometrymodel.b/2)/*0.5*/+tol_machine) 
-                        && (face_center[0] > (param.geometrymodel.b/2)/*0.5*/-tol_machine)
+                else if ((face_center[0] < (param.geometrymodel.b/2)+tol_machine) 
+                        && (face_center[0] > (param.geometrymodel.b/2)-tol_machine)
                         )
                   cell->face(f)->set_boundary_id(2);
 		            // bottom boundary
-                else if ((face_center[1] < (-param.geometrymodel.b/2)/*-0.5*/+tol_machine) 
-                        && (face_center[1] > (-param.geometrymodel.b/2)/*-0.5*/-tol_machine)
+                else if ((face_center[1] < (-param.geometrymodel.b/2)+tol_machine) 
+                        && (face_center[1] > (-param.geometrymodel.b/2)-tol_machine)
                         )
                   cell->face(f)->set_boundary_id(3);
               	// top boundary
-                else if ((face_center[1] < (param.geometrymodel.b/2)/*0.5*/+tol_machine) 
-                        && (face_center[1] > (param.geometrymodel.b/2)/*0.5*/-tol_machine)
+                else if ((face_center[1] < (param.geometrymodel.b/2)+tol_machine) 
+                        && (face_center[1] > (param.geometrymodel.b/2)-tol_machine)
                         )
                   cell->face(f)->set_boundary_id(4);
               }   
