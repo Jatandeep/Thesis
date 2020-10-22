@@ -1,6 +1,7 @@
 #pragma once
-
-#include "../include/ElasticProblem.h"
+//#include "../include/ElasticProblem.h"
+//#include "../include/Phasefield.h"
+#include "../include/PhasefieldSMP.h"
 
 template<int dim>
 void print_tensor(const dealii::SymmetricTensor<4,dim>&C);
@@ -19,4 +20,6 @@ dealii::SymmetricTensor<2,dim> biaxial();
 
 template <int dim>
 dealii::SymmetricTensor<2,dim> uniaxial();
+
+double get_sign(double x);
 

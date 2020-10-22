@@ -2,33 +2,39 @@
 ##################  Geometry  ##################
 
 subsection Geometry Model
-    set Mesh File = ../thesis/meshes/Job-2.inp
-    set Global refinement = 4
+    set Mesh File = ../thesis/meshes/Tension_left_lefm_1.inp #../thesis/meshes/Tension_left_10.inp #../thesis/meshes/Shear_left_2.inp # # # # # #  #  #../thesis/meshes/Elastic.inp  
+    set Global refinement = 3 #0 #3 #9 #0 #4    
+    set Local refinement =  6 #0 #8 # 6 #4  
     set Act_ref = 0.3
     set Act_cors = 0.03
+    set Grid scale = 1e-3 
 end
 
 ###################  Material  ##################
 
 subsection Material Model
-    set Elastic modulus = 6000
+    set Elastic modulus = 1
     set Poisson ratio = 0.3
-    set Lambda = 1
-    set Mu = 1
+    set Lambda = 121.15e+3  
+    set Mu = 80.77e+3 
+    set Viscosity = 0 #1e-3 #0 #0.5e-1 
 end
 
 ##################  FE System  #####################
 
 subsection FE System
     set Finite element degree = 1
-    set Quad order = 2
+    set Quad order = 2 
 end
 
 ############  Non Linear System  ##################
 
 subsection Newton Raphson
-    set Max newton iterations = 10
-    set Residual tolerance = 1e-7
+    set Max newton iterations = 50 
+    set Residual tolerance u = 1e-6 #1e-7 #  
+    set Residual tolerance d = 1e-6 #1e-7 #  
+    set Newton update tolerance u = 1e-6  
+    set Newton update tolerance d = 1 #1e-9
 end
 
 ################  Linear Solver  ##################
@@ -41,9 +47,44 @@ end
 ###################  Time   ##################
 
 subsection Time
-    set Starting time = 0
-    set End time = 1
-    set Delta time = 0.1
+    set Starting time = 0.0
+    set End time = 21e-3 #6.5e-3 #15.5e-3 # #35e-3 # #4e-3 #100e-3 #
+    set Delta time  =  1e-5     
+    set Delta time final = 1e-6  
+    set Time change interval = 5e-3 
     set Time tolerance = 1e-6
+    set Output frequency = 20 #200 #500 
+    set Alpha = 1e-1
+    set Beta = 1e-4
 end
+
+################## Phase Field ###############
+
+subsection PhaseField
+    set Critical energy release rate = 2.7
+    set Length scale parameter = 0.0075 #0.015 #  
+    set Small positive parameter = 1e-10 
+    set Total displacement =  21e-3 #6.5e-3 #15.5e-3 #35e-3 #4e-3
+    set Staggered Tolerance = 1e-6
+end
+
+############## Test Case ###################
+subsection TestCase
+    set Test case = tension #shear #  
+end
+
+########### Boundary Conditions################
+subsection BoundaryConditions
+    set Tension x axis bottom = fixed
+    set Tension x axis top = free
+end
+
+########### Modeling Strategy################
+subsection ModelingStrategy
+    set Initial crack strategy = hybrid #phasefield #mesh   
+    set Computing strategy = lefm #normal  
+    set Target factor fracture toughness = 2
+    set Target steps fracture toughness = 1000
+end
+
 

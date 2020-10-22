@@ -6,10 +6,18 @@
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/sparse_matrix.h>
+#include <deal.II/lac/sparse_direct.h>
+#include <deal.II/lac/sparse_ilu.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/precondition.h>
 #include <deal.II/lac/constraint_matrix.h>
+#include <deal.II/lac/trilinos_precondition.h>
+#include <deal.II/lac/trilinos_solver.h>
+#include <deal.II/lac/sparse_direct.h>
+#include <deal.II/lac/trilinos_block_sparse_matrix.h>
+#include <deal.II/lac/trilinos_sparse_matrix.h>
+
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_refinement.h>
@@ -109,21 +117,22 @@ namespace thesis
           {
               Error()
               :
-              u(1.0)
+              u(1.0),d(1.0)
               {}
 
               void reset()
               {
                   u = 1.0;
+		  d = 1.0;
               }
               void normalize(const Error &err)
               {
                   if (err.u != 0.0)
-                  {
-                      u /= err.u;
-                  }
+                    u /= err.u;
+                  if(err.d !=0.0)
+		    d /= err.d;
               }
-              double u;
+              double u,d;
           };
 
       Error error_residual, error_residual_0, error_residual_norm;

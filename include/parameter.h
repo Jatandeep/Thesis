@@ -11,8 +11,8 @@ namespace thesis
     class GeometryModel{
     public:
         std::string meshfile;
-	double act_ref, act_cors;
-	unsigned int gl_ref;
+	double act_ref, act_cors,grid_scale;
+	unsigned int gl_ref,lc_ref;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
@@ -23,6 +23,7 @@ namespace thesis
         double elastic_mod;
         double poisson_ratio;
         double lambda,mu;
+	double viscosity;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
@@ -43,7 +44,7 @@ namespace thesis
     class NewtonRaphson{
     public:
         unsigned int max_new_ite;
-        double res_tol;
+        double res_tol_u,res_tol_d,nu_tol_u,nu_tol_d;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
@@ -62,7 +63,42 @@ namespace thesis
     class Time{
     public:
         double start_time, end_time;
-        double delta_t, time_tol;
+        double delta_t, time_tol,delta_t_f,time_change_interval;
+	unsigned int op_freq;
+        double alpha,beta;
+
+        static void declare_param(dealii::ParameterHandler& prm);
+        void parse_param(dealii::ParameterHandler &prm);
+    };
+	
+    class PhaseFieldMethod{
+    public:
+        double g_c,l,k,u_total,st_tol;
+       
+        static void declare_param(dealii::ParameterHandler& prm);
+        void parse_param(dealii::ParameterHandler &prm);
+    };
+
+    class TestCase{
+    public:
+        std::string test;
+
+        static void declare_param(dealii::ParameterHandler& prm);
+        void parse_param(dealii::ParameterHandler &prm);
+    };
+
+    class BoundaryConditions{
+    public:
+        std::string uxb,uxt;
+
+        static void declare_param(dealii::ParameterHandler& prm);
+        void parse_param(dealii::ParameterHandler &prm);
+    };
+
+    class ModelingStrategy{
+    public:
+        std::string strategy,comp_strategy;
+        double fac_ft,steps_ft;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);
@@ -75,9 +111,13 @@ namespace thesis
         FESys fesys;
         GeometryModel geometrymodel;
         MaterialModel materialmodel;
-	NewtonRaphson newtonraphson;
-	LinearSolver linearsolver;
-	Time time;	
+        NewtonRaphson newtonraphson;
+        LinearSolver linearsolver;
+        Time time;	
+        PhaseFieldMethod pf;
+        TestCase test_case;
+        BoundaryConditions bc;
+        ModelingStrategy mod_strategy;
 
         static void declare_param(dealii::ParameterHandler& prm);
         void parse_param(dealii::ParameterHandler &prm);

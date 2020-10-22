@@ -12,7 +12,7 @@ template <int dim>
 ElasticProblem<dim>::ElasticProblem(const AllParameters &param)
   : fe_m(FESystem<dim>(FE_Q<dim>(param.fesys.fe_degree),dim),1,
 	FE_Q<dim>(param.fesys.fe_degree),1)
-  , quadrature_formula_m(param.fesys.fe_degree+1)
+  , quadrature_formula_m(param.fesys.quad_order)
   , u_extractor(u_dof_start_m)
   , d_extractor(d_dof_start_m)
   , dofs_per_block_m(n_blocks_m)
@@ -114,9 +114,7 @@ void ElasticProblem<dim>::assemble_system (const AllParameters &param,BlockVecto
   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
   SymmetricTensor<4,dim> BigC;
-  SymmetricTensor<4,dim> Big_C;
-  Big_C = get_const_BigC<dim>(param.materialmodel.lambda,param.materialmodel.mu);
-
+  
   for (const auto &cell : dof_handler_m.active_cell_iterators())
     {
       cell_matrix = 0;
@@ -181,7 +179,7 @@ void ElasticProblem<dim>::assemble_body_forces(const AllParameters &param)
   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
   std::vector<Vector<double> >      rhs_values (n_q_points,Vector<double>(dim+1));
-  const Others<dim> right_hand_side;
+  const ElasticBodyForce<dim> right_hand_side;
 
   for (const auto &cell : dof_handler_m.active_cell_iterators())
     {
@@ -199,7 +197,7 @@ void ElasticProblem<dim>::assemble_body_forces(const AllParameters &param)
                 const unsigned int
                 component_i = fe_m.system_to_component_index(i).first;
                 cell_rhs(i) += fe_values.shape_value(i,q) *
-                               rhs_values[q][component_i] * /* step_fraction* */
+                               rhs_values[q][component_i] * param.time.delta_t* /* step_fraction**/ 
                                fe_values.JxW(q);
             }
 
@@ -244,7 +242,7 @@ void ElasticProblem<dim>::solve_nonlinear_newton(const AllParameters &param,
         error_residual_norm = error_residual;
         error_residual_norm.normalize(error_residual_0);
 
-        if(new_iter > 0 && error_residual_norm.u < param.newtonraphson.res_tol){
+        if(new_iter > 0 && (error_residual_norm.u < 1e-7 || error_residual.u <1e-7) /*param.newtonraphson.res_tol*/){
             std::cout<<"Converged"<<std::endl;
             print_footer();
             break;
@@ -257,7 +255,7 @@ void ElasticProblem<dim>::solve_nonlinear_newton(const AllParameters &param,
 
         std::cout << " | " << std::fixed << std::setprecision(3) << std::setw(7)
                             << std::scientific << lin_solver_output.first << "  "
-                            << lin_solver_output.second << "  " << error_residual_norm.u
+                            << lin_solver_output.second << "  " <<error_residual.u<<"  "<< error_residual_norm.u
                             << "  " << std::endl;
 
     }
@@ -282,6 +280,12 @@ std::pair<unsigned int,double> ElasticProblem<dim>::solve_linear_sys(const AllPa
   preconditioner.initialize(tangent_matrix_m.block(u_dof_m,u_dof_m), param.linearsolver.relax_prm);
   cg.solve (tangent_matrix_m.block(u_dof_m,u_dof_m), newton_update.block(u_dof_m), system_rhs_m.block(u_dof_m),preconditioner);
 
+/*
+  SparseDirectUMFPACK k_uu;
+  k_uu.initialize(tangent_matrix_m.block(u_dof_m,u_dof_m));
+  k_uu.vmult(newton_update.block(u_dof_m),system_rhs_m.block(u_dof_m));
+*/
+   
   lin_ite = solver_control.last_step();
   lin_res = solver_control.last_value();
 
@@ -383,8 +387,8 @@ void ElasticProblem<dim>::print_header(){
         }
         std::cout << std::endl;
 
-        std::cout << "           SOLVER STEP            "
-                    << " |  LIN_IT   LIN_RES    RES_NORM    "
+        std::cout << "  SOLVER STEP  "
+                    << " |  LIN_IT   LIN_RES   RES    RES_NORM    "
                     << std::endl;
 
         for (unsigned int i = 0; i < l_width; ++i)
@@ -463,23 +467,35 @@ void ElasticProblem<dim>::run(const AllParameters &param){
     std::cout<<"FESystem:n_components:"<<fe_m.n_components()<<std::endl;
     std::cout<<"FESystem:n_base_elements:"<<fe_m.n_base_elements()<<std::endl;
 
-    while (current_time < param.time.end_time - present_time_tol)
+    output_results(current_time);
+    current_time += param.time.delta_t;
+
+    solution_delta.reinit(dofs_per_block_m);
+
+    while (current_time < param.time.end_time + present_time_tol)
     {
-        if(current_time >param.time.start_time)
+
+/*	if(current_time == param.time.delta_t)
+	{
+	SymmetricTensor<2,dim> dummy;
+	comparison(param.materialmodel.lambda,param.materialmodel.mu,dummy);
+	exit(0);
+*/	}
+
+/*        if(current_time >param.time.delta_t)
 	{
             	refine_grid(param);
 		setup_system();
 		solution_delta.reinit(dofs_per_block_m);
 	}
-        
+*/
 	solution_delta = 0.0;
         solve_nonlinear_newton(param,solution_delta);
-        solution_m = solution_delta;
+        solution_m += solution_delta;
         output_results(current_time);
 	
         std::cout<<" solution.norm():"<<solution_m.l2_norm()<<std::endl;
-	std::cout<<"solution at node(10):"<<solution_m(10)<<std::endl;
-	
+	std::cout<<std::endl;
         current_time += param.time.delta_t;
     }
 

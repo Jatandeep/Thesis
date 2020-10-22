@@ -13,8 +13,10 @@ void GeometryModel::declare_param(ParameterHandler &prm){
     {
         prm.declare_entry("Mesh File", "grid.inp", Patterns::Anything());
         prm.declare_entry("Global refinement", "0", Patterns::Integer());
+        prm.declare_entry("Local refinement", "0", Patterns::Integer());
         prm.declare_entry("Act_ref", "0.3", Patterns::Double(0));
         prm.declare_entry("Act_cors", "0.03", Patterns::Double(0));
+        prm.declare_entry("Grid scale", "1", Patterns::Double(0));
     }
     prm.leave_subsection();
 }
@@ -24,8 +26,10 @@ void GeometryModel::parse_param(ParameterHandler &prm){
     {
         meshfile = prm.get("Mesh File");
 	gl_ref = prm.get_integer("Global refinement");
-        act_ref = prm.get_double("Act_ref");
+       	lc_ref = prm.get_integer("Local refinement");
+	act_ref = prm.get_double("Act_ref");
         act_cors = prm.get_double("Act_cors");
+   	grid_scale = prm.get_double("Grid scale");
     }
     prm.leave_subsection();
 }
@@ -37,6 +41,8 @@ void MaterialModel::declare_param(ParameterHandler &prm){
         prm.declare_entry("Poisson ratio", "0.3", Patterns::Anything());
         prm.declare_entry("Lambda", "1", Patterns::Double(0));
         prm.declare_entry("Mu", "1", Patterns::Double(0));
+        prm.declare_entry("Viscosity", "1", Patterns::Double(0));
+
     }
     prm.leave_subsection();
 }
@@ -48,6 +54,7 @@ void MaterialModel::parse_param(ParameterHandler &prm){
         poisson_ratio = prm.get_double("Poisson ratio");
         lambda = prm.get_double("Lambda");
         mu = prm.get_double("Mu");
+        viscosity = prm.get_double("Viscosity");
     }
     prm.leave_subsection();
 }
@@ -76,7 +83,10 @@ void NewtonRaphson::declare_param(ParameterHandler &prm){
     prm.enter_subsection("Newton Raphson");
     {
         prm.declare_entry("Max newton iterations", "10", Patterns::Anything());
-        prm.declare_entry("Residual tolerance", "1", Patterns::Double(0));
+        prm.declare_entry("Residual tolerance u", "1", Patterns::Double(0));
+        prm.declare_entry("Residual tolerance d", "1", Patterns::Double(0));
+        prm.declare_entry("Newton update tolerance u", "1", Patterns::Double(0));
+        prm.declare_entry("Newton update tolerance d", "1", Patterns::Double(0));
     }
     prm.leave_subsection();
 }
@@ -85,7 +95,10 @@ void NewtonRaphson::parse_param(ParameterHandler &prm){
     prm.enter_subsection("Newton Raphson");
     {
         max_new_ite = prm.get_integer("Max newton iterations");
-        res_tol = prm.get_double("Residual tolerance");
+        res_tol_u = prm.get_double("Residual tolerance u");
+        res_tol_d = prm.get_double("Residual tolerance d");
+        nu_tol_u = prm.get_double("Newton update tolerance u");
+        nu_tol_d = prm.get_double("Newton update tolerance d");
     }
     prm.leave_subsection();
 }
@@ -115,7 +128,12 @@ void Time::declare_param(ParameterHandler &prm){
         prm.declare_entry("Starting time", "0", Patterns::Double(0));
         prm.declare_entry("End time", "1", Patterns::Double(0));
         prm.declare_entry("Delta time", "0.1", Patterns::Double(0));
+        prm.declare_entry("Delta time final", "0.1", Patterns::Double(0));
+	prm.declare_entry("Time change interval", "1", Patterns::Anything());
         prm.declare_entry("Time tolerance", "1", Patterns::Anything());
+        prm.declare_entry("Output frequency", "5", Patterns::Integer());
+        prm.declare_entry("Alpha", "1", Patterns::Double(0));
+        prm.declare_entry("Beta", "1", Patterns::Double(0));
     }
     prm.leave_subsection();
 }
@@ -126,11 +144,94 @@ void Time::parse_param(ParameterHandler &prm){
         start_time = prm.get_double("Starting time");
         end_time = prm.get_double("End time");
         delta_t = prm.get_double("Delta time");
+   	delta_t_f = prm.get_double("Delta time final");
+	time_change_interval = prm.get_double("Time change interval");
         time_tol = prm.get_double("Time tolerance");
+        op_freq = prm.get_double("Output frequency");
+        alpha = prm.get_double("Alpha");
+        beta = prm.get_double("Beta");
     }
     prm.leave_subsection();
 }
 
+
+void PhaseFieldMethod::declare_param(ParameterHandler &prm){
+    prm.enter_subsection("PhaseField");
+    {
+        prm.declare_entry("Critical energy release rate", "1", Patterns::Double(0));
+        prm.declare_entry("Length scale parameter", "1", Patterns::Double(0));
+	prm.declare_entry("Small positive parameter", "1", Patterns::Double(0));
+	prm.declare_entry("Total displacement", "1", Patterns::Double(0));
+    prm.declare_entry("Staggered Tolerance", "1", Patterns::Double(0));
+    }
+    prm.leave_subsection();
+}
+
+void PhaseFieldMethod::parse_param(ParameterHandler &prm){
+    prm.enter_subsection("PhaseField");
+    {
+        g_c = prm.get_double("Critical energy release rate");
+        l = prm.get_double("Length scale parameter");
+        k = prm.get_double("Small positive parameter");
+	u_total = prm.get_double("Total displacement");
+    st_tol = prm.get_double("Staggered Tolerance");
+    }
+    prm.leave_subsection();
+}
+
+void TestCase::declare_param(ParameterHandler &prm){
+    prm.enter_subsection("TestCase");
+    {
+        prm.declare_entry("Test case","tension",Patterns::Selection("tension|shear|penny_shaape_crack"));
+    }
+    prm.leave_subsection();
+}
+void TestCase::parse_param(ParameterHandler &prm){
+    prm.enter_subsection("TestCase");
+    {
+        test = prm.get("Test case");
+    }
+    prm.leave_subsection();
+}
+
+void BoundaryConditions::declare_param(ParameterHandler &prm){
+    prm.enter_subsection("BoundaryConditions");
+    {
+        prm.declare_entry("Tension x axis bottom","fixed",Patterns::Selection("fixed|free"));
+        prm.declare_entry("Tension x axis top","free",Patterns::Selection("fixed|free"));
+    }
+    prm.leave_subsection();
+}
+void BoundaryConditions::parse_param(ParameterHandler &prm){
+    prm.enter_subsection("BoundaryConditions");
+    {
+        uxb = prm.get("Tension x axis bottom");
+        uxt = prm.get("Tension x axis top");
+    }
+    prm.leave_subsection();
+}
+
+void ModelingStrategy::declare_param(ParameterHandler &prm){
+    prm.enter_subsection("ModelingStrategy");
+    {
+        prm.declare_entry("Initial crack strategy","mesh",Patterns::Selection("mesh|phasefield|hybrid"));
+        prm.declare_entry("Computing strategy","normal",Patterns::Selection("normal|lefm"));
+        prm.declare_entry("Target factor fracture toughness", "2", Patterns::Double(0));
+        prm.declare_entry("Target steps fracture toughness", "1000", Patterns::Double(0));
+    }
+    prm.leave_subsection();
+}
+void ModelingStrategy::parse_param(ParameterHandler &prm){
+    prm.enter_subsection("ModelingStrategy");
+    {
+        strategy = prm.get("Initial crack strategy");
+        comp_strategy = prm.get("Computing strategy");
+        fac_ft = prm.get_double("Target factor fracture toughness");
+        steps_ft = prm.get_double("Target steps fracture toughness");
+
+    }
+    prm.leave_subsection();
+}
 
 AllParameters::AllParameters(const std::string &filename){
     ParameterHandler prm;
@@ -146,6 +247,10 @@ void AllParameters::declare_param(ParameterHandler &prm){
     NewtonRaphson::declare_param(prm);
     LinearSolver::declare_param(prm);
     Time::declare_param(prm);
+    PhaseFieldMethod::declare_param(prm);
+    TestCase::declare_param(prm);
+    BoundaryConditions::declare_param(prm);
+    ModelingStrategy::declare_param(prm);
 }
 
 void AllParameters::parse_param(ParameterHandler &prm){
@@ -155,5 +260,9 @@ void AllParameters::parse_param(ParameterHandler &prm){
     newtonraphson.parse_param(prm);
     linearsolver.parse_param(prm);
     time.parse_param(prm);
+    pf.parse_param(prm);
+    test_case.parse_param(prm);
+    bc.parse_param(prm);
+    mod_strategy.parse_param(prm);
 }
 
