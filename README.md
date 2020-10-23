@@ -24,8 +24,8 @@ We will take an example and explain the meaning of that parameter file.
 5. **mesh01** -> Corresponding mesh file name.
 6. **uxbfxd-uxtfree** -> **Optional** parameter showing boundary conditions for tension test. If not mentioned, **uxbfxd-uxtfree** is assumed. (**uxbfxd-uxtfxd** | **uxbfxd-uxtfree** | **uxbfree-uxtfree**)
 
--You can find parameter files relation with thesis report figures [here](Figures.md)
--Detailed explanation of variables to be given in parameter file are defined [here](Parameter.md) 
+- You can find parameter files relation with thesis report figures [here](Figures.md)
+- Detailed explanation of variables to be given in parameter file is given [here](Parameter.md) 
 
 
 # How to run
