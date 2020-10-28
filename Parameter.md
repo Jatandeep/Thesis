@@ -46,7 +46,7 @@
 - **Viscosity**-> Artificial stiffness added in the equations to stabilize numerical treatment. Possible values used are 0 Ns/mm^2,1e-3 Ns/mm^2,1e-2 Ns/mm^2,0.5e-1 Ns/mm^2.  
 
 # TestCase
-- **Test case**-> Parameter which decides whether test being run is tension or shear.
+- **Test case**-> Parameter which decides whether test being run is tension or shear. Possible options are **tension** and **shear**.
 
 # BoundaryConditions
 - **Tension x axis bottom**-> Boundary condition for bottom boundary in x-axis for tension test. Applicable to all cases of pre-existing crack- M_I, M_Id and P_I. 
