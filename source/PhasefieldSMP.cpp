@@ -1317,7 +1317,7 @@ void Phasefield<dim>::run(const AllParameters &param){
 	std::cout<<"Parameter delta_t: "<</*param.time.*/delta_t<<std::endl;
 	std::cout<<"Parameter end_time: "<<param.time.end_time<<std::endl;
 	std::cout<<"Parameter u_total: "<<param.pf.u_total<<std::endl;
-	std::cout<<"Parameter time change interval: "<<param.time.time_change_interval<<std::endl;
+	std::cout<<"Parameter time change point: "<<param.time.time_change_point<<std::endl;
   std::cout<<"Parameter Newton: max iterations: "<<param.newtonraphson.max_new_ite<<std::endl;
 	std::cout<<"Parameter Newton: res tol_u: "<<param.newtonraphson.res_tol_u<<std::endl;
 	std::cout<<"Parameter Newton: res tol_d: "<<param.newtonraphson.res_tol_d<<std::endl;
@@ -1384,7 +1384,7 @@ void Phasefield<dim>::run(const AllParameters &param){
         stat_file.close();
         if(param.test_case.test == "tension" && param.mod_strategy.comp_strategy=="StandardNum" )
         {
-          if(current_time_m >= param.time.time_change_interval)
+          if(current_time_m >= param.time.time_change_point)
           {
             static bool once=false;
             if(!once)

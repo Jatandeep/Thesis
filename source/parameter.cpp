@@ -127,7 +127,7 @@ void Time::declare_param(ParameterHandler &prm){
         prm.declare_entry("End time", "1", Patterns::Double(0));
         prm.declare_entry("Delta time initial", "0.1", Patterns::Double(0));
         prm.declare_entry("Delta time final", "0.1", Patterns::Double(0));
-	    prm.declare_entry("Time change interval", "1", Patterns::Anything());
+	    prm.declare_entry("Time change point", "1", Patterns::Anything());
         prm.declare_entry("Time tolerance", "1", Patterns::Anything());
         prm.declare_entry("Output frequency", "5", Patterns::Integer());
         prm.declare_entry("Time adaptivity","true",Patterns::Selection("true|false"));
@@ -145,7 +145,7 @@ void Time::parse_param(ParameterHandler &prm){
         end_time = prm.get_double("End time");
         delta_t = prm.get_double("Delta time initial");
    	    delta_t_f = prm.get_double("Delta time final");
-	    time_change_interval = prm.get_double("Time change interval");
+	    time_change_point = prm.get_double("Time change point");
         time_tol = prm.get_double("Time tolerance");
         op_freq = prm.get_double("Output frequency");
         time_adap = prm.get("Time adaptivity");

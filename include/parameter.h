@@ -60,7 +60,7 @@ namespace thesis
     class Time{
     public:
         double start_time, end_time;
-        double delta_t, time_tol,delta_t_f,time_change_interval;
+        double delta_t, time_tol,delta_t_f,time_change_point;
 	    unsigned int op_freq;
         double alpha,beta;
         std::string time_adap;

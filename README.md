@@ -7,7 +7,7 @@ Please refer to Algorithm-1 in thesis-report in order to understand the project 
 # Mesh file
 The mesh name nomenclature used in parameter files name is described below:
 1. **mesh01** -> This mesh is used for M_I and M_Id type crack in tension test and contains pre-refined mesh where crack is expected to grow with element size h = 0.001 mm (approx).(Tension_left_1.inp)
-2. **mesh02** -> This mesh is used for P_I type crack for tension test and contains pre-refined mesh where crack is to be prescribed and expected to grow with element size h = 0.001 mm (approx).(Tension_left_10.inp)
+2. **mesh02** -> This mesh is used for P_I type crack for tension test and contains pre-refined mesh where crack is to be prescribed as well as where the crack is expected to grow with element size h = 0.001 mm (approx).(Tension_left_10.inp)
 3. **mesh03** -> This mesh is used for M_I type crack for shear test and contains pre-refined mesh where crack is expected to grow with element size h = 0.002 mm (approx).(Shear_left_2.inp)
 4. **mesh04** -> This mesh is used for M_I and M_Id type crack for lefm scenarios and subsequent global and local refinement will be implemented in the program giving us a element size of h = 0.001 mm(approx).(Tension_left_lefm_1.inp)
 5. **mesh05** -> This mesh is used for P_I type crack for lefm scenarios and contains a pre-refined mesh where crack is to be prescribed and expected to grow with element size of h = 0.001 mm(approx).(Tension_left_lefm_2.inp)

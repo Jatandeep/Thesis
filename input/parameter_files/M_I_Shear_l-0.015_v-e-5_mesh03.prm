@@ -49,7 +49,7 @@ subsection Time
     set End time = 20e-3 
     set Delta time initial =  1e-5     
     set Delta time final = 1e-6  
-    set Time change interval = 5e-3 
+    set Time change point = 5e-3 
     set Time tolerance = 1e-6
     set Output frequency = 1 
     set Time adaptivity = true
