@@ -224,7 +224,7 @@ void ModelingStrategy::declare_param(ParameterHandler &prm){
     prm.enter_subsection("ModelingStrategy");
     {
         prm.declare_entry("Initial crack strategy","M_I",Patterns::Selection("M_I|P_I|M_Id"));
-        prm.declare_entry("Computing strategy","StandardNum",Patterns::Selection("StandardNum|lefm"));
+        prm.declare_entry("Problem type","benchmarks",Patterns::Selection("benchmarks|lefm_mode_I"));
         prm.declare_entry("Target factor fracture toughness", "2", Patterns::Double(0));
         prm.declare_entry("Target steps fracture toughness", "1000", Patterns::Double(0));
     }
@@ -235,7 +235,7 @@ void ModelingStrategy::parse_param(ParameterHandler &prm){
     prm.enter_subsection("ModelingStrategy");
     {
         strategy = prm.get("Initial crack strategy");
-        comp_strategy = prm.get("Computing strategy");
+        comp_strategy = prm.get("Problem type");
         fac_ft = prm.get_double("Target factor fracture toughness");
         steps_ft = prm.get_double("Target steps fracture toughness");
 

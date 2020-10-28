@@ -81,7 +81,7 @@ end
 ########### Modeling Strategy################
 subsection ModelingStrategy
     set Initial crack strategy = M_I   
-    set Computing strategy =  lefm    
+    set Problem type =  lefm_mode_I    
     set Target factor fracture toughness = 2
     set Target steps fracture toughness = 1000
 end

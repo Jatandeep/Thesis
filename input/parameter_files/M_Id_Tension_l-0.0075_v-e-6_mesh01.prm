@@ -81,7 +81,7 @@ end
 ########### Modeling Strategy################
 subsection ModelingStrategy
     set Initial crack strategy = M_Id   
-    set Computing strategy =  StandardNum    
+    set Problem type =  benchmarks    
     set Target factor fracture toughness = 2
     set Target steps fracture toughness = 1000
 end

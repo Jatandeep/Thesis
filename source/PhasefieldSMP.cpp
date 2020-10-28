@@ -116,7 +116,7 @@ void Phasefield<dim>::set_boundary_id(const AllParameters &param)
             if (cell->face(f)->at_boundary())
             {
 		          //////////////////////For (0,b)x(0,b)
-              if(param.mod_strategy.comp_strategy=="StandardNum")
+              if(param.mod_strategy.comp_strategy=="benchmarks")
               {
 		            //left boundary
                 if ((face_center[0] < 0.0+tol_machine) && (face_center[0] > 0.0-tol_machine)
@@ -138,7 +138,7 @@ void Phasefield<dim>::set_boundary_id(const AllParameters &param)
                   cell->face(f)->set_boundary_id(4);
               }
               //////////////////////For (-b/2,b/2)x(-b/2,b/2)
-              if(param.mod_strategy.comp_strategy=="lefm")
+              if(param.mod_strategy.comp_strategy=="lefm_mode_I")
               {
                 //left boundary
                 if ((face_center[0] < (-param.geometrymodel.b/2)+tol_machine) 
@@ -865,7 +865,7 @@ void Phasefield<dim>::make_constraints_u(unsigned int &itr,const double load_rat
    //Tension test
    if(param.test_case.test == "tension")
    {
-     if(param.mod_strategy.comp_strategy=="StandardNum")
+     if(param.mod_strategy.comp_strategy=="benchmarks")
      {
       { 
       std::vector<bool> component_mask1(dim+1, false);
@@ -897,7 +897,7 @@ void Phasefield<dim>::make_constraints_u(unsigned int &itr,const double load_rat
       }
      }
       
-     if(param.mod_strategy.comp_strategy=="lefm")
+     if(param.mod_strategy.comp_strategy=="lefm_mode_I")
       {         
         
         std::vector<bool> component_mask(dim+1, false);
@@ -1255,7 +1255,7 @@ void Phasefield<dim>::run(const AllParameters &param){
             for (unsigned int vertex = 0;vertex < GeometryInfo<dim>::vertices_per_cell; ++vertex)
               {
                 Tensor<1, dim> cell_vertex = (cell->vertex(vertex));
-                if(param.mod_strategy.comp_strategy=="StandardNum")
+                if(param.mod_strategy.comp_strategy=="benchmarks")
                 {
                   if (cell_vertex[0] <= param.geometrymodel.b /*1.0*/ 
                       && cell_vertex[0] >= ((100-param.geometrymodel.x)/100)*(param.geometrymodel.a)/* 0.48*/
@@ -1266,7 +1266,7 @@ void Phasefield<dim>::run(const AllParameters &param){
                       break;
                   }
                 }
-                else if(param.mod_strategy.comp_strategy=="lefm")
+                else if(param.mod_strategy.comp_strategy=="lefm_mode_I")
                 {
                   if (cell_vertex[0] <= (param.geometrymodel.b/2)/*0.5*/ 
                       && cell_vertex[0] >= -(param.geometrymodel.x*param.geometrymodel.a/100)/*-0.1*/ 
@@ -1382,7 +1382,7 @@ void Phasefield<dim>::run(const AllParameters &param){
         statistics.write_text (stat_file,
                                     TableHandler::simple_table_with_separate_column_description);
         stat_file.close();
-        if(param.test_case.test == "tension" && param.mod_strategy.comp_strategy=="StandardNum" )
+        if(param.test_case.test == "tension" && param.mod_strategy.comp_strategy=="benchmarks" )
         {
           if(current_time_m >= param.time.time_change_point)
           {
@@ -1394,7 +1394,7 @@ void Phasefield<dim>::run(const AllParameters &param){
             }
           }
         }
-        if(param.mod_strategy.comp_strategy=="lefm")
+        if(param.mod_strategy.comp_strategy=="lefm_mode_I")
         {
           if(current_timestep>param.mod_strategy.fac_ft*param.mod_strategy.steps_ft)
           {

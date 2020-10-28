@@ -2,16 +2,18 @@
 
 This is a finite element code based in deal.II to simulate crack propagation in brittle materials using phase field model. 
 The above project has been developed for a master thesis in FAU Erlangen-Nuremebrg.
-Please refer to Algorithm-1 in thesis-report in order to understand the project completely.
+Please refer to **thesis-report** in order to understand the basic terms used in this project. Also Algorithm-1 in section 3.3 is recommended to understand the overall flow of the program.
 
 # Mesh file
+In this nomenclature, we use three pre-existing crack modeling strategies: M_I, M_Id and P_I. Reader is referred to section 2.4 in thesis-report to understand the definition and basic differences between them. mesh01, mesh02, mesh03, mesh05 and mesh06 are generated with ABAQUS and are taken as input without any subsequent changes in them. Only change is in mesh04, which is also generated in ABAQUS but is then again refined using deal.ii parameters of global and local refinements. Values of these global,local parameters and also height and length of refined areas could be found in respective parameter files of mesh04.
+
 The mesh name nomenclature used in parameter files name is described below:
-1. **mesh01** -> This mesh is used for M_I and M_Id type crack in tension test and contains pre-refined mesh where crack is expected to grow with element size h = 0.001 mm (approx).(Tension_left_1.inp)
-2. **mesh02** -> This mesh is used for P_I type crack for tension test and contains pre-refined mesh where crack is to be prescribed as well as where the crack is expected to grow with element size h = 0.001 mm (approx).(Tension_left_10.inp)
-3. **mesh03** -> This mesh is used for M_I type crack for shear test and contains pre-refined mesh where crack is expected to grow with element size h = 0.002 mm (approx).(Shear_left_2.inp)
+1. **mesh01** -> This mesh is used for M_I and M_Id type crack in **tension test** and contains pre-refined mesh where crack is expected to grow with element size h = 0.001 mm (approx).(Tension_left_1.inp)
+2. **mesh02** -> This mesh is used for P_I type crack for **tension test** and contains pre-refined mesh where crack is to be prescribed as well as where the crack is expected to grow with element size h = 0.001 mm (approx).(Tension_left_10.inp)
+3. **mesh03** -> This mesh is used for M_I type crack for **shear test** and contains pre-refined mesh where crack is expected to grow with element size h = 0.002 mm (approx).(Shear_left_2.inp)
 4. **mesh04** -> This mesh is used for M_I and M_Id type crack for lefm scenarios and subsequent global and local refinement will be implemented in the program giving us a element size of h = 0.001 mm(approx).(Tension_left_lefm_1.inp)
 5. **mesh05** -> This mesh is used for P_I type crack for lefm scenarios and contains a pre-refined mesh where crack is to be prescribed and expected to grow with element size of h = 0.001 mm(approx).(Tension_left_lefm_2.inp)
-6. **mesh06_01/02** -> This mesh is used for P_I type crack for tension test using method of single row of nodes as a crack  and is refined appropriately with local and global refinement to get element sizes of h = 0.001 mm(**mesh06-01**)and h = 0.0007 mm (**mesh06-02**) respectively.(Tension_left_7.inp)  
+6. **mesh06_01/02** -> This mesh is used for P_I type crack for **tension test** using method of single row of nodes as a crack  and is refined appropriately with local and global refinement to get element sizes of h = 0.001 mm(**mesh06-01**)and h = 0.0007 mm (**mesh06-02**) respectively.(Tension_left_7.inp)  
 
 # Parameter file
 In order to replicate the results in thesis-report, various parameter files have been added to folder named "parameter_files". 
