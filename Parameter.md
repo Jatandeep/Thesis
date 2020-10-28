@@ -3,10 +3,12 @@
 - **Global Refinement**-> Refinement of the whole mesh. Only required in lefm cases of M_I and M_Id. Other mesh files are already refined at areas expecting crack propagation.
 - **Local Refinement**-> Refinement near crack areas only. Only required in lefm cases of M_I and M_Id.
 - **Grid scale**-> Scaling parameter for the input mesh files. In our case, input ABAQUS meshes are scaled 1000 times smaller with help of this parameter.
-- **Plate dim**-> Dimension of the side of input geometry (square) in mm (denoted as a). ![Geometry image](Geometry.jpg).
-- **Crack length**-> Length of the pre-existing crack in the body in mm (denoted as b). ![Geometry image](Geometry.jpg).
-- **Ref region height perc**-> Refinement region height percentage: Input parameter as a percentage of Plate dim. Only required in lefm cases of M_I and M_Id. This height(h) is defined as length of the area above or below crack which will be refined. So total height of refined area will be 2h. ![Geometry image](Geometry.jpg).
-- **Crack tip back ref perc**-> Crack tip back refinement percentage:(denoted as x): Input parameter as a percentage of crack length. Only required in lefm cases of M_I and M_Id. This length is defined as the length of the refined area in the back of the crack tip. This parameter ensures that crack tip is surrounded by fine mesh from every direction and that refinement doesn't start abruptly from crack tip. ![Geometry image](Geometry.jpg).
+- **Plate dim**-> Dimension of the side of input geometry (square) in mm (denoted as a in figure attached below). 
+- **Crack length**-> Length of the pre-existing crack in the body in mm (denoted as b). 
+- **Ref region height perc**-> Refinement region height percentage: Input parameter as a percentage of Plate dim. Only required in lefm cases of M_I and M_Id. This height(h) is defined as length of the area above or below crack which will be refined. So total height of refined area will be 2h. 
+- **Crack tip back ref perc**-> Crack tip back refinement percentage:(denoted as x): Input parameter as a percentage of crack length. Only required in lefm cases of M_I and M_Id. This length is defined as the length of the refined area in the back of the crack tip. This parameter ensures that crack tip is surrounded by fine mesh from every direction and that refinement doesn't start abruptly from crack tip. 
+
+![Geometry image](Geometry.jpg).
 
 # Material
 - **Lambda**-> Lame parameter for assigning material properties.
