@@ -46,7 +46,7 @@ Compile with:
 ```
 and finally run with:
 ```
-  ./crack /path/to/parameter/file
+  ./pffsim /path/to/parameter/file
 ```
 
 # Helpful material
