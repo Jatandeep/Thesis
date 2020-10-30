@@ -30,8 +30,8 @@ end
 
 subsection Newton Raphson
     set Max newton iterations = 50 
-    set Residual tolerance u = 1e-7  
-    set Residual tolerance d = 1e-7  
+    set Residual tolerance u = 1e-6  
+    set Residual tolerance d = 1e-6  
     set Newton update tolerance u = 1e-6  
 end
 

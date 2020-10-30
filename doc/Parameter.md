@@ -57,5 +57,6 @@
 # ModelingStrategy
 - **Initial crack strategy**-> Pre-existing crack modeling strategy. Possible options are **M_I**, **M_Id** and **P_I**.
 - **Problem type**-> Whether we are solving standard benchmark problems or LEFM. Possible options are **benchmarks** and **lefm_mode_I**.
+- **P_I crack method**-> If strategy selected is P_I, this method decides whether single row of elements or nodes is selected as a crack. Possible options are **elements** and **nodes**. For P_I by default, elements method is selected. This option is given in parameter files only when we want to choose nodes method (which as shown in report, doesn't gives correct result).
 - **Target factor fracture toughness**-> Applicable for lefm only. Decides upto what value of K_IC should the time loop run. So for example, a value of 2 would mean we will be running the simulation until K_I becomes 2*K_IC. 
 - **Target steps fracture toughness**-> Applicable for lefm only. Decides the number of steps in which K_I should reach value of K_IC.

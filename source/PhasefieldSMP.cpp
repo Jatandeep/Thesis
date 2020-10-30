@@ -123,8 +123,8 @@ void Phasefield<dim>::set_boundary_id(const AllParameters &param)
                    )
                   cell->face(f)->set_boundary_id(1);
 		            //right boundary
-                else if ((face_center[0] < param.geometrymodel.b+tol_machine) 
-                          && (face_center[0] > param.geometrymodel.b -tol_machine)
+                else if ((face_center[0] < param.geometrymodel.a+tol_machine) 
+                          && (face_center[0] > param.geometrymodel.a -tol_machine)
                         )
                   cell->face(f)->set_boundary_id(2);
 		            // bottom boundary
@@ -132,8 +132,8 @@ void Phasefield<dim>::set_boundary_id(const AllParameters &param)
                         )
                   cell->face(f)->set_boundary_id(3);
               	// top boundary
-                else if ((face_center[1] < param.geometrymodel.b+tol_machine) 
-                          && (face_center[1] > param.geometrymodel.b-tol_machine)
+                else if ((face_center[1] < param.geometrymodel.a+tol_machine) 
+                          && (face_center[1] > param.geometrymodel.a-tol_machine)
                         )
                   cell->face(f)->set_boundary_id(4);
               }
@@ -141,23 +141,23 @@ void Phasefield<dim>::set_boundary_id(const AllParameters &param)
               if(param.mod_strategy.comp_strategy=="lefm_mode_I")
               {
                 //left boundary
-                if ((face_center[0] < (-param.geometrymodel.b/2)+tol_machine) 
-                    && (face_center[0] > (-param.geometrymodel.b/2)-tol_machine)
+                if ((face_center[0] < (-param.geometrymodel.a/2)+tol_machine) 
+                    && (face_center[0] > (-param.geometrymodel.a/2)-tol_machine)
                    )
                   cell->face(f)->set_boundary_id(1);
 		            //right boundary
-                else if ((face_center[0] < (param.geometrymodel.b/2)+tol_machine) 
-                        && (face_center[0] > (param.geometrymodel.b/2)-tol_machine)
+                else if ((face_center[0] < (param.geometrymodel.a/2)+tol_machine) 
+                        && (face_center[0] > (param.geometrymodel.a/2)-tol_machine)
                         )
                   cell->face(f)->set_boundary_id(2);
 		            // bottom boundary
-                else if ((face_center[1] < (-param.geometrymodel.b/2)+tol_machine) 
-                        && (face_center[1] > (-param.geometrymodel.b/2)-tol_machine)
+                else if ((face_center[1] < (-param.geometrymodel.a/2)+tol_machine) 
+                        && (face_center[1] > (-param.geometrymodel.a/2)-tol_machine)
                         )
                   cell->face(f)->set_boundary_id(3);
               	// top boundary
-                else if ((face_center[1] < (param.geometrymodel.b/2)+tol_machine) 
-                        && (face_center[1] > (param.geometrymodel.b/2)-tol_machine)
+                else if ((face_center[1] < (param.geometrymodel.a/2)+tol_machine) 
+                        && (face_center[1] > (param.geometrymodel.a/2)-tol_machine)
                         )
                   cell->face(f)->set_boundary_id(4);
               }   
@@ -1255,23 +1255,24 @@ void Phasefield<dim>::run(const AllParameters &param){
             for (unsigned int vertex = 0;vertex < GeometryInfo<dim>::vertices_per_cell; ++vertex)
               {
                 Tensor<1, dim> cell_vertex = (cell->vertex(vertex));
-                if(param.mod_strategy.comp_strategy=="benchmarks")
+                if(param.mod_strategy.comp_strategy=="benchmarks" && param.mod_strategy.strategy=="P_I")
                 {
-                  if (cell_vertex[0] <= param.geometrymodel.b /*1.0*/ 
-                      && cell_vertex[0] >= ((100-param.geometrymodel.x)/100)*(param.geometrymodel.a)/* 0.48*/
-                      && cell_vertex[1] <= (param.geometrymodel.b/2) + (param.geometrymodel.h*param.geometrymodel.b/100) /*0.505*/ 
-                      && cell_vertex[1] >= (param.geometrymodel.b/2) - (param.geometrymodel.h*param.geometrymodel.b/100)/*0.495*/)
+                  if (cell_vertex[0] <= param.geometrymodel.a  
+                      && cell_vertex[0] >= 0
+                      && cell_vertex[1] <= (param.geometrymodel.a/2) + (param.geometrymodel.h*param.geometrymodel.a/100)  
+                      && cell_vertex[1] >= (param.geometrymodel.a/2) - (param.geometrymodel.h*param.geometrymodel.a/100))
                   {
                       cell->set_refine_flag();
                       break;
                   }
                 }
-                else if(param.mod_strategy.comp_strategy=="lefm_mode_I")
+                else if(param.mod_strategy.comp_strategy=="lefm_mode_I" && (param.mod_strategy.strategy=="M_I" 
+                                                                            || param.mod_strategy.strategy=="M_Id"))
                 {
-                  if (cell_vertex[0] <= (param.geometrymodel.b/2)/*0.5*/ 
-                      && cell_vertex[0] >= -(param.geometrymodel.x*param.geometrymodel.a/100)/*-0.1*/ 
-                      && cell_vertex[1] <= + (param.geometrymodel.h*param.geometrymodel.b/100)/*0.015*/ 
-                      && cell_vertex[1] >= - (param.geometrymodel.h*param.geometrymodel.b/100)/*-0.015*/)
+                  if (cell_vertex[0] <= (param.geometrymodel.a/2) 
+                      && cell_vertex[0] >= -(param.geometrymodel.x*param.geometrymodel.b/100) 
+                      && cell_vertex[1] <= + (param.geometrymodel.h*param.geometrymodel.a/100) 
+                      && cell_vertex[1] >= - (param.geometrymodel.h*param.geometrymodel.a/100))
                   {
                       cell->set_refine_flag();
                       break;

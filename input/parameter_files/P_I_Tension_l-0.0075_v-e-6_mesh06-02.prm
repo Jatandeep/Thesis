@@ -8,7 +8,7 @@ subsection Geometry Model
     set Grid scale = 1e-3 
     set Plate dim = 1
     set Crack length = 0.5
-    set Ref region height perc = 1.5
+    set Ref region height perc = 0.5
     set Crack tip back ref perc = 20 
 end
 
@@ -81,7 +81,8 @@ end
 ########### Modeling Strategy################
 subsection ModelingStrategy
     set Initial crack strategy = P_I   
-    set Problem type =  benchmarks    
+    set Problem type =  benchmarks
+    set P_I crack method = nodes     
     set Target factor fracture toughness = 2
     set Target steps fracture toughness = 1000
 end

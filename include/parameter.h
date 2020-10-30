@@ -95,7 +95,7 @@ namespace thesis
     /*class for selecting the type of pre-existing crack strategy*/
     class ModelingStrategy{
     public:
-        std::string strategy,comp_strategy;
+        std::string strategy,comp_strategy,pi_strategy;
         double fac_ft,steps_ft;
 
         static void declare_param(dealii::ParameterHandler& prm);

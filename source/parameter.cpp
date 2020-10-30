@@ -29,8 +29,8 @@ void GeometryModel::parse_param(ParameterHandler &prm){
 	gl_ref = prm.get_integer("Global refinement");
     lc_ref = prm.get_integer("Local refinement");
    	grid_scale = prm.get_double("Grid scale");
-    b = prm.get_double("Plate dim");
-    a = prm.get_double("Crack length");
+    a = prm.get_double("Plate dim");
+    b = prm.get_double("Crack length");
     h = prm.get_double("Ref region height perc");
     x = prm.get_double("Crack tip back ref perc");
     }
@@ -225,6 +225,7 @@ void ModelingStrategy::declare_param(ParameterHandler &prm){
     {
         prm.declare_entry("Initial crack strategy","M_I",Patterns::Selection("M_I|P_I|M_Id"));
         prm.declare_entry("Problem type","benchmarks",Patterns::Selection("benchmarks|lefm_mode_I"));
+        prm.declare_entry("P_I crack method","elements",Patterns::Selection("elements|nodes"));
         prm.declare_entry("Target factor fracture toughness", "2", Patterns::Double(0));
         prm.declare_entry("Target steps fracture toughness", "1000", Patterns::Double(0));
     }
@@ -236,9 +237,9 @@ void ModelingStrategy::parse_param(ParameterHandler &prm){
     {
         strategy = prm.get("Initial crack strategy");
         comp_strategy = prm.get("Problem type");
+        pi_strategy = prm.get("P_I crack method");
         fac_ft = prm.get_double("Target factor fracture toughness");
         steps_ft = prm.get_double("Target steps fracture toughness");
-
     }
     prm.leave_subsection();
 }
