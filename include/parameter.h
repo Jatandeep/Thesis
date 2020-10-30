@@ -60,7 +60,7 @@ namespace thesis
     class Time{
     public:
         double start_time, end_time;
-        double delta_t, time_tol,delta_t_f,time_change_interval;
+        double delta_t, time_tol,delta_t_f,time_change_point;
 	    unsigned int op_freq;
         double alpha,beta;
         std::string time_adap;
@@ -95,7 +95,7 @@ namespace thesis
     /*class for selecting the type of pre-existing crack strategy*/
     class ModelingStrategy{
     public:
-        std::string strategy,comp_strategy;
+        std::string strategy,comp_strategy,pi_strategy;
         double fac_ft,steps_ft;
 
         static void declare_param(dealii::ParameterHandler& prm);

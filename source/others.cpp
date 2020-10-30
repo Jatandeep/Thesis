@@ -91,22 +91,34 @@ void Phasefield<dim>::extract_initialcrack_d_index(const double min_cell_dia,con
       {
         const unsigned int idx = local_dof_indices[i];
         
-        //works for case II
-        if(param.mod_strategy.comp_strategy=="StandardNum")
+        if(param.mod_strategy.comp_strategy=="benchmarks")
         {
-          if((support_points[idx][0] <= param.geometrymodel.a/*0.5*/) 
-          && (support_points[idx][0] >= 0.0) 
-          && (support_points[idx][1] <= (param.geometrymodel.b/2)/*0.5*/ + min_cell_dia) 
-          && (support_points[idx][1] >= (param.geometrymodel.b/2)/*0.5*/ - min_cell_dia) )
+          if(param.mod_strategy.pi_strategy=="elements")
           {
-            global_index_m.push_back(idx);
+            if((support_points[idx][0] <= param.geometrymodel.b) 
+            && (support_points[idx][0] >= 0.0) 
+            && (support_points[idx][1] <= (param.geometrymodel.a/2) + min_cell_dia) 
+            && (support_points[idx][1] >= (param.geometrymodel.a/2) - min_cell_dia) )
+            {
+              global_index_m.push_back(idx);
+            }
+          }
+          if(param.mod_strategy.pi_strategy=="nodes")
+          {
+            if((support_points[idx][0] <= param.geometrymodel.b) 
+            && (support_points[idx][0] >= 0.0) 
+            && (support_points[idx][1] <= (param.geometrymodel.a/2) + min_cell_dia/10) 
+            && (support_points[idx][1] >= (param.geometrymodel.a/2) - min_cell_dia/10) )
+            {
+              global_index_m.push_back(idx);
+            }
           }
         }
-        //works for case II
-        if(param.mod_strategy.comp_strategy=="lefm")
+       
+        if(param.mod_strategy.comp_strategy=="lefm_mode_I")
         {
           if((support_points[idx][0] <= 0.0) 
-          && (support_points[idx][0] >= -(param.geometrymodel.b/2)/*-0.5*/) 
+          && (support_points[idx][0] >= -(param.geometrymodel.a/2)) 
           && (support_points[idx][1] <= min_cell_dia) 
           && (support_points[idx][1] >= -min_cell_dia) )
           {
@@ -316,7 +328,7 @@ void Phasefield<dim>::compute_load(const AllParameters &param
     {
         for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
         {
-                  if(param.mod_strategy.comp_strategy=="StandardNum")
+                  if(param.mod_strategy.comp_strategy=="benchmarks")
                   {
                     if (cell->face(face)->at_boundary() && cell->face(face)->boundary_id() == 4)
                     {
@@ -342,7 +354,7 @@ void Phasefield<dim>::compute_load(const AllParameters &param
                     
                     }
                   }
-                  if(param.mod_strategy.comp_strategy=="lefm")
+                  if(param.mod_strategy.comp_strategy=="lefm_mode_I")
                   {
                     if (cell->face(face)->at_boundary() && cell->face(face)->boundary_id() == 1)
                     {
@@ -439,7 +451,7 @@ void Phasefield<dim>::compute_load(const AllParameters &param
                   }
 	        }
     }
-  if(param.mod_strategy.comp_strategy=="StandardNum")
+  if(param.mod_strategy.comp_strategy=="benchmarks")
   {  
     if(param.test_case.test == "tension"){
       double load_y = load_value[1];
@@ -451,7 +463,7 @@ void Phasefield<dim>::compute_load(const AllParameters &param
       statistics.add_value("Load x",load_x);
     }
   }
-  if(param.mod_strategy.comp_strategy=="lefm")
+  if(param.mod_strategy.comp_strategy=="lefm_mode_I")
   {
     if(param.test_case.test == "tension"){
       double load_y_1 = load_value_lefm_1[1];
@@ -491,7 +503,7 @@ double Phasefield<dim>::compute_end_load(const AllParameters &param
     {
         for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
         {
-                  if(param.mod_strategy.comp_strategy=="StandardNum")
+                  if(param.mod_strategy.comp_strategy=="benchmarks")
                   {
                     if (cell->face(face)->at_boundary() && cell->face(face)->boundary_id() == 4)
                     {
