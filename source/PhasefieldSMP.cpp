@@ -1153,7 +1153,7 @@ void Phasefield<dim>::import_mesh(const AllParameters &param){
 
     std::string grid_name;
     grid_name += param.geometrymodel.meshfile;
-
+  
     GridIn<dim> grid_in;
     grid_in.attach_triangulation(triangulation_m);
     std::ifstream input_file(grid_name.c_str());
@@ -1163,7 +1163,7 @@ void Phasefield<dim>::import_mesh(const AllParameters &param){
     GridTools::scale(param.geometrymodel.grid_scale,triangulation_m);
     triangulation_m.refine_global (param.geometrymodel.gl_ref);
 
-    const bool write_grid = true;
+    const bool write_grid = false;
     GridOut::OutputFormat meshOutputFormat = GridOut::vtk;
     if (write_grid)
     {
@@ -1185,7 +1185,9 @@ void Phasefield<dim>::import_mesh(const AllParameters &param){
 
 /*!Write output into files*/
 template <int dim>
-void Phasefield<dim>::output_results (const AllParameters &param,unsigned int cycle) const
+void Phasefield<dim>::output_results (const AllParameters &param
+                                      ,unsigned int cycle
+                                      ,const std::string opfilename) const
 {
     DataOut<dim> data_out;
     
@@ -1210,9 +1212,8 @@ void Phasefield<dim>::output_results (const AllParameters &param,unsigned int cy
     MappingQ <dim> q_mapping(param.fesys.fe_degree);
 
     data_out.build_patches(q_mapping, param.fesys.fe_degree);
-    std::string filename ("solution-"
-                          + std::to_string(dim)
-                          + "d-"
+    std::string filename (opfilename
+                          +"-" 
                           + std::to_string(cycle/param.time.op_freq)
                           + ".vtu");
     std::ofstream output(filename.c_str());
@@ -1228,7 +1229,7 @@ void Phasefield<dim>::output_results (const AllParameters &param,unsigned int cy
   
 /*Data member function containing time loop*/
 template <int dim>
-void Phasefield<dim>::run(const AllParameters &param){
+void Phasefield<dim>::run(const AllParameters &param,const std::string filename){
 
 
     using namespace constants;
@@ -1294,7 +1295,7 @@ void Phasefield<dim>::run(const AllParameters &param){
       extract_initialcrack_d_index(min_cell_diameter,param);
     }
 
-    output_results(param,current_timestep);
+    output_results(param,current_timestep,filename);
     statistics.add_value("Time",current_time_m);
     statistics.set_precision("Time",6);
     compute_load(param,solution_m);
@@ -1376,10 +1377,10 @@ void Phasefield<dim>::run(const AllParameters &param){
              )//Tension
         {
           std::cout<<"time:"<<current_time_m<<std::endl;
-              output_results(param,current_timestep);
+              output_results(param,current_timestep,filename);
         }
      
-        std::ofstream stat_file ("statistics_m");
+        std::ofstream stat_file (filename+"-"+"statistics");
         statistics.write_text (stat_file,
                                     TableHandler::simple_table_with_separate_column_description);
         stat_file.close();

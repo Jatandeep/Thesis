@@ -94,7 +94,7 @@ namespace thesis
       /*Destructor*/
       ~Phasefield ();
       /*Data member function containing time loop*/
-      void run (const parameters::AllParameters &param);
+      void run (const parameters::AllParameters &param,const std::string filename);
 
     private:
       /*Variables for dealing with SMP formulation for d and u respectively*/
@@ -155,7 +155,7 @@ namespace thesis
       void print_footer_u();
 
       /*!Write output into files*/
-      void output_results (const parameters::AllParameters &param,unsigned int cycle) const;
+      void output_results (const parameters::AllParameters &param,unsigned int cycle,const std::string filename) const;
 
       /*Data memeber variables for implementing the discretization*/
       dealii::Triangulation<dim>   triangulation_m;

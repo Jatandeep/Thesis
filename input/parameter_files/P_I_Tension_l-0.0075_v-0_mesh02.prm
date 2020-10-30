@@ -2,7 +2,7 @@
 ##################  Geometry  ##################
 
 subsection Geometry Model
-    set Mesh File = ../thesis/input/meshes/Tension_left_10.inp  
+    set Mesh File = input/meshes/Tension_left_10.inp  
     set Global refinement = 0 
     set Local refinement =  0   
     set Grid scale = 1e-3 
