@@ -1328,7 +1328,8 @@ void Phasefield<dim>::run(const AllParameters &param,const std::string filename)
 ///////////////////////     
 
     unsigned int new_iter=0;
-    double prev_delta_t = 0; 
+    double prev_delta_t = 0;
+    int excep =-1; 
 
     while (current_time_m < param.time.end_time + present_time_tol)
 	 
@@ -1342,22 +1343,29 @@ void Phasefield<dim>::run(const AllParameters &param,const std::string filename)
 
       if(new_iter == param.newtonraphson.max_new_ite && param.time.time_adap== "true")
       {
-          prev_delta_t = delta_t;
-          delta_t = param.time.alpha*delta_t;
-          if(delta_t < param.time.beta*param.time.delta_t)
+          try
           {
-            std::cout<<"delta_t:"<<delta_t<<std::endl;
-            std::cout<<"param.time.delta_t:"<<param.time.delta_t<<std::endl;
-            std::cout<<"beta*param.time.delta_t:"<<param.time.beta*param.time.delta_t<<std::endl;
-            std::cout<<std::endl;
-            std::cout << "No convergence in prescribed limits!" << std::endl;
-            std::cerr << "No convergence in prescribed limits!" << std::endl
-                      << "Aborting!" << std::endl;
-                      exit(0);
+            prev_delta_t = delta_t;
+            delta_t = param.time.alpha*delta_t;
+            if(delta_t < param.time.beta*param.time.delta_t)
+            {
+              throw excep;              
+            }
+            std::cout<<"Solver did not converge! Adjusting time steps to "<<delta_t<<std::endl;
+            current_time_m -= prev_delta_t;
+            current_time_m += delta_t;
           }
-          std::cout<<"Solver did not converge! Adjusting time steps to "<<delta_t<<std::endl;
-          current_time_m -= prev_delta_t;
-          current_time_m += delta_t;
+          catch(int excep)
+          {
+            std::cerr << std::endl << std::endl
+                  << "----------------------------------------------------"
+                  << std::endl;
+            std::cerr << "Exception on processing: " << std::endl
+                  << "Aborting!" << std::endl
+                  << "----------------------------------------------------"
+                  << std::endl;
+                  break;
+          }
       }
       else
       {
