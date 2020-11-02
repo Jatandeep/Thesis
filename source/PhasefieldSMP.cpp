@@ -1360,7 +1360,7 @@ void Phasefield<dim>::run(const AllParameters &param,const std::string filename)
             std::cerr << std::endl << std::endl
                   << "----------------------------------------------------"
                   << std::endl;
-            std::cerr << "Exception on processing: " << std::endl
+            std::cerr << "No convergence even after excessive temporal refinement" << std::endl
                   << "Aborting!" << std::endl
                   << "----------------------------------------------------"
                   << std::endl;
