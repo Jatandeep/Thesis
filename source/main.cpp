@@ -15,13 +15,9 @@ int main(int argc, char *argv[]){
        
        const std::string filename = argv[1];
 
-       /*Extracting filename for outputs*/
-       std::size_t found = filename.find_last_of("/\\");
-       std::string rawfilename = filename.substr(found+1).substr(0, filename.substr(found+1).find_last_of("."));
-       
        thesis::parameters::AllParameters param(filename);
        thesis::Phasefield<2> phasefield_2d(param);
-       phasefield_2d.run(param,rawfilename);
+       phasefield_2d.run(param);
       }
     catch (std::exception &exc)
       {

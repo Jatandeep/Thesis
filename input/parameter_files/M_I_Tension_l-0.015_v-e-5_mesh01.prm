@@ -2,7 +2,7 @@
 ##################  Geometry  ##################
 
 subsection Geometry Model
-    set Mesh File = input/meshes/Tension_left_1.inp  
+    set Mesh File = ../thesis/input/meshes/Tension_left_1.inp  
     set Global refinement = 0 
     set Local refinement =  0   
     set Grid scale = 1e-3 
@@ -51,7 +51,7 @@ subsection Time
     set Delta time final = 1e-6  
     set Time change point = 5e-3 
     set Time tolerance = 1e-6
-    set Output frequency = 20
+    set Output frequency = 1
     set Time adaptivity = true
     set Alpha = 1e-1
     set Beta = 1e-4

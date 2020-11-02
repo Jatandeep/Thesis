@@ -1153,7 +1153,7 @@ void Phasefield<dim>::import_mesh(const AllParameters &param){
 
     std::string grid_name;
     grid_name += param.geometrymodel.meshfile;
-  
+
     GridIn<dim> grid_in;
     grid_in.attach_triangulation(triangulation_m);
     std::ifstream input_file(grid_name.c_str());
@@ -1163,7 +1163,7 @@ void Phasefield<dim>::import_mesh(const AllParameters &param){
     GridTools::scale(param.geometrymodel.grid_scale,triangulation_m);
     triangulation_m.refine_global (param.geometrymodel.gl_ref);
 
-    const bool write_grid = false;
+    const bool write_grid = true;
     GridOut::OutputFormat meshOutputFormat = GridOut::vtk;
     if (write_grid)
     {
@@ -1185,9 +1185,7 @@ void Phasefield<dim>::import_mesh(const AllParameters &param){
 
 /*!Write output into files*/
 template <int dim>
-void Phasefield<dim>::output_results (const AllParameters &param
-                                      ,unsigned int cycle
-                                      ,const std::string opfilename) const
+void Phasefield<dim>::output_results (const AllParameters &param,unsigned int cycle) const
 {
     DataOut<dim> data_out;
     
@@ -1212,8 +1210,9 @@ void Phasefield<dim>::output_results (const AllParameters &param
     MappingQ <dim> q_mapping(param.fesys.fe_degree);
 
     data_out.build_patches(q_mapping, param.fesys.fe_degree);
-    std::string filename (opfilename
-                          +"-" 
+    std::string filename ("solution-"
+                          + std::to_string(dim)
+                          + "d-"
                           + std::to_string(cycle/param.time.op_freq)
                           + ".vtu");
     std::ofstream output(filename.c_str());
@@ -1229,7 +1228,7 @@ void Phasefield<dim>::output_results (const AllParameters &param
   
 /*Data member function containing time loop*/
 template <int dim>
-void Phasefield<dim>::run(const AllParameters &param,const std::string filename){
+void Phasefield<dim>::run(const AllParameters &param){
 
 
     using namespace constants;
@@ -1295,7 +1294,7 @@ void Phasefield<dim>::run(const AllParameters &param,const std::string filename)
       extract_initialcrack_d_index(min_cell_diameter,param);
     }
 
-    output_results(param,current_timestep,filename);
+    output_results(param,current_timestep);
     statistics.add_value("Time",current_time_m);
     statistics.set_precision("Time",6);
     compute_load(param,solution_m);
@@ -1328,8 +1327,7 @@ void Phasefield<dim>::run(const AllParameters &param,const std::string filename)
 ///////////////////////     
 
     unsigned int new_iter=0;
-    double prev_delta_t = 0;
-    int excep =-1; 
+    double prev_delta_t = 0; 
 
     while (current_time_m < param.time.end_time + present_time_tol)
 	 
@@ -1343,29 +1341,22 @@ void Phasefield<dim>::run(const AllParameters &param,const std::string filename)
 
       if(new_iter == param.newtonraphson.max_new_ite && param.time.time_adap== "true")
       {
-          try
+          prev_delta_t = delta_t;
+          delta_t = param.time.alpha*delta_t;
+          if(delta_t < param.time.beta*param.time.delta_t)
           {
-            prev_delta_t = delta_t;
-            delta_t = param.time.alpha*delta_t;
-            if(delta_t < param.time.beta*param.time.delta_t)
-            {
-              throw excep;              
-            }
-            std::cout<<"Solver did not converge! Adjusting time steps to "<<delta_t<<std::endl;
-            current_time_m -= prev_delta_t;
-            current_time_m += delta_t;
+            std::cout<<"delta_t:"<<delta_t<<std::endl;
+            std::cout<<"param.time.delta_t:"<<param.time.delta_t<<std::endl;
+            std::cout<<"beta*param.time.delta_t:"<<param.time.beta*param.time.delta_t<<std::endl;
+            std::cout<<std::endl;
+            std::cout << "No convergence in prescribed limits!" << std::endl;
+            std::cerr << "No convergence in prescribed limits!" << std::endl
+                      << "Aborting!" << std::endl;
+                      exit(0);
           }
-          catch(int excep)
-          {
-            std::cerr << std::endl << std::endl
-                  << "----------------------------------------------------"
-                  << std::endl;
-            std::cerr << "No convergence even after excessive temporal refinement" << std::endl
-                  << "Aborting!" << std::endl
-                  << "----------------------------------------------------"
-                  << std::endl;
-                  break;
-          }
+          std::cout<<"Solver did not converge! Adjusting time steps to "<<delta_t<<std::endl;
+          current_time_m -= prev_delta_t;
+          current_time_m += delta_t;
       }
       else
       {
@@ -1385,10 +1376,10 @@ void Phasefield<dim>::run(const AllParameters &param,const std::string filename)
              )//Tension
         {
           std::cout<<"time:"<<current_time_m<<std::endl;
-              output_results(param,current_timestep,filename);
+              output_results(param,current_timestep);
         }
      
-        std::ofstream stat_file (filename+"-"+"statistics");
+        std::ofstream stat_file ("statistics_m");
         statistics.write_text (stat_file,
                                     TableHandler::simple_table_with_separate_column_description);
         stat_file.close();
