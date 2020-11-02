@@ -38,7 +38,10 @@ Download the code and configure with:
   spack load dealii
 ```
 ```
-  cmake .
+  cd Thesis
+  mkdir build
+  cd build
+  cmake ..
 ```
 Compile with:
 ```

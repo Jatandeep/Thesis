@@ -2,7 +2,7 @@
 ##################  Geometry  ##################
 
 subsection Geometry Model
-    set Mesh File = input/meshes/Shear_left_2.inp  
+    set Mesh File = ../input/meshes/Shear_left_2.inp  
     set Global refinement = 0 
     set Local refinement =  0   
     set Grid scale = 1e-3 
