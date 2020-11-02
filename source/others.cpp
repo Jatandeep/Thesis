@@ -129,10 +129,11 @@ void Phasefield<dim>::extract_initialcrack_d_index(const double min_cell_dia,con
       }
     }
   }
-  
   std::sort(global_index_m.begin(),global_index_m.end());
   global_index_m.erase(std::unique(global_index_m.begin(),global_index_m.end())
                       ,global_index_m.end());
+  std::cout<<"SIze global vector"<<global_index_m.size()<<std::endl;
+
 }
 
 /*For P_I method, this function prescribe d=1 values on selected nodes for initial time step and maintains them throughout simulation*/

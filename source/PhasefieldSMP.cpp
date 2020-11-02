@@ -115,7 +115,7 @@ void Phasefield<dim>::set_boundary_id(const AllParameters &param)
             const Point<dim> face_center = cell->face(f)->center();
             if (cell->face(f)->at_boundary())
             {
-		          //////////////////////For (0,b)x(0,b)
+		          //////////////////////For (0,a)x(0,a)
               if(param.mod_strategy.comp_strategy=="benchmarks")
               {
 		            //left boundary
@@ -137,7 +137,7 @@ void Phasefield<dim>::set_boundary_id(const AllParameters &param)
                         )
                   cell->face(f)->set_boundary_id(4);
               }
-              //////////////////////For (-b/2,b/2)x(-b/2,b/2)
+              //////////////////////For (-a/2,a/2)x(-a/2,a/2)
               if(param.mod_strategy.comp_strategy=="lefm_mode_I")
               {
                 //left boundary
@@ -681,7 +681,7 @@ unsigned int Phasefield<dim>::solve_nonlinear_newton(const AllParameters &param
           }
 
           /*Phase field induced initial crack*/
-          if(param.mod_strategy.strategy=="P_I"){        
+          if(param.mod_strategy.strategy=="P_I"){
           get_constrained_initial_d(new_iter_d,param);
           }
 
@@ -1268,7 +1268,7 @@ void Phasefield<dim>::run(const AllParameters &param,const std::string filename)
                   }
                 }
                 else if(param.mod_strategy.comp_strategy=="lefm_mode_I" && (param.mod_strategy.strategy=="M_I" 
-                                                                            || param.mod_strategy.strategy=="M_Id"))
+                                                                           || param.mod_strategy.strategy=="M_Id"))
                 {
                   if (cell_vertex[0] <= (param.geometrymodel.a/2) 
                       && cell_vertex[0] >= -(param.geometrymodel.x*param.geometrymodel.b/100) 
