@@ -1,3 +1,0 @@
-/calculate/iwtm952/thesis/thesis/build/CMakeFiles/rebuild_cache.dir
-/calculate/iwtm952/thesis/thesis/build/CMakeFiles/pffsim.dir
-/calculate/iwtm952/thesis/thesis/build/CMakeFiles/edit_cache.dir
