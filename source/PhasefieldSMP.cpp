@@ -173,6 +173,7 @@ void Phasefield<dim>::setup_qph()
   std::cout<<"CellDataStorage:setting up quadrature point data.."<<std::endl;
 
   const unsigned int   n_q_points    = quadrature_formula_m.size();
+     
   quadrature_point_history.initialize(triangulation_m.begin_active()
                                       ,triangulation_m.end()
                                       ,n_q_points);
@@ -185,7 +186,6 @@ void Phasefield<dim>::setup_qph()
       std::vector<std::shared_ptr<PointHistory>> lqph = quadrature_point_history.get_data(cell);
       Assert(lqph.size() == n_q_points, ExcInternalError());
   }
-
 }
 
 /*Genrating elastic and fracture energy values for statistics file*/
@@ -358,7 +358,8 @@ template <int dim>
 void Phasefield<dim>::copy_local_to_global_d(const PerTaskData_d &data)
 {
   constraints_m.distribute_local_to_global(data.cell_matrix,data.cell_rhs,data.local_dof_indices
-                                          ,tangent_matrix_m,system_rhs_m);	
+                                          ,tangent_matrix_m,system_rhs_m);
+
 }
 
 /*!Assemble the linear system for the d in SMP format*/
@@ -1000,10 +1001,9 @@ void Phasefield<dim>::make_constraints_d(unsigned int &itr,const AllParameters &
       component_mask[2] = true;
       VectorTools::interpolate_boundary_values(dof_handler_m, 0,
                                                   ZeroFunction<dim>(n_components_m), constraints_m, component_mask);
-      }
-      
-       
+      }       
    }
+   constraints_m.close();
     
 }
 

@@ -132,7 +132,6 @@ void Phasefield<dim>::extract_initialcrack_d_index(const double min_cell_dia,con
   std::sort(global_index_m.begin(),global_index_m.end());
   global_index_m.erase(std::unique(global_index_m.begin(),global_index_m.end())
                       ,global_index_m.end());
-  std::cout<<"SIze global vector"<<global_index_m.size()<<std::endl;
 
 }
 
@@ -146,8 +145,7 @@ void Phasefield<dim>::get_constrained_initial_d(unsigned int itr_,const AllParam
 
   DoFTools::make_hanging_node_constraints (dof_handler_m,
                                             constraints_m);
-  
-   
+     
   if(current_time_m==param.time.delta_t)
   {
       for(auto idx:global_index_m)
@@ -173,6 +171,7 @@ void Phasefield<dim>::get_constrained_initial_d(unsigned int itr_,const AllParam
     }
 
   }
+  constraints_m.close();
      
 }
 

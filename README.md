@@ -58,6 +58,4 @@ please refer to Step-44 of deal.II tutorials (https://dealii.org/9.0.0/doxygen/d
 
 # Notes
 - The code uses the deal.II 9.0.0 version. If proejct is run with newer versions, certain version specific modifications might need to be done.
-- After running cmake, you need to ensure that CMakeCache.txt contains following option:
-(//Choose the type of build, options are: **Debug**, **Release**)->
-CMAKE_BUILD_TYPE:STRING=**Release**
+
