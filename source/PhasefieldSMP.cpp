@@ -115,7 +115,7 @@ void Phasefield<dim>::set_boundary_id(const AllParameters &param)
             const Point<dim> face_center = cell->face(f)->center();
             if (cell->face(f)->at_boundary())
             {
-		          //////////////////////For (0,b)x(0,b)
+		          //////////////////////For (0,a)x(0,a)
               if(param.mod_strategy.comp_strategy=="benchmarks")
               {
 		            //left boundary
@@ -137,7 +137,7 @@ void Phasefield<dim>::set_boundary_id(const AllParameters &param)
                         )
                   cell->face(f)->set_boundary_id(4);
               }
-              //////////////////////For (-b/2,b/2)x(-b/2,b/2)
+              //////////////////////For (-a/2,a/2)x(-a/2,a/2)
               if(param.mod_strategy.comp_strategy=="lefm_mode_I")
               {
                 //left boundary
@@ -173,6 +173,7 @@ void Phasefield<dim>::setup_qph()
   std::cout<<"CellDataStorage:setting up quadrature point data.."<<std::endl;
 
   const unsigned int   n_q_points    = quadrature_formula_m.size();
+     
   quadrature_point_history.initialize(triangulation_m.begin_active()
                                       ,triangulation_m.end()
                                       ,n_q_points);
@@ -185,7 +186,6 @@ void Phasefield<dim>::setup_qph()
       std::vector<std::shared_ptr<PointHistory>> lqph = quadrature_point_history.get_data(cell);
       Assert(lqph.size() == n_q_points, ExcInternalError());
   }
-
 }
 
 /*Genrating elastic and fracture energy values for statistics file*/
@@ -358,7 +358,8 @@ template <int dim>
 void Phasefield<dim>::copy_local_to_global_d(const PerTaskData_d &data)
 {
   constraints_m.distribute_local_to_global(data.cell_matrix,data.cell_rhs,data.local_dof_indices
-                                          ,tangent_matrix_m,system_rhs_m);	
+                                          ,tangent_matrix_m,system_rhs_m);
+
 }
 
 /*!Assemble the linear system for the d in SMP format*/
@@ -681,7 +682,7 @@ unsigned int Phasefield<dim>::solve_nonlinear_newton(const AllParameters &param
           }
 
           /*Phase field induced initial crack*/
-          if(param.mod_strategy.strategy=="P_I"){        
+          if(param.mod_strategy.strategy=="P_I"){
           get_constrained_initial_d(new_iter_d,param);
           }
 
@@ -1000,10 +1001,9 @@ void Phasefield<dim>::make_constraints_d(unsigned int &itr,const AllParameters &
       component_mask[2] = true;
       VectorTools::interpolate_boundary_values(dof_handler_m, 0,
                                                   ZeroFunction<dim>(n_components_m), constraints_m, component_mask);
-      }
-      
-       
+      }       
    }
+   constraints_m.close();
     
 }
 
@@ -1268,7 +1268,7 @@ void Phasefield<dim>::run(const AllParameters &param,const std::string filename)
                   }
                 }
                 else if(param.mod_strategy.comp_strategy=="lefm_mode_I" && (param.mod_strategy.strategy=="M_I" 
-                                                                            || param.mod_strategy.strategy=="M_Id"))
+                                                                           || param.mod_strategy.strategy=="M_Id"))
                 {
                   if (cell_vertex[0] <= (param.geometrymodel.a/2) 
                       && cell_vertex[0] >= -(param.geometrymodel.x*param.geometrymodel.b/100) 

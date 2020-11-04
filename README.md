@@ -57,5 +57,5 @@ For getting an overview of block solvers, multithreading, input parameter handli
 please refer to Step-44 of deal.II tutorials (https://dealii.org/9.0.0/doxygen/deal.II/step_44.html).
 
 # Notes
-The code uses the deal.II 9.0.0 version. If proejct is run with newer versions, certain version specific modifications
-might need to be done.
+- The code uses the deal.II 9.0.0 version. If proejct is run with newer versions, certain version specific modifications might need to be done.
+

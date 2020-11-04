@@ -243,7 +243,7 @@ namespace thesis
       void set_boundary_id(const parameters::AllParameters &param);
 
       /*dealii function for handing history variables*/
-      dealii::CellDataStorage<typename dealii::Triangulation<dim>::cell_iterator
+      dealii::CellDataStorage<typename dealii::Triangulation<dim>::active_cell_iterator
                               ,PointHistory> quadrature_point_history;
       /*Setting up quadrature point history for facilitating history function implementation*/
       void setup_qph();
