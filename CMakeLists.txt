@@ -9,9 +9,6 @@ set(CMAKE_CXX_FLAGS "-pthread -O3")
 set(CMAKE_CXX_FLAGS "-fmax-errors=1")
 set(CMAKE_CXX_FLAGS "-DDEAL_II_DEBUG")
 
-#set(CMAKE_CXX_COMPILER "mpicxx")
-#set(CMAKE_C_COMPILER "mpicc")
-
 # declare source files and header files
 SET(SOURCES
     source/main.cpp
