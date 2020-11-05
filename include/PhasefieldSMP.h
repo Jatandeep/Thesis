@@ -1,11 +1,11 @@
-#pragma once
+#ifndef PHASEFIELDSMP_H
+#define PHASEFIELDSMP_H
+
 #include <deal.II/base/timer.h>
 #include <deal.II/base/tensor_function.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/symmetric_tensor.h>
-#include <deal.II/base/geometry_info.h>
 #include <deal.II/base/quadrature_lib.h>
-#include <deal.II/base/function.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_point_data.h>
@@ -15,28 +15,20 @@
 #include <deal.II/base/multithread_info.h>
 #include <deal.II/base/utilities.h>
 #include <deal.II/base/data_out_base.h>
-#include <deal.II/base/index_set.h>
 
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/sparse_direct.h>
-#include <deal.II/lac/sparse_ilu.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/solver_cg.h>
-#include <deal.II/lac/precondition.h>
 #include <deal.II/lac/constraint_matrix.h>
-#include <deal.II/lac/linear_operator.h>
-#include <deal.II/lac/packaged_operation.h>
-#include <deal.II/lac/precondition_selector.h>
 #include <deal.II/lac/solver_selector.h>
 #include <deal.II/lac/block_sparse_matrix.h>
 #include <deal.II/lac/block_vector.h>
 
 
 #include <deal.II/grid/tria.h>
-#include <deal.II/grid/grid_generator.h>
-#include <deal.II/grid/grid_refinement.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
 #include <deal.II/grid/grid_in.h>
@@ -52,18 +44,13 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/data_out.h>
-#include <deal.II/numerics/error_estimator.h>
-#include <deal.II/numerics/solution_transfer.h>
 
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_values_extractors.h>
-#include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_tools.h>
-#include <deal.II/fe/mapping_q_eulerian.h>
 #include <deal.II/fe/mapping_q.h>
-#include <deal.II/fe/mapping.h>
 #include <deal.II/fe/component_mask.h>
 
 #include "parameter.h"
@@ -203,18 +190,19 @@ namespace thesis
               }
               double norm,u,d;
           };
-
       Error error_residual, error_residual_0, error_residual_norm,
 	    error_update, error_update_0, error_update_norm;
 
       /*Calculate error residual from system_rhs for d*/
       void get_error_residual_d(Error & error_residual);
+
       /*Calculate newton error for d*/
       void get_newton_update_error_d(const dealii::BlockVector<double> &newton_update
 		      		                    ,Error & error_update);
 
       /*Calculate error residual from system_rhs for d*/
       void get_error_residual_u(Error & error_residual);
+
       /*Calculate newton error for u*/
       void get_newton_update_error_u(const dealii::BlockVector<double> &newton_update
 		      		                    ,Error & error_update);
@@ -234,19 +222,23 @@ namespace thesis
 	
       /*Data member variables for total dofs per block*/
       std::vector<dealii::types::global_dof_index> dofs_per_block_m;
+
       /*Data member variables for identifying d and u contributions per cell*/
       std::vector<unsigned int> dof_block_identifier_m;
 
       /*Data member function for identifying the block for d and u respectively*/
       void determine_comp_extractor();
+
       /*Giving each boundary of the geometry a particular id. If not assigned,default is 0*/
       void set_boundary_id(const parameters::AllParameters &param);
 
       /*dealii function for handing history variables*/
       dealii::CellDataStorage<typename dealii::Triangulation<dim>::active_cell_iterator
                               ,PointHistory> quadrature_point_history;
+
       /*Setting up quadrature point history for facilitating history function implementation*/
       void setup_qph();
+
       /*Data member function for calculating the history function for present time step*/
       double get_history(const double lambda
                 	      ,const double mu
@@ -254,22 +246,32 @@ namespace thesis
 
       /*Generating load on boundaries for being written to statistics file*/
       void compute_load(const parameters::AllParameters &param,dealii::BlockVector<double> &solution); 
+      
       /*Additional functional to generate a visualization file when load becomes 0 for tension case*/
       double compute_end_load(const parameters::AllParameters &param,dealii::BlockVector<double> &solution); 
+      
       /*Genrating elastic and fracture energy values for statistics file*/
       void get_energy_v(const parameters::AllParameters &param,
                             dealii::BlockVector<double> & update);
+      
       /*For P_I method, this function prescribe d=1 values on selected nodes for initial time step and maintains them throughout simulation*/
+      /*Thesis_report:Section4.3.3*/
       void get_constrained_initial_d(unsigned int itr
                                     ,const parameters::AllParameters &param);
-      /*For P_I, this function extracts global node ids from cells where crack is to be placed*/   
+      
+      /*For P_I, this function extracts global node ids from cells where crack is to be placed*//*Thesis_report:Section4.3.3*/   
       void extract_initialcrack_d_index(const double min_cell_dia,const parameters::AllParameters &param);
+      
       /*Data member varaible to store global node ids*/
       std::vector<double> global_index_m;
 
+      /*Data members for handling time quantities*/
       double	          current_time_m;
       mutable dealii::TimerOutput	timer;
+      
       /*To print load and energies during the simulation*/
       dealii::TableHandler		statistics;
     };
 }
+
+#endif

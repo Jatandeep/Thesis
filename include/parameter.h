@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PARAMETER_H
+#define PARAMETER_H
 
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/grid/tria.h>
@@ -124,3 +125,4 @@ namespace thesis
     }
 
 }
+#endif

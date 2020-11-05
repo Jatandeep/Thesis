@@ -1007,7 +1007,7 @@ void Phasefield<dim>::make_constraints_d(unsigned int &itr,const AllParameters &
     
 }
 
-/*Print header and footer for newton iterations*/
+/*Print header and footer for newton iterations for d*/
 template <int dim>
 void Phasefield<dim>::print_header_d(){
     const unsigned int l_width = 80;
@@ -1031,7 +1031,7 @@ void Phasefield<dim>::print_header_d(){
 
 }
 
-/*Print header and footer for newton iterations*/
+/*Print header and footer for newton iterations for u*/
 template <int dim>
 void Phasefield<dim>::print_header_u(){
     const unsigned int l_width = 95;
@@ -1055,7 +1055,7 @@ void Phasefield<dim>::print_header_u(){
 
 }
 
-/*Print header and footer for newton iterations*/
+/*Print header and footer for newton iterations for d*/
 template <int dim>
 void Phasefield<dim>::print_footer_d(){
     const unsigned int l_width = 80;
@@ -1071,7 +1071,7 @@ void Phasefield<dim>::print_footer_d(){
 
 }
 
-/*Print header and footer for newton iterations*/
+/*Print header and footer for newton iterations for u*/
 template <int dim>
 void Phasefield<dim>::print_footer_u(){
     const unsigned int l_width = 95;
