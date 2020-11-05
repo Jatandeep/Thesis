@@ -299,12 +299,10 @@ SymmetricTensor<4,dim> get_BigC_minus(const double lambda
 	std::array <double,std::integral_constant< int, dim >::value> eps_eigenval;
 	eps_eigenval = eigenvalues(eps);
 
-
 	//Calculates an array of -ve stress eigenvalues
 	std::array <double,std::integral_constant< int, dim >::value> stress_eigenval_minus;
 	stress_eigenval_minus = get_stress_eigenval_minus(lambda,mu,eps,eps_eigenval); 
 	
-
 	//Calculating C_1_minus:
 	double scalar_13 = 0;
   	for (unsigned int a = 0;a < dim; ++a){
