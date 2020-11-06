@@ -3,7 +3,7 @@
 using namespace dealii;
 
 /*To get tensile/positive component of stress to be used in assembly of u*/
-/*Gives stress_plus at particular quadrature point*/
+/*Gives stress_plus at particular quadrature point*//*Thesis_report:Equation 2.38*/
 template<int dim>
 SymmetricTensor<2,dim> get_stress_plus(const double lambda
 				      ,const double mu
@@ -39,7 +39,7 @@ return stress_plus;
 }
 
 /*To get compressive/negative component of stress to be used in assembly of u*/
-/*Gives stress_minus at particular quadrature point*/
+/*Gives stress_minus at particular quadrature point*//*Thesis_report:Equation 2.39*/
 template<int dim>
 SymmetricTensor<2,dim> get_stress_minus(const double lambda
 				      ,const double mu
@@ -74,7 +74,7 @@ SymmetricTensor<2,dim> get_stress_minus(const double lambda
 return stress_minus; 
 }
 
-//Gives an array of +ve stress eigenvalues
+//Gives an array of +ve stress eigenvalues/*To be used in get_BigC_plus()*/
 template <int dim>
 std::array<double,std::integral_constant< int, dim >::value> get_stress_eigenval_plus(const double lambda
 				      						,const double mu
@@ -96,7 +96,7 @@ std::array<double,std::integral_constant< int, dim >::value> get_stress_eigenval
 return stress_eigenval_plus;
 }
 
-//Gives an array of -ve stress eigenvalues
+//Gives an array of -ve stress eigenvalues/*To be used in get_BigC_minus()*/
 template <int dim>
 std::array<double,std::integral_constant< int, dim >::value> get_stress_eigenval_minus(const double lambda
 				      						,const double mu
@@ -118,36 +118,7 @@ std::array<double,std::integral_constant< int, dim >::value> get_stress_eigenval
 return stress_eigenval_minus;
 }
 
-
-//Gives coefficient of first part of spectral BigC
-double delsig_dellmbda(const double lambda
-                      ,const double mu
-		      ,unsigned int i
-		      ,unsigned int j)
-{
-	double result = 0;
-
-	if(i==j)
-	result = lambda + 2*mu;
-	else
-	result = lambda;
-
-return result;
-}
-
-//Gives part of coefficient after applying L'hospital rule (in second part of spectral BigC)
-double delsig_dellmbda_b(const double lambda
-                        ,const double mu)
-{
-    double result = 0;
-
-    result =  2*mu + lambda;
-
-return result;
-}
-
-
-//Gives part of +ve coefficient after applying L'hospital rule (in second part of +ve BigC)
+//Gives part of +ve coefficient after applying L'hospital rule (in second part of +ve BigC)/*To be used in get_BigC_plus()*/
 template<int dim>
 double delsig_dellmbda_b_plus(const double lambda
                              ,const double mu
@@ -166,7 +137,7 @@ double delsig_dellmbda_b_plus(const double lambda
 return result;
 }
 
-//Gives part of -ve coefficient after applying L'hospital rule (in second part of -ve BigC)
+//Gives part of -ve coefficient after applying L'hospital rule (in second part of -ve BigC)/*To be used in get_BigC_minus()*/
 template<int dim>
 double delsig_dellmbda_b_minus(const double lambda
                              ,const double mu
@@ -185,7 +156,7 @@ double delsig_dellmbda_b_minus(const double lambda
 return result;
 }
 
-/*Gives coefficient of first part of positive BigC*/
+/*Gives coefficient of first part of positive BigC*//*To be used in get_BigC_plus()*/
 template<int dim>
 double delsig_dellmbda_plus(const double lambda
                            ,const double mu
@@ -206,7 +177,7 @@ double delsig_dellmbda_plus(const double lambda
 return result;
 }
 
-/*Gives coefficient of first part of negative BigC*/
+/*Gives coefficient of first part of negative BigC*//*To be used in get_BigC_minus()*/
 template<int dim>
 double delsig_dellmbda_minus(const double lambda
 	                    ,const double mu
@@ -227,7 +198,7 @@ double delsig_dellmbda_minus(const double lambda
 return result;
 }
 
-/*To get positive component of BigC to be used in assembly of u*/
+/*To get positive component of BigC to be used in assembly of u*//*Thesis_report:Equation 3.43*/
 template <int dim>
 SymmetricTensor<4,dim> get_BigC_plus(const double lambda
                                             ,const double mu
@@ -305,7 +276,7 @@ SymmetricTensor<4,dim> get_BigC_plus(const double lambda
 return C_total_plus;
 }
 
-/*To get negative component of BigC to be used in assembly of u*/
+/*To get negative component of BigC to be used in assembly of u*//*Thesis_report:Equation 3.48*/
 template <int dim>
 SymmetricTensor<4,dim> get_BigC_minus(const double lambda
                                              ,const double mu
@@ -328,12 +299,10 @@ SymmetricTensor<4,dim> get_BigC_minus(const double lambda
 	std::array <double,std::integral_constant< int, dim >::value> eps_eigenval;
 	eps_eigenval = eigenvalues(eps);
 
-
 	//Calculates an array of -ve stress eigenvalues
 	std::array <double,std::integral_constant< int, dim >::value> stress_eigenval_minus;
 	stress_eigenval_minus = get_stress_eigenval_minus(lambda,mu,eps,eps_eigenval); 
 	
-
 	//Calculating C_1_minus:
 	double scalar_13 = 0;
   	for (unsigned int a = 0;a < dim; ++a){

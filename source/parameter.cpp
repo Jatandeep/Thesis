@@ -37,7 +37,7 @@ void GeometryModel::parse_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
-/*Function for declaring the material parameters of the test specimen*/
+/*Function for declaring the material parameters of the test specimen*//*Thesis_report:Equation 2.6*/
 void MaterialModel::declare_param(ParameterHandler &prm){
     prm.enter_subsection("Material Model");
     {
@@ -47,7 +47,7 @@ void MaterialModel::declare_param(ParameterHandler &prm){
     prm.leave_subsection();
 }
 
-/*Function for parsing the material parameters of the test specimen*/
+/*Function for parsing the material parameters of the test specimen*//*Thesis_report:Equation 2.6*/
 void MaterialModel::parse_param(ParameterHandler &prm){
     prm.enter_subsection("Material Model");
     {

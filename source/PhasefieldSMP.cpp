@@ -215,11 +215,11 @@ void Phasefield<dim>::get_energy_v(const AllParameters &param
       fe_values[d_extractor].get_function_gradients(update,grad_d);
 
       for (unsigned int q = 0; q < n_q_points; ++q){
-	
+      /*Thesis report:Equation 2.34*/
 		  Elastic_energy += ( (get_deg_func(d_vals[q]) + param.pf.k)*get_energy_density_plus(param.materialmodel.lambda,param.materialmodel.mu,epsilon_vals[q]) 
 				                + get_energy_density_minus(param.materialmodel.lambda,param.materialmodel.mu,epsilon_vals[q]) )
                         *fe_values.JxW(q);
-
+      /*Thesis report:Equation 2.34*/
       Fracture_energy += ( param.pf.g_c*( (0.5/param.pf.l)*d_vals[q]*d_vals[q] 
                           + 0.5*param.pf.l* (scalar_product(grad_d[q],grad_d[q])) ))
                           *fe_values.JxW(q);
@@ -407,7 +407,7 @@ void Phasefield<dim>::assemble_system_d_one_cell (const parameters::AllParameter
     		    for (unsigned int j = i; j < dofs_per_cell; ++j)
             {
 
-              if((dof_block_identifier_m[i] == d_dof_m) && (dof_block_identifier_m[j] == d_dof_m))
+              if((dof_block_identifier_m[i] == d_dof_m) && (dof_block_identifier_m[j] == d_dof_m))/*Thesis-report:Equation3.36*/
               {
                   data.cell_matrix(i, j) +=( (param.pf.g_c/param.pf.l)*scratch.shape_d[i]*scratch.shape_d[j] 
                                           + (param.pf.g_c*param.pf.l)* scalar_product(scratch.grad_shape_d[i],scratch.grad_shape_d[j])
@@ -422,7 +422,7 @@ void Phasefield<dim>::assemble_system_d_one_cell (const parameters::AllParameter
 		
             }
             
-            if(dof_block_identifier_m[i] == d_dof_m )
+            if(dof_block_identifier_m[i] == d_dof_m )/*Thesis-report:Equation3.30*/
             {
                  data.cell_rhs(i) -= ( (param.pf.g_c/param.pf.l)*scratch.shape_d[i] *scratch.d_vals[q]
                                       + (param.pf.g_c*param.pf.l)*scalar_product(scratch.grad_shape_d[i],scratch.grad_d[q])
@@ -612,7 +612,7 @@ void Phasefield<dim>::assemble_system_u_one_cell (const parameters::AllParameter
         {
           data.cell_matrix(i,j) += 0.0;
         }
-        else if((dof_block_identifier_m[i] == u_dof_m) && (dof_block_identifier_m[j] == u_dof_m))
+        else if((dof_block_identifier_m[i] == u_dof_m) && (dof_block_identifier_m[j] == u_dof_m))/*Thesis-report:Equation3.54*/
         {
           double_contract(scratch.tmp1, scratch.BigC_plus, scratch.sym_grad_shape_u[j]);
           double_contract(scratch.tmp2, scratch.BigC_minus,scratch.sym_grad_shape_u[j]);
@@ -624,7 +624,7 @@ void Phasefield<dim>::assemble_system_u_one_cell (const parameters::AllParameter
       }
 
 			
-      if(dof_block_identifier_m[i] == u_dof_m)
+      if(dof_block_identifier_m[i] == u_dof_m)/*Thesis-report:Equation3.22*/
       {
           data.cell_rhs(i) -= (-scalar_product(scratch.grad_shape_u[i],scratch.sigma_plus) *(1 - scratch.d_vals[q])*(1-scratch.d_vals[q])
                               - param.pf.k*scalar_product(scratch.grad_shape_u[i],scratch.sigma_plus)
@@ -645,7 +645,7 @@ void Phasefield<dim>::assemble_system_u_one_cell (const parameters::AllParameter
 template <int dim>
 unsigned int Phasefield<dim>::solve_nonlinear_newton(const AllParameters &param
                                             ,BlockVector<double> &solution_delta
-                                            ,const double delta_t)
+                                            ,const double delta_t)/*Thesis-report:Algorithm 1*/
 {
     std::cout<<"Delta_t(inside newton):"<<delta_t<<std::endl;
 
@@ -1007,7 +1007,7 @@ void Phasefield<dim>::make_constraints_d(unsigned int &itr,const AllParameters &
     
 }
 
-/*Print header and footer for newton iterations*/
+/*Print header and footer for newton iterations for d*/
 template <int dim>
 void Phasefield<dim>::print_header_d(){
     const unsigned int l_width = 80;
@@ -1031,7 +1031,7 @@ void Phasefield<dim>::print_header_d(){
 
 }
 
-/*Print header and footer for newton iterations*/
+/*Print header and footer for newton iterations for u*/
 template <int dim>
 void Phasefield<dim>::print_header_u(){
     const unsigned int l_width = 95;
@@ -1055,7 +1055,7 @@ void Phasefield<dim>::print_header_u(){
 
 }
 
-/*Print header and footer for newton iterations*/
+/*Print header and footer for newton iterations for d*/
 template <int dim>
 void Phasefield<dim>::print_footer_d(){
     const unsigned int l_width = 80;
@@ -1071,7 +1071,7 @@ void Phasefield<dim>::print_footer_d(){
 
 }
 
-/*Print header and footer for newton iterations*/
+/*Print header and footer for newton iterations for u*/
 template <int dim>
 void Phasefield<dim>::print_footer_u(){
     const unsigned int l_width = 95;
@@ -1163,7 +1163,7 @@ void Phasefield<dim>::import_mesh(const AllParameters &param){
     GridTools::scale(param.geometrymodel.grid_scale,triangulation_m);
     triangulation_m.refine_global (param.geometrymodel.gl_ref);
 
-    const bool write_grid = false;
+    const bool write_grid = true;
     GridOut::OutputFormat meshOutputFormat = GridOut::vtk;
     if (write_grid)
     {
@@ -1377,7 +1377,7 @@ void Phasefield<dim>::run(const AllParameters &param,const std::string filename)
              )//Tension
         {
           std::cout<<"time:"<<current_time_m<<std::endl;
-              output_results(param,current_timestep,filename);
+          output_results(param,current_timestep,filename);
         }
      
         std::ofstream stat_file (filename+"-"+"statistics");

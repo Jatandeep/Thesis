@@ -74,7 +74,8 @@ SymmetricTensor<2,dim> uniaxial(){
 return u;
 
 }
-/*To define the definition of sign funciton*/
+/*To define the definition of sign funciton*//*To be used in constitutive.cpp in 
+delsig_dellmbda_minus/plus and delsig_dellmbda_b_minus/plus*/
 double get_sign(double x)
 {
         double sgn_x;
