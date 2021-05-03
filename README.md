@@ -7,9 +7,9 @@ and a comparison is made between them considering the factors like time for crac
 
 <!---This is a finite element code based in deal.II (C++) to simulate crack propagation in brittle materials using phase field model. 
 The above project has been developed for a master thesis in FAU Erlangen-Nuremebrg. --->
-Please refer to [**thesis-report**](doc/Singh_Thesis_Report.pdf) in order to understand the basic terms used in this project. Also, Algorithm-1 in section 3.3 is recommended to understand the overall flow of the program. The algorithm has been implemented within a finite element code written in
-C++, based on open source library deal.II
+Please refer to [**thesis-report**](doc/Singh_Thesis_Report.pdf) in order to understand the basic terms used in this project. Also, Algorithm-1 in section 3.3 is recommended to understand the overall flow of the program. The algorithm has been implemented within a finite element code written in C++, based on open source library deal.II
 
+![Alt text](/doc/Images_readme/tension_ve-6.png?raw=true "Optional Title")
 # Mesh file
 In this nomenclature, we use three pre-existing crack modeling strategies: M_I, M_Id and P_I. Reader is referred to section 2.4 in thesis-report to understand the definition and basic differences between them. mesh01, mesh02, mesh03, mesh05 and mesh06 are generated with ABAQUS and are taken as input without any subsequent changes in them. Only change is in mesh04, which is also generated in ABAQUS but is then again refined using deal.ii parameters of global and local refinements. Values of these global,local parameters and also height and length of refined areas could be found in respective parameter files of mesh04.
 
