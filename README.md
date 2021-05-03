@@ -10,7 +10,7 @@ The above project has been developed for a master thesis in FAU Erlangen-Nuremeb
 Please refer to [**thesis-report**](doc/Singh_Thesis_Report.pdf) in order to understand the basic terms used in this project. Also, Algorithm-1 in section 3.3 is recommended to understand the overall flow of the program. The algorithm has been implemented within a finite element code written in C++, based on open source library deal.II
 
 <!---![tenison_ve-6](https://user-images.githubusercontent.com/45743866/116868849-d7351800-ac0f-11eb-9ca9-80953effce21.png "Optional Title") --->
-![](../doc/Images_readme/tension_ve-6.png "Title")
+![](../master/doc/Images_readme/tension_ve-6.png "Title")
 # Mesh file
 In this nomenclature, we use three pre-existing crack modeling strategies: M_I, M_Id and P_I. Reader is referred to section 2.4 in thesis-report to understand the definition and basic differences between them. mesh01, mesh02, mesh03, mesh05 and mesh06 are generated with ABAQUS and are taken as input without any subsequent changes in them. Only change is in mesh04, which is also generated in ABAQUS but is then again refined using deal.ii parameters of global and local refinements. Values of these global,local parameters and also height and length of refined areas could be found in respective parameter files of mesh04.
 
