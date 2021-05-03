@@ -1,4 +1,4 @@
-# Thesis
+# Master Thesis: Implementation and Analysis of a Phase-Field Model for Brittle Fracture
 
 This is a finite element code based in deal.II (C++) to simulate crack propagation in brittle materials using phase field model. 
 The above project has been developed for a master thesis in FAU Erlangen-Nuremebrg.
