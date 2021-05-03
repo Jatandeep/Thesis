@@ -1,8 +1,14 @@
-# Master Thesis: Implementation and Analysis of a Phase-Field Model for Brittle Fracture
+# Master Thesis: "Implementation and Analysis of a Phase-Field Model for Brittle Fracture"
 
-This is a finite element code based in deal.II (C++) to simulate crack propagation in brittle materials using phase field model. 
-The above project has been developed for a master thesis in FAU Erlangen-Nuremebrg.
-Please refer to [**thesis-report**](doc/Singh_Thesis_Report.pdf) in order to understand the basic terms used in this project. Also Algorithm-1 in section 3.3 is recommended to understand the overall flow of the program.
+Phase-field approach for predicting fracture based failures in structures is gaining importance like never before. This approach is an elegant numerical technique which doesn’t require tracking of crack surfaces and allows to study crack branching and merging without much additional effort.
+
+The research presented in this work focuses on numerical implementation of quasi-static brittle fracture for standard benchmark problems and analyzing the effects of various parameters like viscosity, regularization length and boundary conditions. For facilitating numerical implementation of the anisotropic formulation of phase field model, a unique expression for elasticity tensor has been derived. Three different modeling strategies for the pre-existing crack are presented
+and a comparison is made between them considering the factors like time for crack initiation and maximum attainable force during simulation. We compare our implemented phase field model results with the linear elastic fracture mechanics (LEFM) for mode I loading for all three modeling strategies for pre-existing crack.
+
+<!---This is a finite element code based in deal.II (C++) to simulate crack propagation in brittle materials using phase field model. 
+The above project has been developed for a master thesis in FAU Erlangen-Nuremebrg. --->
+Please refer to [**thesis-report**](doc/Singh_Thesis_Report.pdf) in order to understand the basic terms used in this project. Also, Algorithm-1 in section 3.3 is recommended to understand the overall flow of the program. The algorithm has been implemented within a finite element code written in
+C++, based on open source library deal.II
 
 # Mesh file
 In this nomenclature, we use three pre-existing crack modeling strategies: M_I, M_Id and P_I. Reader is referred to section 2.4 in thesis-report to understand the definition and basic differences between them. mesh01, mesh02, mesh03, mesh05 and mesh06 are generated with ABAQUS and are taken as input without any subsequent changes in them. Only change is in mesh04, which is also generated in ABAQUS but is then again refined using deal.ii parameters of global and local refinements. Values of these global,local parameters and also height and length of refined areas could be found in respective parameter files of mesh04.
