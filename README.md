@@ -1,4 +1,4 @@
-# Master Thesis: "Implementation and Analysis of a Phase-Field Model for Brittle Fracture"
+# Implementation and Analysis of a Phase-Field Model for Brittle Fracture
 
 Phase-field approach for predicting fracture based failures in structures is gaining importance like never before. This approach is an elegant numerical technique which doesn’t require tracking of crack surfaces and allows to study crack branching and merging without much additional effort.
 
