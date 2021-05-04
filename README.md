@@ -15,7 +15,7 @@ Please refer to [**thesis-report**](doc/Singh_Thesis_Report.pdf) in order to und
 *Figure: Single edge notched tension test (M<sub>I</sub>). Crack patterns for viscosity = 1 × 10<sup>−6</sup> kNs/mm<sup>2</sup>
 at different displacements (u) for each regularization length (l)*--->
 <p align="center">
-    <img src="/doc/Images_readme/tension_ve-6n2.png" >
+    <img src="doc/Images_readme/tension_ve-6n2.png" >
 </p>
 <p>
     <em align="center">Figure: Single edge notched tension test (M<sub>I</sub>). Crack patterns for viscosity = 1 × 10<sup>−6</sup> kNs/mm<sup>2</sup>
