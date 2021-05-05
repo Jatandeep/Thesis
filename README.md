@@ -28,21 +28,22 @@ We can classify external loads into three independent types, leading to a simpli
 </p>
 
 ## Numerical Results ##
-For the Mode I case i.e. Tension mode, the resulting crack patterns at different displacements for regularization length (l) = 0.015 mm can be
-seen in Fig. 2. The illustration uses the viscous model with viscosity (η) = 1 × 10<sup>−6</sup> kNs/mm<sup>2</sup>.
+We perform the single edge notched tension test in a quasi-static setting for plane
+strain conditions. The resulting crack patterns at different displacements for can be seen in Fig. 2.
 <p align="center">
     <img src="doc/Images_readme/tension_ve-6n2.png" >
 </p>
 <p>
-    <em align="center">Figure: Single edge notched tension test. Crack patterns for viscosity = 1 × 10<sup>−6</sup> kNs/mm<sup>2</sup>
-at different displacements (u) for each regularization length (l)</em>
+    <em align="center">Figure 2: Single edge notched tension test. Crack patterns for viscosity (η) = 1 × 10<sup>−6</sup> kNs/mm<sup>2</sup>
+at different displacements (u) for regularization length (l) = 0.015 mm.</em>
 </p>
+Similarly, we perform the single edge notched shear test in the same conditions. The resulting crack patterns at different displacements for this case can be seen in Fig. 3.
 <p align="center">
     <img src="doc/Images_readme/shear_ve-6.png" >
 </p>
 <p>
-    <em align="center">Figure: Single edge notched shear test. Crack patterns for viscosity = 1 × 10<sup>−6</sup> kNs/mm<sup>2</sup>
-at different displacements (u) for each regularization length (l)</em>
+    <em align="center">Figure 3: Single edge notched shear test. Crack patterns for viscosity (η) = 1 × 10<sup>−6</sup> kNs/mm<sup>2</sup>
+at different displacements (u) for regularization length (l) = 0.015 mm.</em>
 </p>
 
 ## Mesh file
