@@ -46,11 +46,19 @@ Similarly, we perform the single edge notched shear test in the same conditions.
 at different displacements (u) for regularization length (l) = 0.015 mm.</em>
 </p>
 
-  
+## Comparison with LEFM analytical results ## 
+Mode I fracture condition is implemented and it is shown that our phase field model gives correct results for the case of
+LEFM also by showing that the crack initiation occurs when K<sub>I</sub> (Stress Intensity Factor) becomes equal to K<sub>IC</sub> (Fracture Toughness). We can observe a sudden change in curves of fracture energy, elastic energy and force on top boundary at the point where crack initiation occurs. This point is significantly close to the theoretical point where K<sub>I</sub> becomes equal to K<sub>IC</sub>.  
+<p align="center">
+    <img src="doc/Images_readme/lefm.png" >
+</p>
+<p>
+    <em align="center">Figure 4: Energy-time curve for elastic and fracture energy along with force-time curve on
+secondary y-axis for regularization length (l) = 0.0075 mm and viscosity (η) = 0 kNs/mm<sup>2</sup>.</em>
+</p>
 
-## Parameter file
-In order to replicate the results in thesis-report, various parameter files have been added to folder named "parameter_files". Detailed explanation of different types of meshes can be found [here](doc/Mesh.md)
-We will take an example and explain the meaning of that parameter file. 
+## Parameter file ##
+In order to replicate the results in thesis-report, various parameter files have been added to folder named "parameter_files". Detailed explanation of different types of meshes can be found [here](doc/Mesh.md). We will take an example and explain the meaning of that parameter file. 
 "**M_I_Tension_l-0.015_v-0_mesh01_uxbfxd-uxtfree.prm**":
 1. **M_I** -> It denotes the pre-existing crack modeling strategy. (**M_I** | **M_Id** | **P_I**)
 2. **Tension** -> It shows the type of test begin performed on the specimen. (**Tension** | **Shear** | **lefm**)
@@ -59,11 +67,11 @@ We will take an example and explain the meaning of that parameter file.
 5. **mesh01** -> Corresponding mesh file name.
 6. **uxbfxd-uxtfree** -> **Optional** parameter showing boundary conditions for tension test. If not mentioned, **uxbfxd-uxtfree** is assumed. (**uxbfxd-uxtfxd** | **uxbfxd-uxtfree** | **uxbfree-uxtfree**)
 
-- You can find parameter files relation with thesis report figures [here](doc/Figures.md)
-- Detailed explanation of variables to be given in parameter file is given [here](doc/Parameter.md) 
+- You can find parameter files relation with thesis report figures [here](doc/Figures.md).
+- Detailed explanation of variables to be given in parameter file is given [here](doc/Parameter.md). 
 
 
-## How to run
+## How to run ##
 
 You need to install deal.II (see http://www.dealii.org) from the official site or using spack (https://github.com/dealii/dealii/wiki/deal.II-in-Spack). 
 Download the code and configure with:
