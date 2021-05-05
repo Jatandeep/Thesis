@@ -23,8 +23,9 @@ We can classify external loads into three independent types, leading to a simpli
 <p align="center">
     <img src="doc/Images_readme/fracturemodes.png" >
 </p>
-<p>
-    <em align="center"> Figure 1: Modes of fracture</em>
+
+<p align=center> 
+    <em> Figure 1: Modes of fracture.</em>
 </p>
 
 ## Numerical Results ##
@@ -48,7 +49,7 @@ at different displacements (u) for regularization length (l) = 0.015 mm.</em>
 
 ## Comparison with LEFM analytical results ## 
 Mode I fracture condition is implemented and it is shown that our phase field model gives correct results for the case of
-LEFM also by showing that the crack initiation occurs when K<sub>I</sub> (Stress Intensity Factor) becomes equal to K<sub>IC</sub> (Fracture Toughness). We can observe a sudden change in curves of fracture energy, elastic energy and force on top boundary at the point where crack initiation occurs. This point is significantly close to the theoretical point where K<sub>I</sub> becomes equal to K<sub>IC</sub>.  
+LEFM also by showing that the crack initiation occurs when K<sub>I</sub> (Stress Intensity Factor) becomes equal to K<sub>IC</sub> (Fracture Toughness). We can observe a sudden increase in the curve of fracture energy and a drop in curves of elastic energy and force on top boundary at the point where crack initiation occurs. This point is significantly close to the theoretical point where K<sub>I</sub> becomes equal to K<sub>IC</sub>.  
 <p align="center">
     <img src="doc/Images_readme/lefm.png" >
 </p>
