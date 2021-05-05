@@ -66,7 +66,7 @@ In order to replicate the results in thesis-report, various parameter files have
 
 ## How to run ##
 
-You need to install deal.II (see http://www.dealii.org) from the official site or using spack (https://github.com/dealii/dealii/wiki/deal.II-in-Spack). 
+You need to install deal.II (see <http://www.dealii.org>) from the official site or using spack (https://github.com/dealii/dealii/wiki/deal.II-in-Spack). 
 Download the code and configure with:
 ```
   spack load dealii
