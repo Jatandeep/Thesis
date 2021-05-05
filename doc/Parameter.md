@@ -1,4 +1,4 @@
-We will take an example and explain the meaning of that parameter file. 
+We will take an example and explain the meaning of a parameter file. 
 "**M_I_Tension_l-0.015_v-0_mesh01_uxbfxd-uxtfree.prm**":
 1. **M_I** -> It denotes the pre-existing crack modeling strategy. (**M_I** | **M_Id** | **P_I**)
 2. **Tension** -> It shows the type of test begin performed on the specimen. (**Tension** | **Shear** | **lefm**)
