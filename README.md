@@ -66,7 +66,7 @@ In order to replicate the results in thesis-report, various parameter files have
 
 ## How to run ##
 
-You need to install deal.II (see <http://www.dealii.org>) from the official site or using spack (https://github.com/dealii/dealii/wiki/deal.II-in-Spack). 
+You need to install deal.II (see <http://www.dealii.org>) from the official site or using spack (<https://github.com/dealii/dealii/wiki/deal.II-in-Spack>). 
 Download the code and configure with:
 ```
   spack load dealii
@@ -88,7 +88,7 @@ and finally run with:
 
 ## Helpful material
 For getting an overview of block solvers, multithreading, input parameter handling and linear newton system from non-linear equations, 
-please refer to Step-44 of deal.II tutorials (https://dealii.org/9.0.0/doxygen/deal.II/step_44.html).
+please refer to Step-44 of deal.II tutorials (<https://dealii.org/9.0.0/doxygen/deal.II/step_44.html>).
 
 ## Notes
 - The code uses the deal.II 9.0.0 version. If project is run with newer versions, certain version specific modifications might need to be done.
