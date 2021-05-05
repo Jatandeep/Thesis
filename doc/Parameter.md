@@ -1,3 +1,12 @@
+We will take an example and explain the meaning of that parameter file. 
+"**M_I_Tension_l-0.015_v-0_mesh01_uxbfxd-uxtfree.prm**":
+1. **M_I** -> It denotes the pre-existing crack modeling strategy. (**M_I** | **M_Id** | **P_I**)
+2. **Tension** -> It shows the type of test begin performed on the specimen. (**Tension** | **Shear** | **lefm**)
+3. **l-0.015** -> Regularization length (**0.015** | **0.0075**)
+4. **v-0** -> Viscosity (**0** | **1e-6** | **1e-5** | **0.5e-4**)
+5. **mesh01** -> Corresponding mesh file name.
+6. **uxbfxd-uxtfree** -> **Optional** parameter showing boundary conditions for tension test. If not mentioned, **uxbfxd-uxtfree** is assumed. (**uxbfxd-uxtfxd** | **uxbfxd-uxtfree** | **uxbfree-uxtfree**)
+
 # Geometry
 - **Mesh File**-> Path of the mesh file to be read.
 - **Global Refinement**-> Refinement of the whole mesh. Only required in lefm cases of M_I and M_Id. Other mesh files are already refined at areas expecting crack propagation.

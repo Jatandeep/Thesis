@@ -57,16 +57,9 @@ LEFM also by showing that the crack initiation occurs when K<sub>I</sub> (Stress
 secondary y-axis for regularization length (l) = 0.0075 mm and viscosity (η) = 0 kNs/mm<sup>2</sup>.</em>
 </p>
 
-## Parameter file ##
-In order to replicate the results in thesis-report, various parameter files have been added to folder named "parameter_files". Detailed explanation of different types of meshes can be found [here](doc/Mesh.md). We will take an example and explain the meaning of that parameter file. 
-"**M_I_Tension_l-0.015_v-0_mesh01_uxbfxd-uxtfree.prm**":
-1. **M_I** -> It denotes the pre-existing crack modeling strategy. (**M_I** | **M_Id** | **P_I**)
-2. **Tension** -> It shows the type of test begin performed on the specimen. (**Tension** | **Shear** | **lefm**)
-3. **l-0.015** -> Regularization length (**0.015** | **0.0075**)
-4. **v-0** -> Viscosity (**0** | **1e-6** | **1e-5** | **0.5e-4**)
-5. **mesh01** -> Corresponding mesh file name.
-6. **uxbfxd-uxtfree** -> **Optional** parameter showing boundary conditions for tension test. If not mentioned, **uxbfxd-uxtfree** is assumed. (**uxbfxd-uxtfxd** | **uxbfxd-uxtfree** | **uxbfree-uxtfree**)
-
+## Parameter and Mesh file ##
+In order to replicate the results in thesis-report, various parameter files have been added to folder named "parameter_files". 
+- Detailed explanation of different types of meshes can be found [here](doc/Mesh.md). 
 - You can find parameter files relation with thesis report figures [here](doc/Figures.md).
 - Detailed explanation of variables to be given in parameter file is given [here](doc/Parameter.md). 
 
