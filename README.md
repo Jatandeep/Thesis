@@ -14,17 +14,39 @@ Please refer to [**thesis-report**](doc/Singh_Thesis_Report.pdf) in order to und
 ![text](/doc/Images_readme/tension_ve-6n.png)
 *Figure: Single edge notched tension test (M<sub>I</sub>). Crack patterns for viscosity = 1 × 10<sup>−6</sup> kNs/mm<sup>2</sup>
 at different displacements (u) for each regularization length (l)*--->
+
+## Fracture Modes ##
+We can classify external loads into three independent types, leading to a simplified scenario where the effect of each type can be determined individually.
+* **Mode I** : Opening mode - This type of mode occurs when we have a tensile stress which is acting normal to the plane of crack. We get a symmetric crack opening in this case. 
+* **Mode II** : Shearing mode - The applied stress is parallel to the plane of crack and is perpendicular to the leading edge of crack.
+* **Mode III** : Tearing mode - In this mode, crack surfaces also separate in the plane of the crack but parallel to the leading edge of the crack.
+<p align="center">
+    <img src="doc/Images_readme/fracturemodes.png" >
+</p>
+<p>
+    <em align="center"> Figure 1: Modes of fracture</em>
+</p>
+
+## Numerical Results ##
+For the Mode I case i.e. Tension mode, the resulting crack patterns at different displacements for regularization length (l) = 0.015 mm can be
+seen in Fig. 2. The illustration uses the viscous model with viscosity (η) = 1 × 10<sup>−6</sup> kNs/mm<sup>2</sup>.
 <p align="center">
     <img src="doc/Images_readme/tension_ve-6n2.png" >
 </p>
 <p>
-    <em align="center">Figure: Single edge notched tension test (M<sub>I</sub>). Crack patterns for viscosity = 1 × 10<sup>−6</sup> kNs/mm<sup>2</sup>
+    <em align="center">Figure: Single edge notched tension test. Crack patterns for viscosity = 1 × 10<sup>−6</sup> kNs/mm<sup>2</sup>
+at different displacements (u) for each regularization length (l)</em>
+</p>
+<p align="center">
+    <img src="doc/Images_readme/shear_ve-6.png" >
+</p>
+<p>
+    <em align="center">Figure: Single edge notched shear test. Crack patterns for viscosity = 1 × 10<sup>−6</sup> kNs/mm<sup>2</sup>
 at different displacements (u) for each regularization length (l)</em>
 </p>
 
-
 ## Mesh file
-In this nomenclature, we use three pre-existing crack modeling strategies: M_I, M_Id and P_I. Reader is referred to section 2.4 in thesis-report to understand the definition and basic differences between them. mesh01, mesh02, mesh03, mesh05 and mesh06 are generated with ABAQUS and are taken as input without any subsequent changes in them. Only change is in mesh04, which is also generated in ABAQUS but is then again refined using deal.ii parameters of global and local refinements. Values of these global,local parameters and also height and length of refined areas could be found in respective parameter files of mesh04.
+In this nomenclature, we use three pre-existing crack modeling strategies: M_I, M_Id and P_I. Reader is referred to section 2.4 in thesis-report to understand the definition and basic differences between them. mesh01, mesh02, mesh03, mesh05 and mesh06 are generated with ABAQUS and are taken as input without any subsequent changes in them. Only change is in mesh04, which is also generated in ABAQUS but is then again refined using deal.II parameters of global and local refinements. Values of these global, local parameters and also height and length of refined areas could be found in respective parameter files of mesh04.
 
 The mesh name nomenclature used in parameter files name is described below:
 1. **mesh01** -> This mesh is used for M_I and M_Id type crack in **tension test** for benchmark problems and contains pre-refined mesh where crack is expected to grow with element size h = 0.001 mm (approx).(Tension_left_1.inp)
