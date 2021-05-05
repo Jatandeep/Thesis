@@ -29,8 +29,7 @@ We can classify external loads into three independent types, leading to a simpli
 </p>
 
 ## Numerical Results ##
-We perform the single edge notched tension test in a quasi-static setting for plane
-strain conditions. The resulting crack patterns at different displacements for can be seen in Fig. 2.
+We perform the single edge notched tension test in a quasi-static setting for plane strain conditions. The resulting crack patterns at different displacements for can be seen in Fig. 2. Phase field variable *d = 1* denotes crack and *d = 0* means compact material.
 <p align="center">
     <img src="doc/Images_readme/tension_ve-6n2.png" >
 </p>
